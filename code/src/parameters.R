@@ -72,7 +72,7 @@ pbc_steep1=2
 #opinion effect on adoption - to what extent does opinion on climate change affect probability of adopting mitigative behaviors?
 #parameterized as a shift in the midpoint of the adoption-pbc curve to the left => negative numbers mean adoption more likely conditional on pbc
 #defined relative to neutral, so middle value should be 0
-pbc_opinionchange1=c(0.2,0,-0.5) #effect of climate chnage opinion on probability of adoption for opposition, neutral, support
+pbc_opinionchange1 = c(0.2, 0, -0.5)  # effect of climate chnage opinion on probability of adoption for opposition, neutral, support
 
 #initial pbc
 pbc_01=-1.5
