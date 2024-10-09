@@ -11,13 +11,14 @@ library(metR)
 #graphs to demonstrate interaction of model tipping points
 
 # Loop over a set param
-for (pbc_opinionchange_it in seq(-1, 1, by = 0.1)) {
-  
+# for (evidenceeffect1_it in c(0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2)) {
+for (evidenceeffect1_it in c(0)) {
+
   # Print the current homophily_param01 value for tracking
-  print(paste("Running for pbc_opinionchange_it = (0.2, 0, ", pbc_opinionchange_it))
+  print(paste("Running for evidenceeffect1 = ", evidenceeffect1_it))
 
   # Save the plot with the iterable value as a suffix
-  fileSaveSuffix = paste0("-pbc_opinionchange_(0.2_0_", pbc_opinionchange_it, ")")  
+  fileSaveSuffix = paste0("-evidenceeffect1_", evidenceeffect1_it)  
 
   #1. Individual Behavior
   print('Individual Behavior')
@@ -38,7 +39,7 @@ for (pbc_opinionchange_it in seq(-1, 1, by = 0.1)) {
   lbd_param = 0.2  # Learning-by-doing effect (cost reduction with cumulative mitigation)
   
   # Change the value for the loop
-  pbc_opinionchange1 = c(0.2, 0, pbc_opinionchange_it)  # This will now vary with each iteration
+  evidenceeffect1 = evidenceeffect1_it  # This will now vary with each iteration
 
   # Loop over ranges of willingness to change behavior and credibility-enhancing display (CED)
   adoption_param = seq(0, 0.7, by = 0.01)  # Sequence of adoption parameters
@@ -81,7 +82,7 @@ for (pbc_opinionchange_it in seq(-1, 1, by = 0.1)) {
   pol_feedback1 = 0  # No policy feedback
 
   # Change the value for the loop
-  pbc_opinionchange1 = c(0.2, 0, pbc_opinionchange_it)  # This will now vary with each iteration
+  evidenceeffect1 = evidenceeffect1_it  # This will now vary with each iteration
 
   # Sweep over ranges of endogenous cost reduction and policy support
   lbd_sweep = seq(0, 0.25, by = 0.005)  # Endogenous cost reduction
@@ -124,7 +125,7 @@ for (pbc_opinionchange_it in seq(-1, 1, by = 0.1)) {
   # homophily_param1 = 0.95   # Very high similarity in social networks, originally 0.95
 
   # Change the value for the loop
-  pbc_opinionchange1 = c(0.2, 0, pbc_opinionchange_it)  # This will now vary with each iteration
+  evidenceeffect1 = evidenceeffect1_it  # This will now vary with each iteration
 
   # Sweep over biased assimilation, evidence effect, and shifting baselines
   biassedass_sweep = seq(0, 0.9, by = 0.05)  # Range of biased assimilation parameters
@@ -137,7 +138,7 @@ for (pbc_opinionchange_it in seq(-1, 1, by = 0.1)) {
   dist_output_pro = numeric()  # Store output for climate policy proponents
   dist_output_con = numeric()  # Store output for climate policy opponents
   year = 2050  # Target year for analysis
-  reps = 20  # Number of model repetitions to average over randomization 
+  reps = 30  # Number of model repetitions to average over randomization 
   
   # Loop through each combination of parameters
   for (i in 1:dim(params)[1]) {
