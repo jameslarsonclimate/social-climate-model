@@ -12,13 +12,14 @@ library(metR)
 
 # Loop over a set param
 # for (evidenceeffect1_it in c(0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2)) {
-for (evidenceeffect1_it in c(0)) {
+for (iterable in c(0)) {
 
   # Print the current homophily_param01 value for tracking
   print(paste("Running for evidenceeffect1 = ", evidenceeffect1_it))
 
   # Save the plot with the iterable value as a suffix
   fileSaveSuffix = paste0("-evidenceeffect1_", evidenceeffect1_it)  
+  # fileSaveSuffix = 'original'
 
   #1. Individual Behavior
   print('Individual Behavior')
@@ -39,7 +40,7 @@ for (evidenceeffect1_it in c(0)) {
   lbd_param = 0.2  # Learning-by-doing effect (cost reduction with cumulative mitigation)
   
   # Change the value for the loop
-  evidenceeffect1 = evidenceeffect1_it  # This will now vary with each iteration
+  # evidenceeffect1 = evidenceeffect1_it  # This will now vary with each iteration
 
   # Loop over ranges of willingness to change behavior and credibility-enhancing display (CED)
   adoption_param = seq(0, 0.7, by = 0.01)  # Sequence of adoption parameters
@@ -48,11 +49,14 @@ for (evidenceeffect1_it in c(0)) {
   # Create a grid of all combinations of adoption_param and cred_param
   params = expand.grid(adoption_param, cred_param)  
   ems_output = numeric()  # Initialize an empty numeric vector for emissions output
+  weather_output = numeric() # Initialize an empty numeric vector for weather output
+
 
   # Loop through each combination of parameters
   for(i in 1:dim(params)[1]){
     m = model(pbc_opinionchange=c(0, 0, -1*params[i,1]), ced_param=params[i, 2])
     ems_output[i] = m$totalemissions[81]  # extract cumulative emissions for 2020-2100
+    # weather_output[i] = m$weather[81]  # extract cumulative emissions for 2020-2100    
   }
 
   # Store the results in the params data frame
@@ -67,6 +71,113 @@ for (evidenceeffect1_it in c(0)) {
   a = a + geom_contour(breaks=c(2,4,6,8,10,12,14,16,18,20,22), col="black", lwd=0.75) + geom_text_contour(size=6.5, label.placement=label_placement_fraction(), skip=2, rotate=FALSE)
   ggsave(paste("../results/figure2a", fileSaveSuffix,".png", sep=""), plot=a)
 
+
+  # Create a data frame with all the variables manually, no reshaping
+  data <- data.frame(
+    time = seq(2020, 2100, length.out = 81),     # Time from 2020 to 2100
+    emissions = m$emissions,                     # Emissions data
+    totalemissions = m$totalemissions,           # Total emissions data
+    # mitigation = m$mitigation,                   # Mitigation data
+    temperature = m$temp[,1],                         # Surface temperature
+    # mass = m$mass,                               # Climate-related mass
+    # weather = m$weather,                         # Weather data
+    evidence = m$evidence[,1],                       # Evidence data
+    anomaly = m$anomaly,                          # Climate anomaly
+    opposed = m$distributions[,1],
+    neutral = m$distributions[,2],
+    support = m$distributions[,3]
+  )
+
+  # Plot each variable using ggplot2
+  fig = ggplot(data, aes(x = time)) +
+                geom_line(aes(y = emissions, color = "emissions")) +
+                geom_line(aes(y = totalemissions, color = "totalemissions")) +
+                # geom_line(aes(y = mitigation, color = "mitigation")) +
+                geom_line(aes(y = temperature, color = "temperature")) +
+                geom_line(aes(y = evidence, color = "evidence")) +
+                geom_line(aes(y = anomaly, color = "anomaly")) +
+                geom_line(aes(y = opposed, color = "opposed")) +
+                geom_line(aes(y = neutral, color = "neutral")) +
+                geom_line(aes(y = support, color = "support")) +
+                labs(
+                  x = "Year",
+                  y = "Model output",
+                  title = "Model Outputs over Time (2020 to 2100)"
+                ) +
+                scale_color_manual(
+                  values = c("emissions" = "red", 
+                            "totalemissions" = "blue", 
+                            # "mitigation" = "green", 
+                            "temperature" = "purple", 
+                            "mass" = "orange", 
+                            "weather" = "brown", 
+                            "evidence" = "cyan", 
+                            "anomaly" = "pink",
+                            "opposed" = "yellow",
+                            "neutral" = "darkgray",
+                            "support" = "green")
+                ) +
+                theme_minimal() +
+                theme(
+                  legend.title = element_blank(),
+                  # Set white background for panel and plot
+                  panel.background = element_rect(fill = "white", color = NA),
+                  plot.background = element_rect(fill = "white", color = NA),
+                  panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
+                  panel.grid.minor = element_blank() # Optional: hide minor grid lines
+                )
+
+
+  ggsave(paste("../results/figure2a-timeSeries", fileSaveSuffix,".png", sep=""), plot=fig)
+
+  # Normalize each column (0 to 1) without using external packages
+  normalize <- function(x) {
+    return((x - min(x)) / (max(x) - min(x)))
+  }
+
+  # Plot each variable using ggplot2
+  fig = ggplot(data, aes(x = time)) +
+                geom_line(aes(y = normalize(emissions), color = "emissions")) +
+                geom_line(aes(y = normalize(totalemissions), color = "totalemissions")) +
+                # geom_line(aes(y = mitigation, color = "mitigation")) +
+                geom_line(aes(y = normalize(temperature), color = "temperature")) +
+                geom_line(aes(y = normalize(evidence), color = "evidence")) +
+                geom_line(aes(y = normalize(anomaly), color = "anomaly")) +
+                geom_line(aes(y = normalize(opposed), color = "opposed")) +
+                geom_line(aes(y = normalize(neutral), color = "neutral")) +
+                geom_line(aes(y = normalize(support), color = "support")) +
+                labs(
+                  x = "Year",
+                  y = "Normalized model output (0 to 1)",
+                  title = "Model Outputs over Time (2020 to 2100)"
+                ) +
+                scale_color_manual(
+                  values = c("emissions" = "red", 
+                            "totalemissions" = "blue", 
+                            # "mitigation" = "green", 
+                            "temperature" = "purple", 
+                            "mass" = "orange", 
+                            "weather" = "brown", 
+                            "evidence" = "cyan", 
+                            "anomaly" = "pink",
+                            "opposed" = "yellow",
+                            "neutral" = "darkgray",
+                            "support" = "green")
+                ) +
+                theme_minimal() +
+                theme(
+                  legend.title = element_blank(),
+                  # Set white background for panel and plot
+                  panel.background = element_rect(fill = "white", color = NA),
+                  plot.background = element_rect(fill = "white", color = NA),
+                  panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
+                  panel.grid.minor = element_blank() # Optional: hide minor grid lines
+                )
+
+  ggsave(paste("../results/figure2a-timeSeriesNormalized", fileSaveSuffix,".png", sep=""), plot=fig)
+
+  # stop()
+  
   #2. Technical Change
   print('Technical Change')
 
@@ -82,7 +193,7 @@ for (evidenceeffect1_it in c(0)) {
   pol_feedback1 = 0  # No policy feedback
 
   # Change the value for the loop
-  evidenceeffect1 = evidenceeffect1_it  # This will now vary with each iteration
+  # evidenceeffect1 = evidenceeffect1_it  # This will now vary with each iteration
 
   # Sweep over ranges of endogenous cost reduction and policy support
   lbd_sweep = seq(0, 0.25, by = 0.005)  # Endogenous cost reduction
@@ -113,6 +224,107 @@ for (evidenceeffect1_it in c(0)) {
   a = a + geom_contour(breaks=seq(600,1400,by=50), col="black", lwd=0.75)+geom_text_contour(size=6.5, label.placement = label_placement_fraction(), skip=2, rotate=FALSE)
   ggsave(paste("../results/figure2b",fileSaveSuffix,".png", sep=""), plot=a)
 
+  # Create a data frame with all the variables manually, no reshaping
+  data <- data.frame(
+    time = seq(2020, 2100, length.out = 81),     # Time from 2020 to 2100
+    emissions = m$emissions,                     # Emissions data
+    totalemissions = m$totalemissions,           # Total emissions data
+    # mitigation = m$mitigation,                   # Mitigation data
+    temperature = m$temp[,1],                         # Surface temperature
+    # mass = m$mass,                               # Climate-related mass
+    # weather = m$weather,                         # Weather data
+    evidence = m$evidence[,1],                       # Evidence data
+    anomaly = m$anomaly,                          # Climate anomaly
+    opposed = m$distributions[,1],
+    neutral = m$distributions[,2],
+    support = m$distributions[,3]
+  )
+
+# Plot each variable using ggplot2
+  fig = ggplot(data, aes(x = time)) +
+                geom_line(aes(y = emissions, color = "emissions")) +
+                geom_line(aes(y = totalemissions, color = "totalemissions")) +
+                # geom_line(aes(y = mitigation, color = "mitigation")) +
+                geom_line(aes(y = temperature, color = "temperature")) +
+                geom_line(aes(y = evidence, color = "evidence")) +
+                geom_line(aes(y = anomaly, color = "anomaly")) +
+                geom_line(aes(y = opposed, color = "opposed")) +
+                geom_line(aes(y = neutral, color = "neutral")) +
+                geom_line(aes(y = support, color = "support")) +
+                labs(
+                  x = "Year",
+                  y = "Model output",
+                  title = "Model Outputs over Time (2020 to 2100)"
+                ) +
+                scale_color_manual(
+                  values = c("emissions" = "red", 
+                            "totalemissions" = "blue", 
+                            # "mitigation" = "green", 
+                            "temperature" = "purple", 
+                            "mass" = "orange", 
+                            "weather" = "brown", 
+                            "evidence" = "cyan", 
+                            "anomaly" = "pink",
+                            "opposed" = "yellow",
+                            "neutral" = "darkgray",
+                            "support" = "green")
+                ) +
+                theme_minimal() +
+                theme(
+                  legend.title = element_blank(),
+                  # Set white background for panel and plot
+                  panel.background = element_rect(fill = "white", color = NA),
+                  plot.background = element_rect(fill = "white", color = NA),
+                  panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
+                  panel.grid.minor = element_blank() # Optional: hide minor grid lines
+                )
+
+
+  ggsave(paste("../results/figure2b-timeSeries", fileSaveSuffix,".png", sep=""), plot=fig)
+
+
+# Plot each variable using ggplot2
+fig = ggplot(data, aes(x = time)) +
+              geom_line(aes(y = normalize(emissions), color = "emissions")) +
+              geom_line(aes(y = normalize(totalemissions), color = "totalemissions")) +
+              # geom_line(aes(y = mitigation, color = "mitigation")) +
+              geom_line(aes(y = normalize(temperature), color = "temperature")) +
+              geom_line(aes(y = normalize(evidence), color = "evidence")) +
+              geom_line(aes(y = normalize(anomaly), color = "anomaly")) +
+              geom_line(aes(y = normalize(opposed), color = "opposed")) +
+              geom_line(aes(y = normalize(neutral), color = "neutral")) +
+              geom_line(aes(y = normalize(support), color = "support")) +
+              labs(
+                x = "Year",
+                y = "Normalized model output (0 to 1)",
+                title = "Model Outputs over Time (2020 to 2100)"
+              ) +
+              scale_color_manual(
+                values = c("emissions" = "red", 
+                          "totalemissions" = "blue", 
+                          # "mitigation" = "green", 
+                          "temperature" = "purple", 
+                          "mass" = "orange", 
+                          "weather" = "brown", 
+                          "evidence" = "cyan", 
+                          "anomaly" = "pink",
+                          "opposed" = "yellow",
+                          "neutral" = "darkgray",
+                          "support" = "green")
+              ) +
+              theme_minimal() +
+              theme(
+                legend.title = element_blank(),
+                # Set white background for panel and plot
+                panel.background = element_rect(fill = "white", color = NA),
+                plot.background = element_rect(fill = "white", color = NA),
+                panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
+                panel.grid.minor = element_blank() # Optional: hide minor grid lines
+              )
+
+  ggsave(paste("../results/figure2b-timeSeriesNormalized", fileSaveSuffix,".png", sep=""), plot=fig)
+
+
   # 3. Perception of Climate Change
   print('Perception of Climate Change')
 
@@ -125,7 +337,7 @@ for (evidenceeffect1_it in c(0)) {
   # homophily_param1 = 0.95   # Very high similarity in social networks, originally 0.95
 
   # Change the value for the loop
-  evidenceeffect1 = evidenceeffect1_it  # This will now vary with each iteration
+  # evidenceeffect1 = evidenceeffect1_it  # This will now vary with each iteration
 
   # Sweep over biased assimilation, evidence effect, and shifting baselines
   biassedass_sweep = seq(0, 0.9, by = 0.05)  # Range of biased assimilation parameters
@@ -189,7 +401,7 @@ for (evidenceeffect1_it in c(0)) {
   params$shiftingbaseline = fct_recode(params$shiftingbaseline, "Shifting Baseline" = "1", "Fixed Baseline" = "0")
   
   # Define the fixed range for the fill colors
-  fixed_range <- c(0, 10)  # Example range from 0% to 100%
+  fixed_range <- c(0, 12)  # Example range from 0% to 100%
   
   # Plot the results with fixed range
   a = ggplot(params, aes(x = biassed_assimilation, y = evidenceeffect, fill = opposers2050 * 100, z = opposers2050 * 100)) + geom_tile()
@@ -198,6 +410,107 @@ for (evidenceeffect1_it in c(0)) {
   a = a + scale_fill_gradient(low = "darkorchid", high = "palegreen2", limits = fixed_range)
   
   ggsave(paste("../results/figure2c", fileSaveSuffix, ".png", sep = ""), plot = a)
+
+    # Create a data frame with all the variables manually, no reshaping
+  data <- data.frame(
+    time = seq(2020, 2100, length.out = 81),     # Time from 2020 to 2100
+    emissions = m$emissions,                     # Emissions data
+    totalemissions = m$totalemissions,           # Total emissions data
+    # mitigation = m$mitigation,                   # Mitigation data
+    temperature = m$temp[,1],                         # Surface temperature
+    # mass = m$mass,                               # Climate-related mass
+    # weather = m$weather,                         # Weather data
+    evidence = m$evidence[,1],                       # Evidence data
+    anomaly = m$anomaly,                          # Climate anomaly
+    opposed = m$distributions[,1],
+    neutral = m$distributions[,2],
+    support = m$distributions[,3]
+  )
+
+  # Plot each variable using ggplot2
+  fig = ggplot(data, aes(x = time)) +
+                geom_line(aes(y = emissions, color = "emissions")) +
+                geom_line(aes(y = totalemissions, color = "totalemissions")) +
+                # geom_line(aes(y = mitigation, color = "mitigation")) +
+                geom_line(aes(y = temperature, color = "temperature")) +
+                geom_line(aes(y = evidence, color = "evidence")) +
+                geom_line(aes(y = anomaly, color = "anomaly")) +
+                geom_line(aes(y = opposed, color = "opposed")) +
+                geom_line(aes(y = neutral, color = "neutral")) +
+                geom_line(aes(y = support, color = "support")) +
+                labs(
+                  x = "Year",
+                  y = "Model output",
+                  title = "Model Outputs over Time (2020 to 2100)"
+                ) +
+                scale_color_manual(
+                  values = c("emissions" = "red", 
+                            "totalemissions" = "blue", 
+                            # "mitigation" = "green", 
+                            "temperature" = "purple", 
+                            "mass" = "orange", 
+                            "weather" = "brown", 
+                            "evidence" = "cyan", 
+                            "anomaly" = "pink",
+                            "opposed" = "yellow",
+                            "neutral" = "darkgray",
+                            "support" = "green")
+                ) +
+                theme_minimal() +
+                theme(
+                  legend.title = element_blank(),
+                  # Set white background for panel and plot
+                  panel.background = element_rect(fill = "white", color = NA),
+                  plot.background = element_rect(fill = "white", color = NA),
+                  panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
+                  panel.grid.minor = element_blank() # Optional: hide minor grid lines
+                )
+
+
+  ggsave(paste("../results/figure2c-timeSeries", fileSaveSuffix,".png", sep=""), plot=fig)
+
+  # Plot each variable using ggplot2
+  fig = ggplot(data, aes(x = time)) +
+                geom_line(aes(y = normalize(emissions), color = "emissions")) +
+                geom_line(aes(y = normalize(totalemissions), color = "totalemissions")) +
+                # geom_line(aes(y = mitigation, color = "mitigation")) +
+                geom_line(aes(y = normalize(temperature), color = "temperature")) +
+                geom_line(aes(y = normalize(evidence), color = "evidence")) +
+                geom_line(aes(y = normalize(anomaly), color = "anomaly")) +
+                geom_line(aes(y = normalize(opposed), color = "opposed")) +
+                geom_line(aes(y = normalize(neutral), color = "neutral")) +
+                geom_line(aes(y = normalize(support), color = "support")) +
+                labs(
+                  x = "Year",
+                  y = "Normalized model output (0 to 1)",
+                  title = "Model Outputs over Time (2020 to 2100)"
+                ) +
+                scale_color_manual(
+                  values = c("emissions" = "red", 
+                            "totalemissions" = "blue", 
+                            # "mitigation" = "green", 
+                            "temperature" = "purple", 
+                            "mass" = "orange", 
+                            "weather" = "brown", 
+                            "evidence" = "cyan", 
+                            "anomaly" = "pink",
+                            "opposed" = "yellow",
+                            "neutral" = "darkgray",
+                            "support" = "green")
+                ) +
+                theme_minimal() +
+                theme(
+                  legend.title = element_blank(),
+                  # Set white background for panel and plot
+                  panel.background = element_rect(fill = "white", color = NA),
+                  plot.background = element_rect(fill = "white", color = NA),
+                  panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
+                  panel.grid.minor = element_blank() # Optional: hide minor grid lines
+                )
+
+  ggsave(paste("../results/figure2c-timeSeriesNormalized", fileSaveSuffix,".png", sep=""), plot=fig)
+
+
 }
 
 print(paste("Run completed at", Sys.time()))
