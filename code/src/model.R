@@ -42,6 +42,7 @@ model=function(time=1:81,
                shiftingbaselines=shiftingbaselines1,
                year0=2020,
                natvar=NULL,
+               natvar_multiplier = natvar_multiplier1,
                policyopinionfeedback_param=policyopinionfeedback_01,
                lbd_param=lbd_param01,
                lag_param=lag_param01,
@@ -92,8 +93,10 @@ model=function(time=1:81,
   bau_mass=matrix(nrow=length(time),ncol=3)
   bau_mass[1,]=mass_0
   
-  if(is.null(natvar)) naturalvariability=Re(randomts(gtemp))[1:length(time)]*8
+  if(is.null(natvar)) naturalvariability=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
   if(!is.null(natvar)) naturalvariability=natvar
+
+  print(naturalvariability)
   
   weather=numeric(length=length(time))
   weather[1]=temperature[1,1]+naturalvariability[1]
@@ -102,7 +105,8 @@ model=function(time=1:81,
   evidence[1,]=rep(0,3)
   
   anomaly=numeric(length=length(time))
-  anomaly[1]=ifelse(shiftingbaselines==0,weather[1],naturalvariability[1])
+  anomaly[1]=ifelse(shiftingbaselines==0,weather[1],naturalvariability[1]) # if shiftingBaselines is off, anomaly=weather
+  # if shitingBaselines is on, anomaly=naturalVariability 
   
   for(t in 2:length(time)){
     distributions[t,]=opinionchange(distributions[t-1,],evidence[t-1,],evidence_effect=evidenceeffect,selfsimparams=homophily,force=force_params,policychange_t_1=ifelse(t==2,0,policy[t-1]-policy[t-2]),policyopinionfeedback=policyopinionfeedback_param,adopt_t_1=adoptersfrac[t-1,],ced=ced_param)
@@ -133,8 +137,8 @@ model=function(time=1:81,
     evidence[t,]=temp5[[2]]
     
   }
-  a=list(time,distributions,policy,pbc,nadopters,adoptersfrac,emissions,mitigation,bau+bau_outside_region,mass,temperature,bau_temp,evidence,anomaly,year0:(year0+length(time)-1),totalemissions)
-  names(a)=c("time","distributions","policy","pbc","nadopters","adoptersfrac","emissions","mitigation","bau_total","mass","temp","bau_temp","evidence","anomaly","year","totalemissions")
+  a=list(time,distributions,policy,pbc,nadopters,adoptersfrac,emissions,mitigation,bau+bau_outside_region,mass,temperature,bau_temp,evidence,anomaly,year0:(year0+length(time)-1),totalemissions,naturalvariability,weather)
+  names(a)=c("time","distributions","policy","pbc","nadopters","adoptersfrac","emissions","mitigation","bau_total","mass","temp","bau_temp","evidence","anomaly","year","totalemissions","naturalvariability","weather")
   
   return(a)
 }
