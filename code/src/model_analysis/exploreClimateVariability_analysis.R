@@ -14,6 +14,17 @@ natvar1[seq(10, 81, by = 10)] <- 5
 
 coeff = 0.1
 
+# Define the temperature matrix with 81 rows and 2 columns
+mat <- matrix(0, nrow = 81, ncol = 2)
+
+# First column values: start at 1, rise to 3 by index 41, drop to 1.5 by index 46, and stay at 1.5
+mat[1:41, 1] <- seq(1, 3, length.out = 41)   # Values from 1 to 3 by index 41
+mat[42:46, 1] <- seq(3, 1.5, length.out = 5) # Drop from 3 to 1.5 from index 41 to 46
+mat[47:81, 1] <- 1.5                        # Stay at 1.5 from index 46 to 81
+
+# Second column always 0
+mat[, 2] <- 0
+
 # for (natvar_it in seq(0, 20, 2)) {
 for (natvar_it in c(5)){
 
@@ -23,7 +34,7 @@ for (natvar_it in c(5)){
 
   source("src/model.R")  # Load the model script
   homophily_param01 = 0.7
-  m = model(shiftingbaselines = 0, natvar_multiplier=8)
+  m = model(shiftingbaselines = 1) #, natvar_multiplier=8, temperature_input=mat)
 
   # Create a data frame with all the variables
   data <- data.frame(
