@@ -121,7 +121,7 @@ model=function(time=1:81,               # Time steps for the simulation (years)
   
   # Initialize anomaly detection (used for shifting baselines)
   anomaly=numeric(length=length(time))
-  anomaly[1]=ifelse(shiftingbaselines==0,weath  er[1],naturalvariability[1])
+  anomaly[1]=ifelse(shiftingbaselines==0,weather[1],naturalvariability[1])
   
   # Loop over time steps to update model state each year
   for(t in 2:length(time)){

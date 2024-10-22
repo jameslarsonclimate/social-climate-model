@@ -156,4 +156,7 @@ biassedassimilation1=0
 #a value of 1 means baselines shift according to pareameters estimated in Moore et al 2019
 shiftingbaselines1=0
 
+# control the natural variability multiplier. Defaults to 8, set by author
+natvar_multiplier1 = 8
+
 
