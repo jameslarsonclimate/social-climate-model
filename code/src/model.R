@@ -78,7 +78,15 @@ model=function(time=1:81,
   emissions[1]=bau[1]*(1+(temp_emissionsparam*temp_0[1]))
   
   totalemissions=numeric(length=length(time))
-  totalemissions[1]=(bau[1]+bau_outside_region[1])*(1+(temp_emissionsparam*temp_0[1]))
+  totalemissions[1]=(bau[1]+rowSums(bau_outside_region[1,]))*(1+(temp_emissionsparam*temp_0[1]))
+  # for (i in 1:ncol(bau_outside_t)) {  # for loop to loop through each region outside OECD
+  #   totalemissions[1]=(totalemissions[1]+bau_outside_region[1,i])*(1+(temp_emissionsparam*temp_0[1]))  # potential concern here of this scaling factor applied multiple times
+  # }
+  
+  emissions_outside = matrix(nrow=length(time), ncol=4)
+  for (i in 1:ncol(emissions_outside)) {
+    emissions_outside[1,i] = bau_outside_region[1,i]*(1+(temp_emissionsparam*temp_0[1]))
+  }
   
   mitigation=matrix(0,nrow=length(time),ncol=length(time)) #must be all zeroes to start
   
@@ -104,7 +112,6 @@ model=function(time=1:81,
   if(is.null(natvar)) naturalvariability=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
   if(!is.null(natvar)) naturalvariability=natvar
 
-  print(naturalvariability)
   
   weather=numeric(length=length(time))
   weather[1]=temperature[1,1]+naturalvariability[1]
@@ -125,14 +132,15 @@ model=function(time=1:81,
     nadopters[t]=temp[[2]]
     adoptersfrac[t,]=temp[[3]]
     
-    temp2=emissionschange(bau[t],nadopters[t],policy[t],mitigation,t,temperature[t-1,1],temperature_t_lag=ifelse(t<=lag_param,temperature[t-1,1],temperature[t-lag_param,1]),effectiveness=adopt_effect,maxm=m_max,rmax=r_max,r0=r_0,lbd=lbd_param,emissions_t_lag=ifelse(t<=lag_param|lag_param==0,emissions[1],emissions[t-lag_param]),bau_t_lag=ifelse(t<=lag_param|lag_param==0,bau[1],bau[t-lag_param]),bau_outisde_t=bau_outside_region[t],lag=lag_param,temp_emissions=temp_emissionsparam)
+    temp2=emissionschange(bau[t],nadopters[t],policy[t],mitigation,t,temperature[t-1,1],temperature_t_lag=ifelse(t<=lag_param,temperature[t-1,1],temperature[t-lag_param,1]),effectiveness=adopt_effect,maxm=m_max,rmax=r_max,r0=r_0,lbd=lbd_param,emissions_t_lag=ifelse(t<=lag_param|lag_param==0,emissions[1],emissions[t-lag_param]),bau_t_lag=ifelse(t<=lag_param|lag_param==0,bau[1],bau[t-lag_param]),bau_outside_t=bau_outside_region[t,],emissions_outside_t=emissions_outside[t,],lag=lag_param,temp_emissions=temp_emissionsparam)
     emissions[t]=temp2[[1]]
     mitigation=temp2[[2]]
     totalemissions[t]=temp2[[3]]
+    emissions_outside[t,]=temp2[[4]]
     
     #climate model
     if(is.null(temperature_input)) {
-        temp3=temperaturechange(temperature[t-1,],mass[t-1,],totalemissions[t],ex_forcing[t],bau[t]+bau_outside_region[t],psi1_param=psi1,nu_param=nu)
+        temp3=temperaturechange(temperature[t-1,],mass[t-1,],totalemissions[t],ex_forcing[t],bau[t]+rowSums(bau_outside_region[t,]),psi1_param=psi1,nu_param=nu)
         mass[t,]=temp3[[1]]
         temperature[t,]=temp3[[2]]
       }
@@ -142,7 +150,7 @@ model=function(time=1:81,
     # mass[t,]=temp3[[1]]
     # temperature[t,]=temp3[[2]]
     
-    temp4=temperaturechange(bau_temp[t-1,],bau_mass[t-1,],bau[t]+bau_outside_region[t],ex_forcing[t],bau[t]+bau_outside_region[t],psi1_param=psi1,nu_param=nu)
+    temp4=temperaturechange(bau_temp[t-1,],bau_mass[t-1,],bau[t]+rowSums(bau_outside_region[t,]),ex_forcing[t],bau[t]+rowSums(bau_outside_region[t,]),psi1_param=psi1,nu_param=nu)
     bau_mass[t,]=temp4[[1]]
     bau_temp[t,]=temp4[[2]]
     weather[t]=temperature[t,1]+naturalvariability[t]
@@ -152,8 +160,8 @@ model=function(time=1:81,
     evidence[t,]=temp5[[2]]
     
   }
-  a=list(time,distributions,policy,pbc,nadopters,adoptersfrac,emissions,mitigation,bau+bau_outside_region,mass,temperature,bau_temp,evidence,anomaly,year0:(year0+length(time)-1),totalemissions,naturalvariability,weather)
-  names(a)=c("time","distributions","policy","pbc","nadopters","adoptersfrac","emissions","mitigation","bau_total","mass","temp","bau_temp","evidence","anomaly","year","totalemissions","naturalvariability","weather")
+  a = list(time,distributions,policy,pbc,nadopters,adoptersfrac,emissions,mitigation,bau+bau_outside_region,mass,temperature,bau_temp,evidence,anomaly,year0:(year0+length(time)-1),totalemissions,naturalvariability,weather,emissions_outside,bau_outside_region)
+  names(a)=c("time","distributions","policy","pbc","nadopters","adoptersfrac","emissions","mitigation","bau_total","mass","temp","bau_temp","evidence","anomaly","year","totalemissions","naturalvariability","weather","emissions_outside","bau_outside_region")
   
   return(a)
 }

@@ -1,5 +1,6 @@
 # Capture the start time
 start_time <- Sys.time()
+options(error = quote({ traceback(); dump.frames(); }))
 
 print('Running, running, running, running away')
 setwd('~/Documents/Research/social-climate-model/code')
@@ -7,6 +8,7 @@ setwd('~/Documents/Research/social-climate-model/code')
 library(ggplot2)
 library(forcats)
 library(metR)
+library(geomtextpath)
 
 # Create a sequence of 81 numbers (you can adjust the length as needed)
 natvar1 <- rep(0, 81)
@@ -34,7 +36,7 @@ for (natvar_it in c(5)){
 
   source("src/model.R")  # Load the model script
   homophily_param01 = 0.7
-  m = model(shiftingbaselines = 1) #, natvar_multiplier=8, temperature_input=mat)
+  m = model(shiftingbaselines = 0, evidenceeffect=0.02) #, natvar_multiplier=8, temperature_input=mat)
 
   # Create a data frame with all the variables
   data <- data.frame(
@@ -51,53 +53,114 @@ for (natvar_it in c(5)){
 
 
   # Plot each variable using ggplot2
-  fig = ggplot(data, aes(x = m$year)) +
-                geom_line(aes(y = m$emissions, color = "emissions")) +
-                geom_line(aes(y = m$totalemissions, color = "totalemissions")) +
-                geom_line(aes(y = m$temp[,1], color = "temperature")) +
-                geom_line(aes(y = m$evidence[,1], color = "evidence")) +
-                geom_line(aes(y = m$anomaly, color = "anomaly"), linetype = "dashed") +
-                # Secondary y-axis variables, rescaled to fit within the range of 0 to 1.5 on the secondary axis
-                geom_line(aes(y = m$distributions[,1]/coeff, color = "opposed")) +
-                geom_line(aes(y = m$distributions[,2]/coeff, color = "neutral")) +
-                geom_line(aes(y = m$distributions[,3]/coeff, color = "support")) +
-                
-                # Combine both primary and secondary axes into a single scale_y_continuous call
-                scale_y_continuous(
-                  # Features of the first axis (primary y-axis)
-                  name = "Emissions, Total Emissions, Temperature, Evidence, and Anomaly",
-                  limits = c(-3, 30),  # Set the limits for the primary y-axis
-                  
-                  # Add a second axis and specify its features (secondary y-axis)
-                  sec.axis = sec_axis(~. * coeff, name = "Population Distributions")
-                ) +
-                labs(
-                  x = "Year",
-                  y = "Model output",
-                  title = "Model Outputs over Time (2020 to 2100)"
-                ) +
-                scale_color_manual(
-                  values = c("emissions" = "red", 
-                            "totalemissions" = "blue", 
-                            "temperature" = "purple", 
-                            "mass" = "orange", 
-                            "weather" = "brown", 
-                            "evidence" = "cyan", 
-                            "anomaly" = "pink",
-                            "opposed" = "yellow",
-                            "neutral" = "darkgray",
-                            "support" = "green")
-                ) +
-                theme_minimal() +
-                theme(
-                  legend.title = element_blank(),
-                  # Set white background for panel and plot
-                  panel.background = element_rect(fill = "white", color = NA),
-                  plot.background = element_rect(fill = "white", color = NA),
-                  panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
-                  panel.grid.minor = element_blank() # Optional: hide minor grid lines
-                )
+  # fig = ggplot(data, aes(x = m$year)) +
+  #               geom_line(aes(y = m$emissions, color = "OECD emissions")) +
+  #               geom_line(aes(y = m$totalemissions, color = "total emissions")) +
+  #               geom_line(aes(y = m$temp[,1], color = "temperature")) +
+  #               geom_line(aes(y = m$evidence[,1], color = "evidence")) +
+  #               geom_line(aes(y = m$anomaly, color = "anomaly"), linetype = "dashed") +
+  #               geom_line(aes(y = m$emissions_outside[,1], color = "Asia Emissions")) +
+  #               geom_line(aes(y = m$emissions_outside[,2], color = "LAM Emissions")) +
+  #               geom_line(aes(y = m$emissions_outside[,3], color = "MAF Emissions")) +
+  #               geom_line(aes(y = m$emissions_outside[,4], color = "Ref Emissions")) +
 
-  ggsave(paste("../results/shiftingBaselines_1", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig)
+  #               # Secondary y-axis variables, rescaled to fit within the range of 0 to 1.5 on the secondary axis
+  #               geom_line(aes(y = m$distributions[,1]/coeff, color = "opposed")) +
+  #               geom_line(aes(y = m$distributions[,2]/coeff, color = "neutral")) +
+  #               geom_line(aes(y = m$distributions[,2]/coeff, color = "support")) +
+                
+  #               # Combine both primary and secondary axes into a single scale_y_continuous call
+  #               scale_y_continuous(
+  #                 # Features of the first axis (primary y-axis)
+  #                 name = "Emissions, Total Emissions, Temperature, Evidence, and Anomaly",
+  #                 limits = c(-1, 21),  # Set the limits for the primary y-axis
+                  
+  #                 # Add a second axis and specify its features (secondary y-axis)
+  #                 sec.axis = sec_axis(~. * coeff, name = "Population Distributions")
+  #               ) +
+  #               labs(
+  #                 x = "Year",
+  #                 y = "Model output",
+  #                 title = "Model Outputs over Time (2020 to 2100)"
+  #               ) +
+  #               scale_color_manual(
+  #                 values = c("OECD emissions" = "red", 
+  #                           "total emissions" = "blue",
+  #                           "Asia Emissions" = "#f200ff",
+  #                           "LAM Emissions" = "#00ff66",
+  #                           "MAF Emissions" = "#ff8000",
+  #                           "Ref Emissions" = "blue", 
+  #                           "temperature" = "#a4f020", 
+  #                           "mass" = "orange", 
+  #                           "weather" = "brown", 
+  #                           "evidence" = "cyan", 
+  #                           "anomaly" = "pink",
+  #                           "opposed" = "yellow",
+  #                           "neutral" = "darkgray",
+  #                           "support" = "green")
+  #               ) +
+fig = ggplot(data, aes(x = m$year)) +
+    # Emissions lines
+    # geom_line(aes(y = m$emissions, color = "OECD emissions"), linetype = "solid", linewidth = 0.7) +
+    geom_textline(aes(y = m$emissions, color = "OECD emissions"), label="OECD emissions", linetype = "solid", linewidth = 0.7, vjust = -0.15, size=3, hjust = 0.2)+
+    geom_textline(aes(y = m$totalemissions, color = "Total emissions"), label="Total emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3, hjust=0.1) +
+    geom_textline(aes(y = m$emissions_outside[,1], color = "Asia Emissions"), label="Asia emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
+    geom_textline(aes(y = m$emissions_outside[,2], color = "LAM Emissions"), label="LAM emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
+    geom_textline(aes(y = m$emissions_outside[,3], color = "MAF Emissions"), label="MAF emissions", linetype = "solid", linewidth = 0.7, vjust=-0.3, size=3) +
+    geom_textline(aes(y = m$emissions_outside[,4], color = "Ref Emissions"), label="REF emissions", linetype = "solid", linewidth = 0.7, vjust=1.5, size=3) +
+
+    # Temperature-related lines
+    geom_line(aes(y = m$temp[,1], color = "Temperature"), linetype = "dotdash", linewidth = 0.9) +
+    geom_line(aes(y = m$evidence[,1], color = "Evidence"), linewidth = 0.9) +
+    geom_line(aes(y = m$anomaly, color = "Anomaly"), linetype = "dotdash", linewidth = 0.9) +
+
+    # Population distribution lines
+    geom_textline(aes(y = m$distributions[,1]/coeff, color = "Opposed"), label="Opposed", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=3, hjust=0.2) +
+    geom_textline(aes(y = m$distributions[,2]/coeff, color = "Neutral"), label="Neutral", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=3, hjust=0.2) +
+    geom_textline(aes(y = m$distributions[,3]/coeff, color = "Support"), label="Support", linetype = "longdash", linewidth = 0.9, vjust=1.5, size=3, hjust=0.2) +
+
+    # Adjust y-axes
+    scale_y_continuous(
+      name = "Emissions, Temperature, Evidence, and Anomaly",
+      limits = c(-1, 21), 
+      sec.axis = sec_axis(~. * coeff, name = "Population Distributions")
+    ) +
+    
+    # Labeling and title
+    labs(
+      x = "Year",
+      y = "Model output",
+      title = "Model Outputs over Time (2020 to 2100)"
+    ) +
+
+    # Updated color scheme using distinct, dark-pastel colors
+    scale_color_manual(
+      values = c(
+        "OECD emissions" = "#6a040f",       # Dark-pastel red
+        "Total emissions" = "#5f0f40",      # Dark-pastel purple
+        "Asia Emissions" = "#d00000",       # Dark-pastel green
+        "LAM Emissions" = "#e85d04",        # Dark-pastel blue
+        "MAF Emissions" = "#f48c06",        # Dark-pastel brown
+        "Ref Emissions" = "#ffba08",        # Dark-pastel red
+        "Temperature" = "#85C1E9",          # Light-pastel blue
+        "Evidence" = "#caf0f8",             # Light-pastel green
+        "Anomaly" = "#f4acb7",              # Light-pastel pink
+        "Opposed" = "#ee4a70",              # Dark-pastel red-pink
+        "Neutral" = "#8d99ae",              # Dark-pastel gray
+        "Support" = "#06d667"               # Dark-pastel gray
+      )
+    ) +
+    theme_minimal() +
+    theme(
+      legend.title = element_blank(),
+      # Set white background for panel and plot
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
+      panel.grid.minor = element_blank() # Optional: hide minor grid lines
+    )
+
+  # ggsave(paste("../results/default", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig)
+  ggsave(paste("../results/default-timeSeries.png", sep=""), plot=fig, width=16/2, height=9/2)
 
 }
