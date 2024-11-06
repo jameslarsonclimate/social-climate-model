@@ -108,9 +108,11 @@ forcefunc=function(force_opp=forcestrong1,force_neut=forceweak1,force_supp=force
 
 #Emissions depend on bau emissions, adoption of mitigative behaviours, and policy
 
-emissions=read.csv("../data/emissions_ssp3_rcp7.csv")
+# emissions=read.csv("../data/emissions_ssp3_rcp7.csv")
+emissions = read.csv("../data/emissions_ssp3_rcp7-moreRegions.csv")
 bau1=emissions[,3]/1000*12/(12+16+16) #conversion factor from MtCO2 per year to GtC per year
-bau_outside1=emissions[,4]/1000*12/(12+16+16)
+# bau_outside1=emissions[,4]/1000*12/(12+16+16)
+bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
 
 #the temp_emissionsparam parameter controls a feedback on baseline emissions from temperature change
 #by default it is set to zero, but distributions in monte carlo runs are drawn from Woodard, Davis and Randerson 2019, PNAS
