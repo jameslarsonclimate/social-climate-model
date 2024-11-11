@@ -29,33 +29,33 @@ emissionschange=function(bau_t,nadopters_t,policy_t,mitigation,t,temperature_t_1
   #outside region follows OECD mitigation pathway, with a lag - if lag is zero, effectively single region - same % reduction in outside region as inside - with emissions-temperature feedback correction
   # total_emissions_t=ifelse(lag==0,emissions_t+bau_outisde_t*(1-(bau_t-emissions_t)/bau_t),emissions_t+bau_outisde_t*(1-(bau_t_lag-emissions_t_lag)/bau_t_lag)*(1-temp_emissions*(temperature_t_1-temperature_t_lag)))
   
-  # Initialize total_emissions_t to start with emissions_t as the base emissions.
-  total_emissions_t <- emissions_t
+  # # Initialize total_emissions_t to start with emissions_t as the base emissions.
+  # total_emissions_t <- emissions_t
 
-  # Loop through each column in bau_outside_t (assuming bau_outside_t has one column per subdivision of the outside region)
-  for (i in 1:ncol(bau_outside_t)) {
+  # # Loop through each column in bau_outside_t (assuming bau_outside_t has one column per subdivision of the outside region)
+  # for (i in 1:ncol(bau_outside_t)) {
     
-    # Apply the emissions calculation formula for each subdivision of the "outside" region
-    total_emissions_t <- total_emissions_t + ifelse(
-      lag == 0,
-      bau_outside_t[, i] * (1 - (bau_t - emissions_t) / bau_t),  # Same region behavior if lag == 0
-      bau_outside_t[, i] * (1 - (bau_t_lag - emissions_t_lag) / bau_t_lag) * (1 - temp_emissions * (temperature_t_1 - temperature_t_lag))
-    )
-  }
-  # Loop through each column in bau_outside_t (assuming bau_outside_t has one column per subdivision of the outside region)
-  for (i in 1:4) {
+  #   # Apply the emissions calculation formula for each subdivision of the "outside" region
+  #   total_emissions_t <- total_emissions_t + ifelse(
+  #     lag == 0,
+  #     bau_outside_t[, i] * (1 - (bau_t - emissions_t) / bau_t),  # Same region behavior if lag == 0
+  #     bau_outside_t[, i] * (1 - (bau_t_lag - emissions_t_lag) / bau_t_lag) * (1 - temp_emissions * (temperature_t_1 - temperature_t_lag))
+  #   )
+  # }
+  # # Loop through each column in bau_outside_t (assuming bau_outside_t has one column per subdivision of the outside region)
+  # for (i in 1:4) {
     
-    # Apply the emissions calculation formula for each subdivision of the "outside" region
-    emissions_outside_t[i] <- ifelse(
-      lag == 0,
-      bau_outside_t[, i] * (1 - (bau_t - emissions_t) / bau_t),  # Same region behavior if lag == 0
-      bau_outside_t[, i] * (1 - (bau_t_lag - emissions_t_lag) / bau_t_lag) * (1 - temp_emissions * (temperature_t_1 - temperature_t_lag))
-    )
-  }
+  #   # Apply the emissions calculation formula for each subdivision of the "outside" region
+  #   emissions_outside_t[i] <- ifelse(
+  #     lag == 0,
+  #     bau_outside_t[, i] * (1 - (bau_t - emissions_t) / bau_t),  # Same region behavior if lag == 0
+  #     bau_outside_t[, i] * (1 - (bau_t_lag - emissions_t_lag) / bau_t_lag) * (1 - temp_emissions * (temperature_t_1 - temperature_t_lag))
+  #   )
+  # }
 
 
 
-  return(list(emissions_t,mitigation,total_emissions_t,emissions_outside_t))
+  return(list(emissions_t,mitigation))  # ,total_emissions_t,emissions_outside_t))
 }
 
 
