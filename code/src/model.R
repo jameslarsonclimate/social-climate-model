@@ -7,6 +7,32 @@ source("src/climate_component.R")
 source("src/cognition_component.R")
 load("../data/naturalvariability.Rdat")
 
+randomts <- function(timeseries) {
+  #returns a time series with the same spectral profile as the argument, but with randomly chosen phases
+  if(length(timeseries) < 81) {
+    # Run twice and concatenate
+    ft1 <- fft(timeseries)
+    N1 <- length(timeseries)
+    rphase1 <- runif(N1, min=0, max=360)
+    newft1 <- complex(real=abs(ft1)*cos(rphase1), imaginary=abs(ft1)*sin(rphase1))
+    output1 <- fft(newft1, inverse=TRUE)/N1
+    
+    ft2 <- fft(timeseries)
+    rphase2 <- runif(N1, min=0, max=360)
+    newft2 <- complex(real=abs(ft2)*cos(rphase2), imaginary=abs(ft2)*sin(rphase2))
+    output2 <- fft(newft2, inverse=TRUE)/N1
+    
+    output <- c(output1, output2)
+  } else {
+    # Run once
+    ft <- fft(timeseries)
+    N <- length(timeseries)
+    rphase <- runif(N, min=0, max=360)
+    newft <- complex(real=abs(ft)*cos(rphase), imaginary=abs(ft)*sin(rphase))
+    output <- fft(newft, inverse=TRUE)/N
+  }
+  return(output)
+}
 model=function(time=1:81,
               num_regions=5, # New parameter for number of regions
               # Convert single values to lists of length num_regions
@@ -45,7 +71,9 @@ model=function(time=1:81,
               year0=2020,
               natvar=NULL,
               natvar_multiplier = natvar_multiplier1,
+              historical=FALSE,
               temperature_input=NULL,
+              temperature_delta=NULL,
               policyopinionfeedback_param=policyopinionfeedback_01,
               lbd_param=lbd_param01,
               lag_param=lag_param01,
@@ -69,7 +97,8 @@ model=function(time=1:81,
   evidence = array(0, dim=c(length(time), 3, num_regions))
   anomaly = array(0, dim=c(length(time), num_regions))
   naturalvariability = array(0, dim=c(length(time), num_regions))
-  
+  natvarERA5 = array(0, dim=c(74, num_regions))
+
   # Initialize temperature and mass arrays (shared across regions)
   temperature = matrix(nrow=length(time), ncol=2)
   mass = matrix(nrow=length(time), ncol=3)
@@ -81,7 +110,19 @@ model=function(time=1:81,
         naturalvariability[,r]=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
       }
   }
-  if(!is.null(natvar)) naturalvariability=natvar
+  if(!is.null(natvar)) {
+      for(r in 1:num_regions) {
+        natvarERA5[,r] = read.csv("../data/naturalvariability_moreRegions.csv")[,r+1]
+        naturalvariability[,r] = if(historical == TRUE) {
+                                        c(natvarERA5[,r], Re(randomts(natvarERA5[,r]))[1:7])} else{
+                                        Re(randomts(natvarERA5[,r]))[1:length(time)]
+                                        }
+      }
+  }
+
+  if(is.null(temperature_delta)) { # simple conversion from Null to zeros
+   temperature_delta = array(0, dim=c(length(time), num_regions))
+  }
 
   # Initialize first timestep
   for(r in 1:num_regions) {
@@ -99,7 +140,7 @@ model=function(time=1:81,
   
   # Main temporal loop
   for(t in 2:length(time)) {
-    print(t)
+    # print(t)
     
     # Regional loop
     for(r in 1:num_regions) {
@@ -178,7 +219,7 @@ model=function(time=1:81,
     total_emissions[t] = sum(emissions[t,])
     
     #climate model
-    if(is.null(temperature_input)) {
+    if(is.null(temperature_input[r])) {
       temp3 = temperaturechange(
         temperature[t-1,],
         mass[t-1,],
@@ -192,10 +233,13 @@ model=function(time=1:81,
       temperature[t,] = temp3[[2]]
     }
     if(!is.null(temperature_input)) temperature=temperature_input
-
+    
+    # print(temperature[t,1])
+    # print(naturalvariability[t,r])
+    # print(temperature_delta[t,r])
     # Update regional weather and evidence
     for(r in 1:num_regions) {
-      weather[t,r] = temperature[t,1] + naturalvariability[t,r]
+      weather[t,r] = temperature[t,1] + naturalvariability[t,r] + temperature_delta[t,r]
       temp5 = anomalyfunc(weather[,r], t, biassedassimilation, shiftingbaselines)
       anomaly[t,r] = temp5[[1]]
       evidence[t,,r] = temp5[[2]]

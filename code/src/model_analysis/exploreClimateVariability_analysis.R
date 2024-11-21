@@ -18,15 +18,12 @@ natvar1[seq(10, 81, by = 10)] <- 5
 coeff = 0.1
 
 # Define the temperature matrix with 81 rows and 2 columns
-mat <- matrix(0, nrow = 81, ncol = 2)
+mat <- array(0, dim=c(length(time), 5))
 
 # First column values: start at 1, rise to 3 by index 41, drop to 1.5 by index 46, and stay at 1.5
-mat[1:41, 1] <- seq(1, 3, length.out = 41)   # Values from 1 to 3 by index 41
-mat[42:46, 1] <- seq(3, 1.5, length.out = 5) # Drop from 3 to 1.5 from index 41 to 46
-mat[47:81, 1] <- 1.5                        # Stay at 1.5 from index 46 to 81
-
-# Second column always 0
-mat[, 2] <- 0
+mat[1:41, 2] <- seq(1, 3, length.out = 41)   # Values from 1 to 3 by index 41
+mat[42:46, 2] <- seq(3, 1.5, length.out = 5) # Drop from 3 to 1.5 from index 41 to 46
+mat[47:81, 2] <- 1.5                        # Stay at 1.5 from index 46 to 81
 
 # for (natvar_it in seq(0, 20, 2)) {
 # for (natvar_it in c(5)){
@@ -37,16 +34,7 @@ mat[, 2] <- 0
 
 source("src/model.R")  # Load the model script
 homophily_param01 = 0.7
-m = model(shiftingbaselines = 0, evidenceeffect=0.02) #, natvar_multiplier=8, temperature_input=mat)
-
-# First check dimensions of input data
-print(dim(m$emissions))
-print(length(m$total_emissions))
-print(dim(m$temp))
-print(dim(m$evidence))
-print(dim(m$anomaly))
-print(dim(m$distributions))
-
+m = model(shiftingbaselines = 0, evidenceeffect=0.015)# , natvar=TRUE, historical=TRUE) #, natvar_multiplier=8, temperature_input=mat)
 
 # # Create a data frame with all the variables
 # data <- data.frame(
@@ -71,15 +59,7 @@ subplot_titles <- c(
   "MAF Emissions", "REF Emissions"
 )
 
-# # Calculate time periods
-# year_range <- range(m$year)
-# period_length <- ceiling((max(year_range) - min(year_range)) / 5)
-# start_years <- seq(min(year_range), max(year_range) - period_length, by=period_length)
-
 for(r in 1:5) {
-# Filter data for current period
-# year_start <- start_years[r]
-# year_end <- year_start + period_length
 
 # Create a data frame with all the variables
 data <- data.frame(
@@ -88,7 +68,7 @@ data <- data.frame(
   total_emissions = m$total_emissions,  #rowSums(m$emissions),             # Total emissions data
   temperature = m$temp[,1],                      # Surface temperature (first column)
   evidence = m$evidence[,1,r],                     # Evidence data (first column)
-  anomaly = m$anomaly[,r],                           # Climate anomaly
+  weather = m$weather[,r],                         # Weather
   opposed = m$distributions[,1,r],                 # Opposed distribution
   neutral = m$distributions[,2,r],                 # Neutral distribution
   support = m$distributions[,3,r]                  # Support distribution
@@ -109,8 +89,8 @@ plot_list[[r]] = ggplot(data, aes(x = m$year)) +
   
   # Temperature-related lines
   geom_line(aes(y = temperature, color = "Temperature"), linetype = "dotdash", linewidth = 0.9) +
-  geom_line(aes(y = evidence, color = "Evidence"), linewidth = 0.9) +
-  geom_line(aes(y = anomaly, color = "Anomaly"), linetype = "dotdash", linewidth = 0.9) +
+  # geom_line(aes(y = evidence, color = "Evidence"), linewidth = 0.9) +
+  geom_line(aes(y = weather, color = "Weather"), linetype = "dotdash", linewidth = 0.9) +
   
   # Population distribution lines
   geom_textline(aes(y = opposed/coeff, color = "Opposed"), label="Opp", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=2) +
@@ -150,7 +130,7 @@ plot_list[[r]] = ggplot(data, aes(x = m$year)) +
 combined_plot <- wrap_plots(plot_list, ncol = 3)
 
 # Save combined plot
-ggsave("../results/default-timeSeries-subplots.png", plot=combined_plot, 
+ggsave("../results/timeSeries-subplots.png", plot=combined_plot, 
       width=10, height=6, dpi=300)
 
 
