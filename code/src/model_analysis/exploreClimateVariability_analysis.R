@@ -35,8 +35,12 @@ for (natvar_it in c(5)){
   fileSaveSuffix = natvar_it
 
   source("src/model.R")  # Load the model script
+  emissions = read.csv("../data/emissions_ssp2_rcp45-moreRegions.csv")
+  bau1=emissions[,3]/1000*12/(12+16+16) # conversion factor from MtCO2 per year to GtC per year
+  bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
+
   homophily_param01 = 0.7
-  m = model(shiftingbaselines = 0, evidenceeffect=0.02) #, natvar_multiplier=8, temperature_input=mat)
+  m = model(shiftingbaselines = 1) # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
 
   # Create a data frame with all the variables
   data <- data.frame(
@@ -104,10 +108,10 @@ fig = ggplot(data, aes(x = m$year)) +
     # geom_line(aes(y = m$emissions, color = "OECD emissions"), linetype = "solid", linewidth = 0.7) +
     geom_textline(aes(y = m$emissions, color = "OECD emissions"), label="OECD emissions", linetype = "solid", linewidth = 0.7, vjust = -0.15, size=3, hjust = 0.2)+
     geom_textline(aes(y = m$totalemissions, color = "Total emissions"), label="Total emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3, hjust=0.1) +
-    geom_textline(aes(y = m$emissions_outside[,1], color = "Asia Emissions"), label="Asia emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
-    geom_textline(aes(y = m$emissions_outside[,2], color = "LAM Emissions"), label="LAM emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
-    geom_textline(aes(y = m$emissions_outside[,3], color = "MAF Emissions"), label="MAF emissions", linetype = "solid", linewidth = 0.7, vjust=-0.3, size=3) +
-    geom_textline(aes(y = m$emissions_outside[,4], color = "Ref Emissions"), label="REF emissions", linetype = "solid", linewidth = 0.7, vjust=1.5, size=3) +
+    # geom_textline(aes(y = m$emissions_outside[,1], color = "Asia Emissions"), label="Asia emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
+    # geom_textline(aes(y = m$emissions_outside[,2], color = "LAM Emissions"), label="LAM emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
+    # geom_textline(aes(y = m$emissions_outside[,3], color = "MAF Emissions"), label="MAF emissions", linetype = "solid", linewidth = 0.7, vjust=-0.3, size=3) +
+    # geom_textline(aes(y = m$emissions_outside[,4], color = "Ref Emissions"), label="REF emissions", linetype = "solid", linewidth = 0.7, vjust=1.5, size=3) +
 
     # Temperature-related lines
     geom_line(aes(y = m$temp[,1], color = "Temperature"), linetype = "dotdash", linewidth = 0.9) +

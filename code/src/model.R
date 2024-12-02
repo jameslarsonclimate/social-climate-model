@@ -90,12 +90,6 @@ model=function(time=1:81,
   
   mitigation=matrix(0,nrow=length(time),ncol=length(time)) #must be all zeroes to start
   
-
-  # if(is.null(temperature_input)) {
-  #     temperature=matrix(nrow=length(time),ncol=2)
-  #     temperature[1,]=temp_0
-  # }
-  # if(!is.null(temperature_input)) temperature=temperature_input
   temperature=matrix(nrow=length(time),ncol=2)
   temperature[1,]=temp_0
 
@@ -145,10 +139,6 @@ model=function(time=1:81,
         temperature[t,]=temp3[[2]]
       }
     if(!is.null(temperature_input)) temperature=temperature_input
-
-    # temp3=temperaturechange(temperature[t-1,],mass[t-1,],totalemissions[t],ex_forcing[t],bau[t]+bau_outside_region[t],psi1_param=psi1,nu_param=nu)
-    # mass[t,]=temp3[[1]]
-    # temperature[t,]=temp3[[2]]
     
     temp4=temperaturechange(bau_temp[t-1,],bau_mass[t-1,],bau[t]+rowSums(bau_outside_region[t,]),ex_forcing[t],bau[t]+rowSums(bau_outside_region[t,]),psi1_param=psi1,nu_param=nu)
     bau_mass[t,]=temp4[[1]]
