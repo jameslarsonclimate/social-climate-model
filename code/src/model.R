@@ -40,6 +40,7 @@ model=function(time=1:81,
                evidenceeffect=evidenceeffect1,
                biassedassimilation=biassedassimilation1,
                shiftingbaselines=shiftingbaselines1,
+               shiftingExtremes=FALSE,
                year0=2020,
                natvar=NULL,
                natvar_multiplier = natvar_multiplier1,
@@ -49,6 +50,10 @@ model=function(time=1:81,
                lag_param=lag_param01,
                temp_emissionsparam=temp_emissionsparam01
                ){
+  
+  if(shiftingExtremes==TRUE) {
+    source("src/cognition_component-extremeInfluence.R")
+  }
   
   startdist=c(frac_opp_0,frac_neut_0,1-(frac_opp_0+frac_neut_0))
   

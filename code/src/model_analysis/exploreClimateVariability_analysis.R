@@ -35,12 +35,15 @@ for (natvar_it in c(5)){
   fileSaveSuffix = natvar_it
 
   source("src/model.R")  # Load the model script
-  emissions = read.csv("../data/emissions_ssp2_rcp45-moreRegions.csv")
-  bau1=emissions[,3]/1000*12/(12+16+16) # conversion factor from MtCO2 per year to GtC per year
-  bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
+  # emissions = read.csv("../data/emissions_ssp2_rcp45-moreRegions.csv")
+  # bau1=emissions[,3]/1000*12/(12+16+16) # conversion factor from MtCO2 per year to GtC per year
+  # bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
 
   homophily_param01 = 0.7
-  m = model(shiftingbaselines = 1) # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
+  # frac_opp_01 = 1
+  # frac_neut_01 = 0
+  evidenceeffect1 = 0.18
+  m = model(shiftingbaselines = 1, shiftingExtremes = TRUE) # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
 
   # Create a data frame with all the variables
   data <- data.frame(
