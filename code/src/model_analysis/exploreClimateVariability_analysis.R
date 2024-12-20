@@ -40,11 +40,82 @@ for (natvar_it in c(5)){
   # bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
 
   homophily_param01 = 0.7
-  # frac_opp_01 = 1
-  # frac_neut_01 = 0
+  frac_opp_01 = 0.1
+  frac_neut_01 = 0.5
   evidenceeffect1 = 0.18
-  m = model(shiftingbaselines = 1, shiftingExtremes = TRUE) # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
+  shiftingbaselines1 = 1
+  # m = model() # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
 
+# Number of runs
+num_runs <- 1
+
+# Initialize a list to store the results of each run
+results_list <- vector("list", num_runs)
+
+# Run the model 20 times and store each result
+for (i in 1:num_runs) {
+  results_list[[i]] <- model()
+}
+
+# Initialize a list to accumulate the sums
+avg_results <- results_list[[1]]
+
+# Set all numeric elements to zero
+for (name in names(avg_results)) {
+  if (is.numeric(avg_results[[name]])) {
+    avg_results[[name]] <- 0
+  } else if (is.matrix(avg_results[[name]])) {
+    avg_results[[name]] <- matrix(0, nrow = nrow(avg_results[[name]]), ncol = ncol(avg_results[[name]]))
+  }
+}
+
+# Sum up the results from each run
+for (i in 1:num_runs) {
+  for (name in names(avg_results)) {
+    if (is.numeric(avg_results[[name]]) || is.matrix(avg_results[[name]])) {
+      avg_results[[name]] <- avg_results[[name]] + results_list[[i]][[name]]
+    }
+  }
+}
+
+# Calculate the average
+for (name in names(avg_results)) {
+  if (is.numeric(avg_results[[name]]) || is.matrix(avg_results[[name]])) {
+    avg_results[[name]] <- avg_results[[name]] / num_runs
+  }
+}
+
+# Use avg_results as your model output
+m <- avg_results
+
+params <- data.frame(
+  Parameter = c(
+    "evidenceeffect1",
+    "shiftingbaselines1",
+    "biassedassimilation1",
+    "frac_opp_01",
+    "frac_neut_01",
+    "lag_param01",
+    "lbd_param01",
+    "forcestrong1",
+    "forceweak1",
+    "homophily_param01"
+  ),
+  Value = c(
+    evidenceeffect1,
+    shiftingbaselines1,
+    biassedassimilation1,
+    frac_opp_01,
+    frac_neut_01,
+    lag_param01,
+    lbd_param01,
+    forcestrong1,
+    forceweak1,
+    homophily_param01
+  )
+)
+
+print(params, row.names = FALSE)
   # Create a data frame with all the variables
   data <- data.frame(
     time = seq(2020, 2100, length.out = 81),       # Time from 2020 to 2100
