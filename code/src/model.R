@@ -43,6 +43,7 @@ model=function(time=1:81,
                shiftingExtremes=FALSE,
                year0=2020,
                natvar=NULL,
+               historical=NULL,
                natvar_multiplier = natvar_multiplier1,
                temperature_input=NULL,
                policyopinionfeedback_param=policyopinionfeedback_01,
@@ -90,17 +91,15 @@ model=function(time=1:81,
   
     if(is.null(natvar)) {
       for(r in 1:1) {
-        naturalvariability[,r]=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
+        naturalvariability=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
       }
   }
   if(!is.null(natvar)) {
-      for(r in 1:1) {
-        natvarObs[,r] = read.csv("../data/giss_globaltemp_19501980anomaly_detrended2ndDeg.csv")[,2]
-        naturalvariability[,r] = if(historical == TRUE) {
-                                        c(natvarObs[,r], Re(randomts(natvarObs[,r]))[1:7])} else{
-                                        Re(randomts(natvarObs[,r]))[1:length(time)]
-                                        }
-      }
+    if(historical == TRUE) {
+        df <- read.csv("../data/giss_globaltemp_19501980anomaly_detrended2ndDeg.csv")
+        # Extract the last 81 rows of the second column
+        naturalvariability <- df[(nrow(df) - 80):nrow(df), 2]*natvar_multiplier/2
+    }
   }
 
 
@@ -124,9 +123,8 @@ model=function(time=1:81,
   bau_mass=matrix(nrow=length(time),ncol=3)
   bau_mass[1,]=mass_0
   
-  if(is.null(natvar)) naturalvariability=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
-  if(!is.null(natvar)) naturalvariability=natvar
-
+  # if(is.null(natvar)) naturalvariability=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
+  # if(!is.null(natvar)) naturalvariability=natvar
   
   weather=numeric(length=length(time))
   weather[1]=temperature[1,1]+naturalvariability[1]

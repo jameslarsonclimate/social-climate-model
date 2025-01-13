@@ -54,7 +54,7 @@ results_list <- vector("list", num_runs)
 
 # Run the model user-defined times and store each result
 for (i in 1:num_runs) {
-  results_list[[i]] <- model(shiftingExtremes=FALSE)
+  results_list[[i]] <- model(shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE)
 }
 
 # Initialize a list to accumulate the sums
@@ -190,9 +190,9 @@ fig = ggplot(data, aes(x = m$year)) +
     # geom_textline(aes(y = m$emissions_outside[,4], color = "Ref Emissions"), label="REF emissions", linetype = "solid", linewidth = 0.7, vjust=1.5, size=3) +
 
     # Temperature-related lines
-    geom_line(aes(y = m$temp[,1], color = "Temperature"), linetype = "dotdash", linewidth = 0.9) +
-    geom_line(aes(y = m$evidence[,1], color = "Evidence"), linewidth = 0.9) +
-    geom_line(aes(y = m$anomaly, color = "Anomaly"), linetype = "dotdash", linewidth = 0.9) +
+    geom_line(aes(y = m$weather, color = "Temperature"), linewidth = 0.9) +
+    # geom_line(aes(y = m$evidence[,1], color = "Evidence"), linewidth = 0.9) +
+    geom_line(aes(y = m$anomaly, color = "Anomaly"), linewidth = 0.9) +
 
     # Population distribution lines
     geom_textline(aes(y = m$distributions[,1]/coeff, color = "Opposed"), label="Opposed", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=3, hjust=0.2) +
@@ -225,6 +225,7 @@ fig = ggplot(data, aes(x = m$year)) +
         "Temperature" = "#85C1E9",          # Light-pastel blue
         "Evidence" = "#caf0f8",             # Light-pastel green
         "Anomaly" = "#f4acb7",              # Light-pastel pink
+        # "Weather" = "#000000",              # Light-pastel pink
         "Opposed" = "#ee4a70",              # Dark-pastel red-pink
         "Neutral" = "#8d99ae",              # Dark-pastel gray
         "Support" = "#06d667"               # Dark-pastel gray
