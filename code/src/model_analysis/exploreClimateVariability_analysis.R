@@ -39,9 +39,9 @@ for (natvar_it in c(5)){
   # bau1=emissions[,3]/1000*12/(12+16+16) # conversion factor from MtCO2 per year to GtC per year
   # bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
 
-  homophily_param01 = 0.7
-  frac_opp_01 = 0.1
-  frac_neut_01 = 0.5
+  # homophily_param01 = 0.7
+  frac_opp_01 = 1
+  frac_neut_01 = 0
   evidenceeffect1 = 0.18
   shiftingbaselines1 = 1
   # m = model() # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
@@ -52,9 +52,9 @@ num_runs <- 1
 # Initialize a list to store the results of each run
 results_list <- vector("list", num_runs)
 
-# Run the model 20 times and store each result
+# Run the model user-defined times and store each result
 for (i in 1:num_runs) {
-  results_list[[i]] <- model()
+  results_list[[i]] <- model(shiftingExtremes=FALSE)
 }
 
 # Initialize a list to accumulate the sums
@@ -99,7 +99,8 @@ params <- data.frame(
     "lbd_param01",
     "forcestrong1",
     "forceweak1",
-    "homophily_param01"
+    "homophily_param01",
+    "num_runs"
   ),
   Value = c(
     evidenceeffect1,
@@ -111,7 +112,8 @@ params <- data.frame(
     lbd_param01,
     forcestrong1,
     forceweak1,
-    homophily_param01
+    homophily_param1,
+    num_runs
   )
 )
 

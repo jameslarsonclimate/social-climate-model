@@ -65,6 +65,6 @@ anomalyfunc = function(weather, t, biassed_assimilation = 0, shifting_baseline =
                       c(anomaly * (1 + biassed_assimilation), anomaly, anomaly * (1 - biassed_assimilation)),
                       c(anomaly * (1 - biassed_assimilation), anomaly, anomaly * (1 + biassed_assimilation)))
   }
-  print(adj_weights)
+  # print(adj_weights)
   return(list(anomaly, evidence))
 }
