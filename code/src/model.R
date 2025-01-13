@@ -88,6 +88,22 @@ model=function(time=1:81,
   #   totalemissions[1]=(totalemissions[1]+bau_outside_region[1,i])*(1+(temp_emissionsparam*temp_0[1]))  # potential concern here of this scaling factor applied multiple times
   # }
   
+    if(is.null(natvar)) {
+      for(r in 1:1) {
+        naturalvariability[,r]=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
+      }
+  }
+  if(!is.null(natvar)) {
+      for(r in 1:1) {
+        natvarERA5[,r] = read.csv("../data/naturalvariability_moreRegions.csv")[,r+1]
+        naturalvariability[,r] = if(historical == TRUE) {
+                                        c(natvarERA5[,r], Re(randomts(natvarERA5[,r]))[1:7])} else{
+                                        Re(randomts(natvarERA5[,r]))[1:length(time)]
+                                        }
+      }
+  }
+
+
   emissions_outside = matrix(nrow=length(time), ncol=4)
   for (i in 1:ncol(emissions_outside)) {
     emissions_outside[1,i] = bau_outside_region[1,i]*(1+(temp_emissionsparam*temp_0[1]))
