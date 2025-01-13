@@ -95,10 +95,10 @@ model=function(time=1:81,
   }
   if(!is.null(natvar)) {
       for(r in 1:1) {
-        natvarERA5[,r] = read.csv("../data/naturalvariability_moreRegions.csv")[,r+1]
+        natvarObs[,r] = read.csv("../data/giss_globaltemp_19501980anomaly_detrended2ndDeg.csv")[,2]
         naturalvariability[,r] = if(historical == TRUE) {
-                                        c(natvarERA5[,r], Re(randomts(natvarERA5[,r]))[1:7])} else{
-                                        Re(randomts(natvarERA5[,r]))[1:length(time)]
+                                        c(natvarObs[,r], Re(randomts(natvarObs[,r]))[1:7])} else{
+                                        Re(randomts(natvarObs[,r]))[1:length(time)]
                                         }
       }
   }
