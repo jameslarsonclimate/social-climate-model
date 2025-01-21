@@ -34,7 +34,7 @@ library(patchwork) # For combining plots
 
 source("src/model.R")  # Load the model script
 homophily_param01 = 0.7
-m = model(shiftingbaselines = 0, evidenceeffect=0.015)# , natvar=TRUE, historical=TRUE) #, natvar_multiplier=8, temperature_input=mat)
+m = model(shiftingbaselines = 1, evidenceeffect=0.18)# , natvar=TRUE, historical=TRUE) #, natvar_multiplier=8, temperature_input=mat)
 
 # # Create a data frame with all the variables
 # data <- data.frame(
@@ -59,7 +59,7 @@ subplot_titles <- c(
   "MAF Emissions", "REF Emissions"
 )
 
-for(r in 1:5) {
+for(r in 1:3) {
 
 # Create a data frame with all the variables
 data <- data.frame(
@@ -80,25 +80,32 @@ data <- data.frame(
 # Create individual plot
 plot_list[[r]] = ggplot(data, aes(x = m$year)) +
   # Emissions lines
-  geom_textline(aes(y = emissions, color = "emissions"), label="emissions", linetype = "solid", linewidth = 0.7, vjust = -0.15, size=2) +
-  geom_textline(aes(y = total_emissions, color = "Total emissions"), label="Total", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=2) +
+  # geom_textline(aes(y = emissions, color = "emissions"), label="emissions", linetype = "solid", linewidth = 0.7, vjust = -0.15, size=2) +
+  # geom_textline(aes(y = total_emissions, color = "Total emissions"), label="Total", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=2) +
   # geom_textline(aes(y = m$emissions_outside[,1], color = "Asia Emissions"), label="Asia", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=2) +
   # geom_textline(aes(y = m$emissions_outside[,2], color = "LAM Emissions"), label="LAM", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=2) +
   # geom_textline(aes(y = m$emissions_outside[,3], color = "MAF Emissions"), label="MAF", linetype = "solid", linewidth = 0.7, vjust=-0.3, size=2) +
   # geom_textline(aes(y = m$emissions_outside[,4], color = "Ref Emissions"), label="REF", linetype = "solid", linewidth = 0.7, vjust=1.5, size=2) +
   
   # Temperature-related lines
-  geom_line(aes(y = temperature, color = "Temperature"), linetype = "dotdash", linewidth = 0.9) +
+  # geom_line(aes(y = temperature, color = "Temperature"), linetype = "dotdash", linewidth = 0.9) +
   # geom_line(aes(y = evidence, color = "Evidence"), linewidth = 0.9) +
-  geom_line(aes(y = weather, color = "Weather"), linetype = "dotdash", linewidth = 0.9) +
+  # geom_line(aes(y = weather, color = "Weather"), linetype = "dotdash", linewidth = 0.9) +
   
   # Population distribution lines
-  geom_textline(aes(y = opposed/coeff, color = "Opposed"), label="Opp", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=2) +
-  geom_textline(aes(y = neutral/coeff, color = "Neutral"), label="Neu", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=2) +
-  geom_textline(aes(y = support/coeff, color = "Support"), label="Sup", linetype = "longdash", linewidth = 0.9, vjust=1.5, size=2) +
+  # geom_textline(aes(y = opposed/coeff, color = "Opposed"), label="Opp", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=2) +
+  # geom_textline(aes(y = neutral/coeff, color = "Neutral"), label="Neu", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=2) +
+  # geom_textline(aes(y = support/coeff, color = "Support"), label="Sup", linetype = "longdash", linewidth = 0.9, vjust=1.5, size=2) +
   
+  geom_line(aes(y = emissions, color = "Emissions"), linewidth = 0.9) +
+  geom_line(aes(y = opposed/coeff, color = "Opposed"), linewidth = 0.9) +
+  geom_line(aes(y = neutral/coeff, color = "Neutral"), linewidth = 0.9) +
+  geom_line(aes(y = weather, color = "Temperature"), linewidth = 0.9) +
+  geom_line(aes(y = support/coeff, color = "Support"), linetype = "longdash", linewidth = 0.9) +
+
   scale_y_continuous(
-    name = "Emissions, Temperature, Evidence, and Anomaly",
+    # name = "Emissions, Temperature, Evidence, and Anomaly",
+    name = "Emissions and Temperature",
     limits = c(-1, 21), 
     sec.axis = sec_axis(~. * coeff, name = "Population Distributions")
   ) +
@@ -108,15 +115,18 @@ plot_list[[r]] = ggplot(data, aes(x = m$year)) +
   ) +
   scale_color_manual(
     values = c(
-      "Emissions" = "#6a040f", "Total emissions" = "#e85d04",
+      "Emissions" = "#000000", 
+      "Total emissions" = "#e85d04",
       # "Asia Emissions" = "#d00000", "LAM Emissions" = "#e85d04",
       # "MAF Emissions" = "#f48c06", "Ref Emissions" = "#ffba08",
-      "Temperature" = "#85C1E9", "Evidence" = "#caf0f8",
+      # "Temperature" = "#85C1E9", 
+      "Temperature" = "#ffba08",         
+      "Evidence" = "#caf0f8",
       "Anomaly" = "#f4acb7", "Opposed" = "#ee4a70",
       "Neutral" = "#8d99ae", "Support" = "#06d667"
     )
   ) +
-  theme_minimal() +
+  theme_minimal(base_size=18) +
   theme(
     legend.position = "none",
     panel.background = element_rect(fill = "white", color = NA),
@@ -130,8 +140,10 @@ plot_list[[r]] = ggplot(data, aes(x = m$year)) +
 combined_plot <- wrap_plots(plot_list, ncol = 3)
 
 # Save combined plot
+# ggsave("../results/timeSeries-subplots.png", plot=combined_plot, 
+#       width=10, height=6, dpi=300)
 ggsave("../results/timeSeries-subplots.png", plot=combined_plot, 
-      width=10, height=6, dpi=300)
+      width=16, height=9/2, dpi=300)
 
 
 # fig = ggplot(data, aes(x = m$year)) +
