@@ -58,7 +58,7 @@ results_list <- vector("list", num_runs)
 
 # Run the model user-defined times and store each result
 for (i in 1:num_runs) {
-  results_list[[i]] <- model(temperature_input=mat) #shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE)
+  results_list[[i]] <- model(temperature_input=mat) #shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE) # temperature_input=mat
 }
 
 # Initialize a list to accumulate the sums
@@ -195,7 +195,7 @@ fig = ggplot(data, aes(x = m$year)) +
     # geom_textline(aes(y = m$emissions_outside[,4], color = "Ref Emissions"), label="REF emissions", linetype = "solid", linewidth = 0.7, vjust=1.5, size=3) +
 
     # Temperature-related lines
-    geom_line(aes(y = m$weather, color = "Temperature"), linewidth = 0.9) +
+    # geom_line(aes(y = m$weather, color = "Temperature"), linewidth = 0.9) +
     # geom_textline(aes(y = m$weather, color = "Temperature"), label="Temperature anomalies", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
 
     # geom_line(aes(y = m$evidence[,1], color = "Evidence"), linewidth = 0.9) +
@@ -207,7 +207,8 @@ fig = ggplot(data, aes(x = m$year)) +
     # geom_textline(aes(y = m$distributions[,3]/coeff, color = "Support"), label="Support", linetype = "longdash", linewidth = 0.9, vjust=1.5, size=3, hjust=0.2) +
     geom_line(aes(y = m$distributions[,1]/coeff, color = "Opposed"), label="Opposed", linewidth = 0.9) +
     geom_line(aes(y = m$distributions[,2]/coeff, color = "Neutral"), label="Neutral", linewidth = 0.9) +
-    geom_line(aes(y = m$distributions[,3]/coeff, color = "Support"), label="Support", linewidth = 0.9) +
+    geom_line(aes(y = m$weather, color = "Temperature"), linewidth = 0.9) +
+    geom_line(aes(y = m$distributions[,3]/coeff, color = "Support"), linetype = "longdash", label="Support", linewidth = 0.9) +
 
     # Adjust y-axes
     scale_y_continuous(
@@ -243,14 +244,17 @@ fig = ggplot(data, aes(x = m$year)) +
         "Support" = "#06d667"               # Dark-pastel gray
       )
     ) +
-    theme_minimal() +
+    theme_minimal(base_size=18) +
     theme(
       legend.title = element_blank(),
       # Set white background for panel and plot
       panel.background = element_rect(fill = "white", color = NA),
       plot.background = element_rect(fill = "white", color = NA),
       panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
-      panel.grid.minor = element_blank() # Optional: hide minor grid lines
+      panel.grid.minor = element_blank(), # Optional: hide minor grid lines
+      legend.position = "bottom",
+      legend.direction = "horizontal"
+
     )
 
   # ggsave(paste("../results/default", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig)
