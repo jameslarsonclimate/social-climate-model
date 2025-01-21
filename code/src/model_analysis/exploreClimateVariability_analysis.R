@@ -11,19 +11,19 @@ library(metR)
 library(geomtextpath)
 library(patchwork) # For combining plots
 
-# Create a sequence of 81 numbers (you can adjust the length as needed)
-natvar1 <- rep(0, 81)
-natvar1[seq(10, 81, by = 10)] <- 5
+# # Create a sequence of 81 numbers (you can adjust the length as needed)
+# natvar1 <- rep(0, 81)
+# natvar1[seq(10, 81, by = 10)] <- 5
 
-coeff = 0.1
+# coeff = 0.1
 
-# Define the temperature matrix with 81 rows and 2 columns
-mat <- array(0, dim=c(length(time), 5))
+# # Define the temperature matrix with 81 rows and 2 columns
+# mat <- array(0, dim=c(length(time), 5))
 
-# First column values: start at 1, rise to 3 by index 41, drop to 1.5 by index 46, and stay at 1.5
-mat[1:41, 2] <- seq(1, 3, length.out = 41)   # Values from 1 to 3 by index 41
-mat[42:46, 2] <- seq(3, 1.5, length.out = 5) # Drop from 3 to 1.5 from index 41 to 46
-mat[47:81, 2] <- 1.5                        # Stay at 1.5 from index 46 to 81
+# # First column values: start at 1, rise to 3 by index 41, drop to 1.5 by index 46, and stay at 1.5
+# mat[1:41, 2] <- seq(1, 3, length.out = 41)   # Values from 1 to 3 by index 41
+# mat[42:46, 2] <- seq(3, 1.5, length.out = 5) # Drop from 3 to 1.5 from index 41 to 46
+# mat[47:81, 2] <- 1.5                        # Stay at 1.5 from index 46 to 81
 
 # for (natvar_it in seq(0, 20, 2)) {
 # for (natvar_it in c(5)){
