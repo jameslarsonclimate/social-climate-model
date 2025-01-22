@@ -101,7 +101,7 @@ plot_list[[r]] = ggplot(data, aes(x = m$year)) +
   geom_line(aes(y = opposed/coeff, color = "Opposed"), linewidth = 0.9) +
   geom_line(aes(y = neutral/coeff, color = "Neutral"), linewidth = 0.9) +
   geom_line(aes(y = weather, color = "Temperature"), linewidth = 0.9) +
-  geom_line(aes(y = support/coeff, color = "Support"), linetype = "longdash", linewidth = 0.9) +
+  geom_line(aes(y = support/coeff, color = "Support"), linewidth = 0.9) +
 
   scale_y_continuous(
     # name = "Emissions, Temperature, Evidence, and Anomaly",
