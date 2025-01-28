@@ -31,8 +31,8 @@ mat[21, 1] <- 5
 # Second column always 0
 mat[, 2] <- 0
 
-# for (natvar_it in seq(0, 20, 2)) {
-for (natvar_it in c(5)){
+for (natvar_it in seq(0, 1, 0.1)) {
+# for (natvar_it in c(5)){
 
   # fileSaveSuffix = ""
   # fileSaveSuffix = paste0("-natvar_", natvar_it) 
@@ -44,10 +44,12 @@ for (natvar_it in c(5)){
   # bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
 
   # homophily_param01 = 0.7
-  frac_opp_01 = 1
-  frac_neut_01 = 0
-  evidenceeffect1 = 0.18
+  frac_opp_01 = 0.1
+  frac_neut_01 = 0.1
+  evidenceeffect1 = 0.25
   shiftingbaselines1 = 1
+  biassedassimilation1 = natvar_it
+
   # m = model() # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
 
 # Number of runs
@@ -58,7 +60,7 @@ results_list <- vector("list", num_runs)
 
 # Run the model user-defined times and store each result
 for (i in 1:num_runs) {
-  results_list[[i]] <- model(temperature_input=mat) #shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE) # temperature_input=mat
+  results_list[[i]] <- model(natvar=TRUE, historical=TRUE) #shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE) # temperature_input=mat
 }
 
 # Initialize a list to accumulate the sums
@@ -205,15 +207,16 @@ fig = ggplot(data, aes(x = m$year)) +
     # geom_textline(aes(y = m$distributions[,1]/coeff, color = "Opposed"), label="Opposed", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=3, hjust=0.2) +
     # geom_textline(aes(y = m$distributions[,2]/coeff, color = "Neutral"), label="Neutral", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=3, hjust=0.2) +
     # geom_textline(aes(y = m$distributions[,3]/coeff, color = "Support"), label="Support", linetype = "longdash", linewidth = 0.9, vjust=1.5, size=3, hjust=0.2) +
-    geom_line(aes(y = m$distributions[,1]/coeff, color = "Opposed"), label="Opposed", linewidth = 0.9) +
-    geom_line(aes(y = m$distributions[,2]/coeff, color = "Neutral"), label="Neutral", linewidth = 0.9) +
-    geom_line(aes(y = m$weather, color = "Temperature"), linewidth = 0.9) +
-    geom_line(aes(y = m$distributions[,3]/coeff, color = "Support"), linetype = "longdash", label="Support", linewidth = 0.9) +
+    geom_line(aes(y = m$evidence[,1], color = "Evidence (neutral)"), linewidth = 0.9) +
+    geom_line(aes(y = m$distributions[,1]/coeff, color = "Opposed"), linewidth = 0.9) +
+    geom_line(aes(y = m$distributions[,2]/coeff, color = "Neutral"), linewidth = 0.9) +
+    geom_line(aes(y = m$weather, color = "Weather"), linewidth = 0.9) +
+    geom_line(aes(y = m$distributions[,3]/coeff, color = "Support"), linewidth = 0.9) +
 
     # Adjust y-axes
     scale_y_continuous(
       name = "Emissions and Temperature",
-      limits = c(-1, 21), 
+      limits = c(-2, 21), 
       sec.axis = sec_axis(~. * coeff, name = "Population Distributions")
     ) +
     
@@ -221,7 +224,7 @@ fig = ggplot(data, aes(x = m$year)) +
     labs(
       x = "Year",
       y = "Model output",
-      # title = "Model Outputs over Time (2020 to 2100)"
+      title = paste("BiassedAssimilation = ", fileSaveSuffix)  # "Model Outputs over Time (2020 to 2100)"
     ) +
 
     # Updated color scheme using distinct, dark-pastel colors
@@ -236,9 +239,9 @@ fig = ggplot(data, aes(x = m$year)) +
         "Ref Emissions" = "#ffba08",        # Dark-pastel red
         # "Temperature" = "#85C1E9",          # Light-pastel blue
         "Temperature" = "#ffba08",          # Light-pastel blue
-        "Evidence" = "#caf0f8",             # Light-pastel green
+        "Evidence (neutral)" = "#caf0f8",             # Light-pastel green
         "Anomaly" = "#f4acb7",              # Light-pastel pink
-        # "Weather" = "#000000",              # Light-pastel pink
+        "Weather" = "#ffba08",              # Light-pastel pink
         "Opposed" = "#ee4a70",              # Dark-pastel red-pink
         "Neutral" = "#8d99ae",              # Dark-pastel gray
         "Support" = "#06d667"               # Dark-pastel gray
@@ -257,7 +260,7 @@ fig = ggplot(data, aes(x = m$year)) +
 
     )
 
-  # ggsave(paste("../results/default", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig)
-  ggsave(paste("../results/default-timeSeries.png", sep=""), plot=fig, width=16/2, height=9/2)
+  ggsave(paste("../results/default", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig, width=8, height=6)
+  # ggsave(paste("../results/default-timeSeries.png", sep=""), plot=fig, width=16/2, height=9/2)
 
 }

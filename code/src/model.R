@@ -162,8 +162,8 @@ model=function(time=1:81,
     temp4=temperaturechange(bau_temp[t-1,],bau_mass[t-1,],bau[t]+rowSums(bau_outside_region[t,]),ex_forcing[t],bau[t]+rowSums(bau_outside_region[t,]),psi1_param=psi1,nu_param=nu)
     bau_mass[t,]=temp4[[1]]
     bau_temp[t,]=temp4[[2]]
-    # weather[t]=temperature[t,1]+naturalvariability[t]
-    weather[t]=temperature[t,1]
+    weather[t]=temperature[t,1]+naturalvariability[t]
+    # weather[t]=temperature[t,1]
     
     temp5=anomalyfunc(weather,t,biassedassimilation,shiftingbaselines)
     anomaly[t]=temp5[[1]]
