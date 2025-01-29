@@ -24,20 +24,106 @@ mat[1:41, 1] <- seq(1, 3, length.out = 41)   # Values from 1 to 3 by index 41
 mat[42:46, 1] <- seq(3, 1.5, length.out = 5) # Drop from 3 to 1.5 from index 41 to 46
 mat[47:81, 1] <- 1.5                        # Stay at 1.5 from index 46 to 81
 
+# Initialize an array of 81 zeros # Set the value at index 21 to be 5
+mat[1:81, 1] <- rep(0, 81)
+mat[21, 1] <- 5
+
 # Second column always 0
 mat[, 2] <- 0
 
-# for (natvar_it in seq(0, 20, 2)) {
-for (natvar_it in c(5)){
+for (natvar_it in seq(0, 1, 0.1)) {
+# for (natvar_it in c(5)){
 
   # fileSaveSuffix = ""
   # fileSaveSuffix = paste0("-natvar_", natvar_it) 
   fileSaveSuffix = natvar_it
 
   source("src/model.R")  # Load the model script
-  homophily_param01 = 0.7
-  m = model(shiftingbaselines = 0, evidenceeffect=0.02) #, natvar_multiplier=8, temperature_input=mat)
+  # emissions = read.csv("../data/emissions_ssp2_rcp45-moreRegions.csv")
+  # bau1=emissions[,3]/1000*12/(12+16+16) # conversion factor from MtCO2 per year to GtC per year
+  # bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
 
+  # homophily_param01 = 0.7
+  frac_opp_01 = 0.1
+  frac_neut_01 = 0.1
+  evidenceeffect1 = 0.25
+  shiftingbaselines1 = 1
+  biassedassimilation1 = natvar_it
+
+  # m = model() # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
+
+# Number of runs
+num_runs <- 1
+
+# Initialize a list to store the results of each run
+results_list <- vector("list", num_runs)
+
+# Run the model user-defined times and store each result
+for (i in 1:num_runs) {
+  results_list[[i]] <- model(natvar=TRUE, historical=TRUE) #shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE) # temperature_input=mat
+}
+
+# Initialize a list to accumulate the sums
+avg_results <- results_list[[1]]
+
+# Set all numeric elements to zero
+for (name in names(avg_results)) {
+  if (is.numeric(avg_results[[name]])) {
+    avg_results[[name]] <- 0
+  } else if (is.matrix(avg_results[[name]])) {
+    avg_results[[name]] <- matrix(0, nrow = nrow(avg_results[[name]]), ncol = ncol(avg_results[[name]]))
+  }
+}
+
+# Sum up the results from each run
+for (i in 1:num_runs) {
+  for (name in names(avg_results)) {
+    if (is.numeric(avg_results[[name]]) || is.matrix(avg_results[[name]])) {
+      avg_results[[name]] <- avg_results[[name]] + results_list[[i]][[name]]
+    }
+  }
+}
+
+# Calculate the average
+for (name in names(avg_results)) {
+  if (is.numeric(avg_results[[name]]) || is.matrix(avg_results[[name]])) {
+    avg_results[[name]] <- avg_results[[name]] / num_runs
+  }
+}
+
+# Use avg_results as your model output
+m <- avg_results
+
+params <- data.frame(
+  Parameter = c(
+    "evidenceeffect1",
+    "shiftingbaselines1",
+    "biassedassimilation1",
+    "frac_opp_01",
+    "frac_neut_01",
+    "lag_param01",
+    "lbd_param01",
+    "forcestrong1",
+    "forceweak1",
+    "homophily_param01",
+    "num_runs"
+  ),
+  Value = c(
+    evidenceeffect1,
+    shiftingbaselines1,
+    biassedassimilation1,
+    frac_opp_01,
+    frac_neut_01,
+    lag_param01,
+    lbd_param01,
+    forcestrong1,
+    forceweak1,
+    homophily_param1,
+    num_runs
+  )
+)
+
+print(params, row.names = FALSE)
   # Create a data frame with all the variables
   data <- data.frame(
     time = seq(2020, 2100, length.out = 81),       # Time from 2020 to 2100
@@ -102,27 +188,35 @@ for (natvar_it in c(5)){
 fig = ggplot(data, aes(x = m$year)) +
     # Emissions lines
     # geom_line(aes(y = m$emissions, color = "OECD emissions"), linetype = "solid", linewidth = 0.7) +
-    geom_textline(aes(y = m$emissions, color = "OECD emissions"), label="OECD emissions", linetype = "solid", linewidth = 0.7, vjust = -0.15, size=3, hjust = 0.2)+
-    geom_textline(aes(y = m$totalemissions, color = "Total emissions"), label="Total emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3, hjust=0.1) +
-    geom_textline(aes(y = m$emissions_outside[,1], color = "Asia Emissions"), label="Asia emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
-    geom_textline(aes(y = m$emissions_outside[,2], color = "LAM Emissions"), label="LAM emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
-    geom_textline(aes(y = m$emissions_outside[,3], color = "MAF Emissions"), label="MAF emissions", linetype = "solid", linewidth = 0.7, vjust=-0.3, size=3) +
-    geom_textline(aes(y = m$emissions_outside[,4], color = "Ref Emissions"), label="REF emissions", linetype = "solid", linewidth = 0.7, vjust=1.5, size=3) +
+    # geom_textline(aes(y = m$emissions, color = "OECD emissions"), label="OECD emissions", linetype = "solid", linewidth = 0.7, vjust = -0.15, size=3, hjust = 0.2)+
+    # geom_textline(aes(y = m$totalemissions, color = "Emissions"), label="Total emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3, hjust=0.1) +
+    geom_line(aes(y = m$totalemissions, color = "Emissions"), linewidth = 0.9) +
+    # geom_textline(aes(y = m$emissions_outside[,1], color = "Asia Emissions"), label="Asia emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
+    # geom_textline(aes(y = m$emissions_outside[,2], color = "LAM Emissions"), label="LAM emissions", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
+    # geom_textline(aes(y = m$emissions_outside[,3], color = "MAF Emissions"), label="MAF emissions", linetype = "solid", linewidth = 0.7, vjust=-0.3, size=3) +
+    # geom_textline(aes(y = m$emissions_outside[,4], color = "Ref Emissions"), label="REF emissions", linetype = "solid", linewidth = 0.7, vjust=1.5, size=3) +
 
     # Temperature-related lines
-    geom_line(aes(y = m$temp[,1], color = "Temperature"), linetype = "dotdash", linewidth = 0.9) +
-    geom_line(aes(y = m$evidence[,1], color = "Evidence"), linewidth = 0.9) +
-    geom_line(aes(y = m$anomaly, color = "Anomaly"), linetype = "dotdash", linewidth = 0.9) +
+    # geom_line(aes(y = m$weather, color = "Temperature"), linewidth = 0.9) +
+    # geom_textline(aes(y = m$weather, color = "Temperature"), label="Temperature anomalies", linetype = "solid", linewidth = 0.7, vjust=-0.15, size=3) +
+
+    # geom_line(aes(y = m$evidence[,1], color = "Evidence"), linewidth = 0.9) +
+    # geom_line(aes(y = m$anomaly, color = "Anomaly"), linewidth = 0.9) +
 
     # Population distribution lines
-    geom_textline(aes(y = m$distributions[,1]/coeff, color = "Opposed"), label="Opposed", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=3, hjust=0.2) +
-    geom_textline(aes(y = m$distributions[,2]/coeff, color = "Neutral"), label="Neutral", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=3, hjust=0.2) +
-    geom_textline(aes(y = m$distributions[,3]/coeff, color = "Support"), label="Support", linetype = "longdash", linewidth = 0.9, vjust=1.5, size=3, hjust=0.2) +
+    # geom_textline(aes(y = m$distributions[,1]/coeff, color = "Opposed"), label="Opposed", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=3, hjust=0.2) +
+    # geom_textline(aes(y = m$distributions[,2]/coeff, color = "Neutral"), label="Neutral", linetype = "longdash", linewidth = 0.9, vjust=-0.15, size=3, hjust=0.2) +
+    # geom_textline(aes(y = m$distributions[,3]/coeff, color = "Support"), label="Support", linetype = "longdash", linewidth = 0.9, vjust=1.5, size=3, hjust=0.2) +
+    geom_line(aes(y = m$evidence[,1], color = "Evidence (neutral)"), linewidth = 0.9) +
+    geom_line(aes(y = m$distributions[,1]/coeff, color = "Opposed"), linewidth = 0.9) +
+    geom_line(aes(y = m$distributions[,2]/coeff, color = "Neutral"), linewidth = 0.9) +
+    geom_line(aes(y = m$weather, color = "Weather"), linewidth = 0.9) +
+    geom_line(aes(y = m$distributions[,3]/coeff, color = "Support"), linewidth = 0.9) +
 
     # Adjust y-axes
     scale_y_continuous(
-      name = "Emissions, Temperature, Evidence, and Anomaly",
-      limits = c(-1, 21), 
+      name = "Emissions and Temperature",
+      limits = c(-2, 21), 
       sec.axis = sec_axis(~. * coeff, name = "Population Distributions")
     ) +
     
@@ -130,7 +224,7 @@ fig = ggplot(data, aes(x = m$year)) +
     labs(
       x = "Year",
       y = "Model output",
-      title = "Model Outputs over Time (2020 to 2100)"
+      title = paste("BiassedAssimilation = ", fileSaveSuffix)  # "Model Outputs over Time (2020 to 2100)"
     ) +
 
     # Updated color scheme using distinct, dark-pastel colors
@@ -138,29 +232,35 @@ fig = ggplot(data, aes(x = m$year)) +
       values = c(
         "OECD emissions" = "#6a040f",       # Dark-pastel red
         "Total emissions" = "#5f0f40",      # Dark-pastel purple
+        "Emissions" = "#5f0f40",      # Dark-pastel purple
         "Asia Emissions" = "#d00000",       # Dark-pastel green
         "LAM Emissions" = "#e85d04",        # Dark-pastel blue
         "MAF Emissions" = "#f48c06",        # Dark-pastel brown
         "Ref Emissions" = "#ffba08",        # Dark-pastel red
-        "Temperature" = "#85C1E9",          # Light-pastel blue
-        "Evidence" = "#caf0f8",             # Light-pastel green
+        # "Temperature" = "#85C1E9",          # Light-pastel blue
+        "Temperature" = "#ffba08",          # Light-pastel blue
+        "Evidence (neutral)" = "#caf0f8",             # Light-pastel green
         "Anomaly" = "#f4acb7",              # Light-pastel pink
+        "Weather" = "#ffba08",              # Light-pastel pink
         "Opposed" = "#ee4a70",              # Dark-pastel red-pink
         "Neutral" = "#8d99ae",              # Dark-pastel gray
         "Support" = "#06d667"               # Dark-pastel gray
       )
     ) +
-    theme_minimal() +
+    theme_minimal(base_size=18) +
     theme(
       legend.title = element_blank(),
       # Set white background for panel and plot
       panel.background = element_rect(fill = "white", color = NA),
       plot.background = element_rect(fill = "white", color = NA),
       panel.grid.major = element_line(color = "grey90"), # Optional: make grid lines light grey
-      panel.grid.minor = element_blank() # Optional: hide minor grid lines
+      panel.grid.minor = element_blank(), # Optional: hide minor grid lines
+      legend.position = "bottom",
+      legend.direction = "horizontal"
+
     )
 
-  # ggsave(paste("../results/default", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig)
-  ggsave(paste("../results/default-timeSeries.png", sep=""), plot=fig, width=16/2, height=9/2)
+  ggsave(paste("../results/default", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig, width=8, height=6)
+  # ggsave(paste("../results/default-timeSeries.png", sep=""), plot=fig, width=16/2, height=9/2)
 
 }
