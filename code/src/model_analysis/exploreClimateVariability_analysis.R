@@ -31,8 +31,8 @@ mat[21, 1] <- 5
 # Second column always 0
 mat[, 2] <- 0
 
-for (natvar_it in seq(0, 1, 0.1)) {
-# for (natvar_it in c(5)){
+# for (natvar_it in seq(0, 1, 0.1)) {
+for (natvar_it in c(5)){
 
   # fileSaveSuffix = ""
   # fileSaveSuffix = paste0("-natvar_", natvar_it) 
