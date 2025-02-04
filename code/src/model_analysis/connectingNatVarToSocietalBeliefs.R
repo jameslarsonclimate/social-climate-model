@@ -21,7 +21,7 @@ shiftingbaselines1 = 1
 replace_high_values <- FALSE       # If TRUE, replace values in long_distribution3 above a threshold with NaN
 high_threshold <- 0.95            # Threshold above which values will be replaced with NaN
 nRuns <- 10  # Number of model iterations
-frac_opp_01 = 0.0  #fraction of population opposing climate policy at t=0
+frac_opp_01 = 0.1  #fraction of population opposing climate policy at t=0
 frac_neut_01 = 0.3  #fraction of population neutral at t=0
 
 # Matrices to store correlation, regression slope, and correlation squared
@@ -125,7 +125,7 @@ for (i in seq_along(evidence_vals)) {
         geom_line(aes(y = NaturalVariability, color = "Natural Variability")) +
         geom_line(aes(y = Distribution3, color = "Distribution Column 3")) +
         labs(title = paste0("Standardized Time Series Plot (EvidenceEffect = ", evidence_vals[i],
-                            ", BiasedAssimilation = ", bias_vals[j], ", Lag = ", lagParam,
+                            ", BiasedAssimilation = ", bias_vals[j], ",\nLag = ", lagParam,
                             ", Opp = ", frac_opp_01, ", Neut = ", frac_neut_01,
                             ", nRuns = ", nRuns, ")"),
             y = "Standardized Value") +
@@ -187,7 +187,7 @@ fig = ggplot(cor_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = Correlation
     ) +
     labs(
       title = paste0("Correlation: m$naturalvariability vs m$distributions[,3] - Lag ", lagParam,
-                   ", Opp ", frac_opp_01, ", Neut ", frac_neut_01, ", nRuns ", nRuns),
+                   ", Opp ", frac_opp_01, ", \nNeut ", frac_neut_01, ", nRuns ", nRuns),
         x = "Evidence Effect",
         y = "Biased Assimilation") +
     theme_minimal() +
@@ -239,14 +239,14 @@ fig = ggplot(reg_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = RegressionS
     ) +
     labs(
       title = paste0("Regression Slope: m$distributions[,3] ~ m$naturalvariability - Lag ", lagParam,
-                    ", Opp ", frac_opp_01, ", Neut ", frac_neut_01, ", nRuns ", nRuns),
+                    ", Opp ", frac_opp_01, ", \nNeut ", frac_neut_01, ", nRuns ", nRuns),
         x = "Evidence Effect",
         y = "Biased Assimilation") +
     theme_minimal()
 
 outfile_reg <- paste0("../results/reg-NatVar_climateSupport-lag", lagParam,
                       "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, ".png")
-ggsave(outfile_reg, plot = fig_reg, width = 8, height = 6)
+ggsave(outfile_reg, plot = fig, width = 8, height = 6)
 
 # Construct a data frame for plotting
 df_timeseries <- data.frame(
