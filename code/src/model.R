@@ -49,7 +49,9 @@ model=function(time=1:81,
                policyopinionfeedback_param=policyopinionfeedback_01,
                lbd_param=lbd_param01,
                lag_param=lag_param01,
-               temp_emissionsparam=temp_emissionsparam01
+               temp_emissionsparam=temp_emissionsparam01,
+               controlRun=FALSE,  # Set to TRUE to use natural variability only (i.e., turn off background climate change)
+               noNatVar=FALSE     # Set to TRUE to use mean climate only (i.e., turn off natural variability)
                ){
   
   if(shiftingExtremes==TRUE) {
@@ -162,9 +164,16 @@ model=function(time=1:81,
     temp4=temperaturechange(bau_temp[t-1,],bau_mass[t-1,],bau[t]+rowSums(bau_outside_region[t,]),ex_forcing[t],bau[t]+rowSums(bau_outside_region[t,]),psi1_param=psi1,nu_param=nu)
     bau_mass[t,]=temp4[[1]]
     bau_temp[t,]=temp4[[2]]
-    weather[t]=temperature[t,1]+naturalvariability[t]
-    # weather[t]=temperature[t,1]
-    
+
+    # In the time loop when computing weather:
+    if (controlRun) {
+      weather[t] <- naturalvariability[t]
+    } else if (noNatVar) {
+      weather[t] <- temperature[t, 1]
+    } else {
+      weather[t] <- temperature[t, 1] + naturalvariability[t]
+    }
+
     temp5=anomalyfunc(weather,t,biassedassimilation,shiftingbaselines)
     anomaly[t]=temp5[[1]]
     evidence[t,]=temp5[[2]]

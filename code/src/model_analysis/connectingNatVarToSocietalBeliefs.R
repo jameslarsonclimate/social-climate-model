@@ -14,15 +14,17 @@ library(ggplot2)
 evidence_vals <- seq(0, 0.3, by = 0.03)       # Evidence effect values
 bias_vals     <- seq(0, 1,   by = 0.1)        # Biased assimilation values
 
-# Define a user-controllable lag (default = 1)
 # For a lag of 1, we compare naturalvariability[i] with distributions[i+1]
-lagParam <- 1
-shiftingbaselines1 = 1
-replace_high_values <- FALSE       # If TRUE, replace values in long_distribution3 above a threshold with NaN
-high_threshold <- 0.95            # Threshold above which values will be replaced with NaN
-nRuns <- 10  # Number of model iterations
-frac_opp_01 = 0.1  #fraction of population opposing climate policy at t=0
-frac_neut_01 = 0.3  #fraction of population neutral at t=0
+lagParam            <- 1     # Define a user-controllable lag (default = 1)
+shiftingbaselines1  <- 1     
+replace_high_values <- FALSE # If TRUE, replace values in long_distribution3 above a threshold with NaN
+high_threshold      <- 0.95  # Threshold above which values will be replaced with NaN
+nRuns               <- 10    # Number of model iterations
+frac_opp_01         <- 0.6   # Fraction of population opposing climate policy at t=0
+frac_neut_01        <- 0.3   # Fraction of population neutral at t=0
+temp_0              <- 0     # Initial temperature (°C) in 2020 = 1.21 °C
+ts_plot_evidence    <- 0.24  # Set the evidence effect value for timeseries plotting
+ts_plot_bias        <- 0.4   # Set the biased assimilation value for timeseries plotting
 
 # Matrices to store correlation, regression slope, and correlation squared
 cor_mat     <- matrix(NA, nrow = length(evidence_vals), ncol = length(bias_vals))
@@ -52,7 +54,8 @@ for (i in seq_along(evidence_vals)) {
     
     # Run the model {} times
     for (run_idx in 1:nRuns) {
-      m <- model()  # natvar = TRUE, historical = TRUE)
+      # *Remember, if changing controlRun or others, change titles in plots and save filenames*
+      m <- model(noNatVar=TRUE)  # natvar = TRUE, historical = TRUE)
       long_naturalvar    <- c(long_naturalvar,    m$naturalvariability)
       long_distribution3 <- c(long_distribution3, m$distributions[,3])
 
@@ -67,6 +70,9 @@ for (i in seq_along(evidence_vals)) {
       
       # Save the final value of this run (using the optionally replaced distr_vec)
       run_final_dist[run_idx] <- tail(distr_vec, 1)
+
+      # # # Save the average value of climate supporter frac of this run (using the optionally replaced distr_vec)
+      # run_final_dist[run_idx] <- mean(distr_vec, na.rm = TRUE)
 
       # Create lagged vectors with support for both positive and negative lags:
       end_idx <- length(natvar_vec)
@@ -101,7 +107,9 @@ for (i in seq_along(evidence_vals)) {
     final_dist_mat[i,j] <- mean(run_final_dist, na.rm = TRUE)
 
     # If certain conditions are met, plot the time series along with the regression fit line
-    if (evidence_vals[i] == 0.24 && bias_vals[j] == 0.2) {
+    # if (evidence_vals[i] == 0.09 && bias_vals[j] == 0.7) {
+    if (round(evidence_vals[i], 2) == ts_plot_evidence && round(bias_vals[j], 2) == ts_plot_bias) {
+      print('Plotting time series...')
       # Create a time axis (one value per observation, starting 2020)
       time_full <- seq(2020, by = 1, length.out = length(long_naturalvar))
       
@@ -135,10 +143,13 @@ for (i in seq_along(evidence_vals)) {
       print(ts_plot)
       
       # Save the standardized time series plot to the "../results/" directory
-      outfile <- paste0("../results/ts_plot_Evidence", evidence_vals[i], 
-                        "_Bias", bias_vals[j], "_lag", lagParam,
-                        "_opp", frac_opp_01, "_neut", frac_neut_01,
-                        "_nRuns", nRuns, ".png")
+      # outfile <- paste0("../results/ts_plot_Evidence", evidence_vals[i], 
+      #                   "_Bias", bias_vals[j], "_lag", lagParam,
+      #                   "_opp", frac_opp_01, "_neut", frac_neut_01,
+      #                   "_nRuns", nRuns, ".png")
+      outfile <- paste0("../results/ts_plot-NatVar_climateSupport-lag", lagParam,
+                  "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, 
+                  "_Evidence", evidence_vals[i], "_Bias", bias_vals[j], ".png")
       ggsave(filename = outfile, plot = ts_plot, width = 10, height = 5)    }
   }
 }
@@ -156,15 +167,15 @@ cor_df <- melt(cor_mat, varnames = c("i", "j"), value.name = "Correlation")
 cor_df$EvidenceEffect <- evidence_vals[cor_df$i]
 cor_df$BiasedAssim    <- bias_vals[cor_df$j]
 
-# Regression DataFrame
-reg_df <- melt(reg_mat, varnames = c("i", "j"), value.name = "RegressionSlope")
-reg_df$EvidenceEffect <- evidence_vals[reg_df$i]
-reg_df$BiasedAssim    <- bias_vals[reg_df$j]
+# # Regression DataFrame
+# reg_df <- melt(reg_mat, varnames = c("i", "j"), value.name = "RegressionSlope")
+# reg_df$EvidenceEffect <- evidence_vals[reg_df$i]
+# reg_df$BiasedAssim    <- bias_vals[reg_df$j]
 
-# Correlation Squared DataFrame
-cor_sq_df <- melt(cor_sq_mat, varnames = c("i", "j"), value.name = "CorrelationSquared")
-cor_sq_df$EvidenceEffect <- evidence_vals[cor_sq_df$i]
-cor_sq_df$BiasedAssim    <- bias_vals[cor_sq_df$j]
+# # Correlation Squared DataFrame
+# cor_sq_df <- melt(cor_sq_mat, varnames = c("i", "j"), value.name = "CorrelationSquared")
+# cor_sq_df$EvidenceEffect <- evidence_vals[cor_sq_df$i]
+# cor_sq_df$BiasedAssim    <- bias_vals[cor_sq_df$j]
 
 # Final distribution values data frame (mean final value for each parameter pair)
 final_dist_df <- melt(final_dist_mat, varnames = c("i", "j"), value.name = "FinalValue")
@@ -178,6 +189,7 @@ fig = ggplot(cor_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = Correlation
       low = "blue", mid = "white", high = "red",
       midpoint = 0, limits = c(-0.5, 0.5),
       breaks = seq(-0.5, 0.5, by = 0.1),
+      labels = function(x) sprintf("%.1f", x), # ensures standard decimal formatting with 1 decimal place
       oob = scales::oob_squish,    # Squish out-of-bound values to the limits
       guide = guide_colorbar(
         barwidth = 1.5,    # adjust width as needed
@@ -187,7 +199,8 @@ fig = ggplot(cor_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = Correlation
     ) +
     labs(
       title = paste0("Correlation: m$naturalvariability vs m$distributions[,3] - Lag ", lagParam,
-                   ", Opp ", frac_opp_01, ", \nNeut ", frac_neut_01, ", nRuns ", nRuns),
+                   ", Opp ", frac_opp_01, ", \nNeut ", frac_neut_01, ", nRuns ", nRuns, ", temp_0 ", temp_0,
+                   "noNatVar"),
         x = "Evidence Effect",
         y = "Biased Assimilation") +
     theme_minimal() +
@@ -201,7 +214,8 @@ fig = ggplot(cor_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = Correlation
     )
 
 outfile_corr <- paste0("../results/corr-NatVar_climateSupport-lag", lagParam,
-                       "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, ".png")
+                       "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, 
+                       "_temp_0", temp_0, "_noNatVar.png")
 ggsave(outfile_corr, plot = fig, width = 8, height = 6)
 
 # # Plot the correlation squared heatmap
@@ -224,39 +238,39 @@ ggsave(outfile_corr, plot = fig, width = 8, height = 6)
 
 # ggsave(paste0("../results/corrSq-NatVar_climateSupport-lag", lagParam, ".png"), plot = fig, width = 8, height = 6)
 
-# Plot the regression slope heatmap
-fig = ggplot(reg_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = RegressionSlope)) +
-    geom_tile() +
-    scale_fill_gradient2(
-      low = "blue", mid = "white", high = "red",
-      midpoint = 0, limits = c(-0.5, 0.5),
-      breaks = seq(-0.5, 0.5, by = 0.1),
-      guide = guide_colorbar(
-        barwidth = 1.5,    # adjust width as needed
-        barheight = 15,    # makes the colorbar longer
-        title.position = "top"
-      )
-    ) +
-    labs(
-      title = paste0("Regression Slope: m$distributions[,3] ~ m$naturalvariability - Lag ", lagParam,
-                    ", Opp ", frac_opp_01, ", \nNeut ", frac_neut_01, ", nRuns ", nRuns),
-        x = "Evidence Effect",
-        y = "Biased Assimilation") +
-    theme_minimal()
+# # Plot the regression slope heatmap
+# fig = ggplot(reg_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = RegressionSlope)) +
+#     geom_tile() +
+#     scale_fill_gradient2(
+#       low = "blue", mid = "white", high = "red",
+#       midpoint = 0, limits = c(-0.5, 0.5),
+#       breaks = seq(-0.5, 0.5, by = 0.1),
+#       guide = guide_colorbar(
+#         barwidth = 1.5,    # adjust width as needed
+#         barheight = 15,    # makes the colorbar longer
+#         title.position = "top"
+#       )
+#     ) +
+#     labs(
+#       title = paste0("Regression Slope: m$distributions[,3] ~ m$naturalvariability - Lag ", lagParam,
+#                     ", Opp ", frac_opp_01, ", \nNeut ", frac_neut_01, ", nRuns ", nRuns),
+#         x = "Evidence Effect",
+#         y = "Biased Assimilation") +
+#     theme_minimal()
 
-outfile_reg <- paste0("../results/reg-NatVar_climateSupport-lag", lagParam,
-                      "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, ".png")
-ggsave(outfile_reg, plot = fig, width = 8, height = 6)
+# outfile_reg <- paste0("../results/reg-NatVar_climateSupport-lag", lagParam,
+#                       "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, ".png")
+# ggsave(outfile_reg, plot = fig, width = 8, height = 6)
 
-# Construct a data frame for plotting
-df_timeseries <- data.frame(
-  Year = seq(2020, by = 1, length.out = length(m$naturalvariability)),
-  NatVarZ = (m$naturalvariability - mean(m$naturalvariability)) / sd(m$naturalvariability),
-  Dist3Z  = (m$distributions[,3] - mean(m$distributions[,3])) / sd(m$distributions[,3])
-)
+# # Construct a data frame for plotting
+# df_timeseries <- data.frame(
+#   Year = seq(2020, by = 1, length.out = length(m$naturalvariability)),
+#   NatVarZ = (m$naturalvariability - mean(m$naturalvariability)) / sd(m$naturalvariability),
+#   Dist3Z  = (m$distributions[,3] - mean(m$distributions[,3])) / sd(m$distributions[,3])
+# )
 
-# Example dimensions for a plot twice as wide as tall in an interactive environment:
-options(repr.plot.width = 10, repr.plot.height = 5)
+# # Example dimensions for a plot twice as wide as tall in an interactive environment:
+# options(repr.plot.width = 10, repr.plot.height = 5)
 
 # # Plot
 # ggplot(df_timeseries, aes(x = Year)) +

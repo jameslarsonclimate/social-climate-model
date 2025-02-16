@@ -45,22 +45,23 @@ for (natvar_it in c(5)){
 
   # homophily_param01 = 0.7
   frac_opp_01 = 0.1
-  frac_neut_01 = 0.1
-  evidenceeffect1 = 0.25
+  frac_neut_01 = 0.01
+  evidenceeffect1 = 0.15
   shiftingbaselines1 = 1
-  biassedassimilation1 = natvar_it
+  biassedassimilation1 = 0.5
+  temp_0 = 0
 
   # m = model() # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
 
-# Number of runs
-num_runs <- 1
+  # Number of runs
+  num_runs <- 1
 
-# Initialize a list to store the results of each run
-results_list <- vector("list", num_runs)
+  # Initialize a list to store the results of each run
+  results_list <- vector("list", num_runs)
 
-# Run the model user-defined times and store each result
-for (i in 1:num_runs) {
-  results_list[[i]] <- model(natvar=TRUE, historical=TRUE) #shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE) # temperature_input=mat
+  # Run the model user-defined times and store each result
+  for (i in 1:num_runs) {
+    results_list[[i]] <- model(controlRun=TRUE) #shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE) # temperature_input=mat
 }
 
 # Initialize a list to accumulate the sums
@@ -260,6 +261,7 @@ fig = ggplot(data, aes(x = m$year)) +
 
     )
 
+  print(fig)
   ggsave(paste("../results/default", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig, width=8, height=6)
   # ggsave(paste("../results/default-timeSeries.png", sep=""), plot=fig, width=16/2, height=9/2)
 
