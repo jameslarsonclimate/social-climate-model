@@ -55,12 +55,12 @@ for (i in seq_along(evidence_vals)) {
     # Run the model {} times
     for (run_idx in 1:nRuns) {
       # *Remember, if changing controlRun or others, change titles in plots and save filenames*
-      m <- model(noNatVar=TRUE)  # natvar = TRUE, historical = TRUE)
-      long_naturalvar    <- c(long_naturalvar,    m$naturalvariability)
+      m <- model(controlRun=TRUE) # noNatVar=TRUE)  # natvar = TRUE, historical = TRUE)
+      long_naturalvar    <- c(long_naturalvar,    m$weather) # m$naturalvariability), m$temp[,1]
       long_distribution3 <- c(long_distribution3, m$distributions[,3])
 
       # Get this iteration's time series
-      natvar_vec <- m$naturalvariability
+      natvar_vec <- m$weather # m$naturalvariability, m$temp[,1]
       distr_vec  <- m$distributions[,3]
 
       # Optionally replace values greater than high_threshold with NaN
@@ -135,7 +135,7 @@ for (i in seq_along(evidence_vals)) {
         labs(title = paste0("Standardized Time Series Plot (EvidenceEffect = ", evidence_vals[i],
                             ", BiasedAssimilation = ", bias_vals[j], ",\nLag = ", lagParam,
                             ", Opp = ", frac_opp_01, ", Neut = ", frac_neut_01,
-                            ", nRuns = ", nRuns, ")"),
+                            ", nRuns = ", nRuns, "_)"),
             y = "Standardized Value") +
         theme_minimal() +
         theme(legend.title = element_blank(), aspect.ratio = 0.5)
@@ -187,8 +187,8 @@ fig = ggplot(cor_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = Correlation
     geom_tile() +
     scale_fill_gradient2(
       low = "blue", mid = "white", high = "red",
-      midpoint = 0, limits = c(-0.5, 0.5),
-      breaks = seq(-0.5, 0.5, by = 0.1),
+      midpoint = 0, limits = c(-1, 1),
+      breaks = seq(-1, 1, by = 0.2),
       labels = function(x) sprintf("%.1f", x), # ensures standard decimal formatting with 1 decimal place
       oob = scales::oob_squish,    # Squish out-of-bound values to the limits
       guide = guide_colorbar(
@@ -198,9 +198,9 @@ fig = ggplot(cor_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = Correlation
       )
     ) +
     labs(
-      title = paste0("Correlation: m$naturalvariability vs m$distributions[,3] - Lag ", lagParam,
+      title = paste0("Correlation: m$weather vs m$distributions[,3] - Lag ", lagParam,  # temp[,1]
                    ", Opp ", frac_opp_01, ", \nNeut ", frac_neut_01, ", nRuns ", nRuns, ", temp_0 ", temp_0,
-                   "noNatVar"),
+                   "_noClimate"),
         x = "Evidence Effect",
         y = "Biased Assimilation") +
     theme_minimal() +
@@ -213,9 +213,9 @@ fig = ggplot(cor_df, aes(x = EvidenceEffect, y = BiasedAssim, fill = Correlation
       inherit.aes = FALSE
     )
 
-outfile_corr <- paste0("../results/corr-NatVar_climateSupport-lag", lagParam,
+outfile_corr <- paste0("../results/corr-weather_climateSupport-lag", lagParam,
                        "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, 
-                       "_temp_0", temp_0, "_noNatVar.png")
+                       "_temp_0", temp_0, "_noClimate.png")
 ggsave(outfile_corr, plot = fig, width = 8, height = 6)
 
 # # Plot the correlation squared heatmap

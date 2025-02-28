@@ -7,14 +7,14 @@ library(reshape2)
 # ---------------------------------------------------------------------------
 # User-specified fixed parameters for the model run:
 evidenceeffect1      <- 0.15  # Fixed evidence effect value
-biassedassimilation1 <- 0.5   # Fixed biased assimilation value
+biassedassimilation1 <- 0.9   # Fixed biased assimilation value
 
 # For a lag of 1, we compare naturalvariability[i] with distributions[i+1]
 lagParam            <- 1     # Define a user-controllable lag (default = 1)
 shiftingbaselines1  <- 1     
 replace_high_values <- FALSE # If TRUE, replace values in long_distribution3 above a threshold with NaN
 high_threshold      <- 0.95  # Threshold for high values
-nRuns               <- 50     # Number of model iterations
+nRuns               <- 10     # Number of model iterations
 temp_0              <- 0     # Initial temperature
 
 # Timeseries plot parameters for fractions (if desired)
@@ -60,13 +60,13 @@ for (i in seq_along(opp_vals)) {
     # Run the model nRuns times
     for (run_idx in 1:nRuns) {
       # Run the model 
-      m <- model(controlRun = TRUE)
+      m <- model()  # controlRun = TRUE
       
       # Concatenate full series across runs for potential timeseries plotting
-      long_naturalvar    <- c(long_naturalvar,    m$naturalvariability)
+      long_naturalvar    <- c(long_naturalvar,    m$weather)  # m$naturalvariability)
       long_distribution3 <- c(long_distribution3, m$distributions[,3])
       
-      natvar_vec <- m$naturalvariability
+      natvar_vec <- m$weather  # m$naturalvariability
       distr_vec  <- m$distributions[,3]
       
       # Optionally replace high values with NaN
@@ -130,7 +130,7 @@ for (i in seq_along(opp_vals)) {
                             ", BiassedAssimilation = ", biassedassimilation1, 
                             " | Varying Init Fractions: Opp = ", frac_opp_01,
                             ", Neut = ", frac_neut_01, ", Lag = ", lagParam,
-                            ", nRuns = ", nRuns, ")"),
+                            ", nRuns = ", nRuns, ""),
              y = "Standardized Value") +
         theme_minimal() +
         theme(legend.title = element_blank(), aspect.ratio = 0.5)
@@ -166,25 +166,25 @@ fig <- ggplot(cor_df, aes(x = FracOpp, y = FracNeut, fill = Correlation)) +
   geom_tile() +
   scale_fill_gradient2(
     low = "blue", mid = "white", high = "red",
-    midpoint = 0, limits = c(-0.6, 0.6),
-    breaks = seq(-0.6, 0.6, by = 0.1),
+    midpoint = 0, limits = c(-1, 1),
+    breaks = seq(-1, 1, by = 0.2),
     labels = function(x) sprintf("%.1f", x),
     oob = scales::oob_squish,
     guide = guide_colorbar(barwidth = 1.5, barheight = 15, title.position = "top")
   ) +
   # scale_x_continuous(breaks = seq(0, 1, by = 0.2), limits = c(0, 1), expand = c(0, 0)) +
   # scale_y_continuous(breaks = seq(0, 1, by = 0.2), limits = c(0, 1), expand = c(0, 0)) +
-  labs(title = paste0("Correlation: m$naturalvariability vs m$distributions[,3]\n",
+  labs(title = paste0("Correlation: m$weather vs m$distributions[,3]\n",  # m$naturalvariability vs
                       "Varying Init Fractions (Opp & Neut) - Lag ", lagParam,
                       "\nFixed: EvidenceEffect = ", evidenceeffect1, ", BiassedAssimilation = ", biassedassimilation1,
-                      ", nRuns = ", nRuns),
+                      ", nRuns = ", nRuns, ""),
        x = "Fraction Opposing", y = "Fraction Neutral") +
   theme_minimal() +
   geom_text(data = final_dist_df, 
             mapping = aes(x = FracOpp, y = FracNeut, label = sprintf("%.2f", FinalValue)),
             color = "black", size = 4, inherit.aes = FALSE)
 
-outfile_corr <- paste0("../results/corr-NatVar_climateSupport-lag", lagParam,
+outfile_corr <- paste0("../results/corr-weather_climateSupport-lag", lagParam,
                        "_oppRange", round(min(opp_vals),2), "to", round(max(opp_vals),2),
                        "_neutRange", round(min(neut_vals),2), "to", round(max(neut_vals),2),
                         "_Evidence", evidenceeffect1,
