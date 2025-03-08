@@ -53,3 +53,38 @@ compute_regression_stats <- function(x, y) {
               slope = slope, 
               intercept = intercept))
 }
+
+
+# Function to identify exactly seq_length consecutive positive/negative anomalies
+identify_anomaly_sequences <- function(anomaly_vector, seq_length) {
+  # Initialize result vector
+  result <- rep(FALSE, length(anomaly_vector))
+  
+  # We need a vector with length at least seq_length
+  if (length(anomaly_vector) < seq_length) return(result)
+  
+  # Count consecutive values of the same sign
+  count <- 1
+  sign_value <- sign(anomaly_vector[1])
+  
+  # Loop through the vector starting from the second value
+  for (i in 2:length(anomaly_vector)) {
+    current_sign <- sign(anomaly_vector[i])
+    
+    # If the sign is the same and non-zero, increase counter
+    if (current_sign == sign_value && current_sign != 0) {
+      count <- count + 1
+      
+      # Mark only exactly the seq_length-th consecutive value
+      if (count == seq_length) {
+        result[i] <- TRUE
+      }
+    } else {
+      # Reset counter and update sign when sequence breaks
+      count <- 1
+      sign_value <- current_sign
+    }
+  }
+  
+  return(result)
+}
