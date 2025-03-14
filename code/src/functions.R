@@ -56,12 +56,15 @@ compute_regression_stats <- function(x, y) {
 
 
 # Function to identify exactly seq_length consecutive positive/negative anomalies
-identify_anomaly_sequences <- function(anomaly_vector, seq_length) {
+identify_anomaly_sequences <- function(anomaly_vector, seq_length, sign_filter = "both") {
   # Initialize result vector
   result <- rep(FALSE, length(anomaly_vector))
   
   # We need a vector with length at least seq_length
   if (length(anomaly_vector) < seq_length) return(result)
+  
+  # Validate sign_filter parameter
+  sign_filter <- match.arg(sign_filter, c("both", "positive", "negative"))
   
   # Count consecutive values of the same sign
   count <- 1
@@ -71,8 +74,13 @@ identify_anomaly_sequences <- function(anomaly_vector, seq_length) {
   for (i in 2:length(anomaly_vector)) {
     current_sign <- sign(anomaly_vector[i])
     
-    # If the sign is the same and non-zero, increase counter
-    if (current_sign == sign_value && current_sign != 0) {
+    # Check if current sign matches our filter criteria
+    valid_sign <- (sign_filter == "both") || 
+                  (sign_filter == "positive" && current_sign > 0) ||
+                  (sign_filter == "negative" && current_sign < 0)
+    
+    # If the sign is the same, non-zero, and matches our filter
+    if (current_sign == sign_value && current_sign != 0 && valid_sign) {
       count <- count + 1
       
       # Mark only exactly the seq_length-th consecutive value

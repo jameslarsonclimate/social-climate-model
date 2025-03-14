@@ -44,11 +44,11 @@ for (natvar_it in c(5)){
   # bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
 
   # homophily_param01 = 0.7
-  frac_opp_01 = 0.1
-  frac_neut_01 = 0.01
-  evidenceeffect1 = 0.15
+  frac_opp_01 = 0.5
+  frac_neut_01 = 0.3
+  evidenceeffect1 = 0.1
   shiftingbaselines1 = 1
-  biassedassimilation1 = 0.5
+  biassedassimilation1 = 0.1
   temp_0 = 0
 
   # m = model() # evidenceeffect=0.02, natvar_multiplier=8, temperature_input=mat)
@@ -61,7 +61,7 @@ for (natvar_it in c(5)){
 
   # Run the model user-defined times and store each result
   for (i in 1:num_runs) {
-    results_list[[i]] <- model(controlRun=TRUE) #shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE) # temperature_input=mat
+    results_list[[i]] <- model() #shiftingExtremes=TRUE, natvar=TRUE, historical=TRUE) # temperature_input=mat
 }
 
 # Initialize a list to accumulate the sums
@@ -225,7 +225,12 @@ fig = ggplot(data, aes(x = m$year)) +
     labs(
       x = "Year",
       y = "Model output",
-      title = paste("BiassedAssimilation = ", fileSaveSuffix)  # "Model Outputs over Time (2020 to 2100)"
+      # title = paste("BiassedAssimilation = ", fileSaveSuffix)  # "Model Outputs over Time (2020 to 2100)"
+      subtitle = paste("Example model run", 
+                "\nEvidenceEffect = ", evidenceeffect1, 
+                ", BiasedAssimilation = ", biassedassimilation1,
+                ",\nfrac_opp_01 = ", frac_opp_01,
+                ", frac_neut_01 = ", frac_neut_01)
     ) +
 
     # Updated color scheme using distinct, dark-pastel colors
@@ -262,7 +267,7 @@ fig = ggplot(data, aes(x = m$year)) +
     )
 
   print(fig)
-  ggsave(paste("../results/default", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig, width=8, height=6)
-  # ggsave(paste("../results/default-timeSeries.png", sep=""), plot=fig, width=16/2, height=9/2)
+  # ggsave(paste("../results/default", fileSaveSuffix,"-timeSeries.png", sep=""), plot=fig, width=8, height=6)
+  ggsave(paste("../results/default-timeSeries.png", sep=""), plot=fig, width=8, height=6)
 
 }

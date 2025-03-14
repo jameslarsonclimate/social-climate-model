@@ -10,17 +10,17 @@ library(ggplot2)
 library(dplyr)
 
 # Parameter grids
-evidence_vals <- c(0.05, 0.15, 0.25)  # Evidence effect values
-bias_vals     <- c(0.1, 0.5, 0.9)     # Biased assimilation values
-# evidence_vals <- c(0.15)  # Evidence effect values
-# bias_vals     <- c(0.1)     # Biased assimilation values
+# evidence_vals <- c(0.05, 0.15, 0.25)  # Evidence effect values
+# bias_vals     <- c(0.1, 0.5, 0.9)     # Biased assimilation values
+evidence_vals <- c(0.05)  # Evidence effect values
+bias_vals     <- c(0.1)     # Biased assimilation values
 
 # For a lag of 1, we compare naturalvariability[i] with distributions[i+1]
 lagParam            <- 1     # Define a user-controllable lag (default = 1)
 shiftingbaselines1  <- 1     
-nRuns               <- 40    # Number of model iterations
-frac_opp_01         <- 0.4   # Fraction of population opposing climate policy at t=0
-frac_neut_01        <- 0.2   # Fraction of population neutral at t=0
+nRuns               <- 200    # Number of model iterations
+frac_opp_01         <- 0.5   # Fraction of population opposing climate policy at t=0
+frac_neut_01        <- 0.3   # Fraction of population neutral at t=0
 temp_0              <- 0     # Initial temperature (°C) in 2020 = 1.21 °C
 
 # # Function to identify sequences of consecutive positive/negative anomalies of a specific length

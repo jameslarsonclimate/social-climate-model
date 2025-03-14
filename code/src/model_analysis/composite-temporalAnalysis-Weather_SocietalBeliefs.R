@@ -12,15 +12,15 @@ source("src/functions.R")
 # Parameter grids
 # evidence_vals <- c(0.05, 0.15, 0.25)  # Evidence effect values
 # bias_vals     <- c(0.1, 0.5, 0.9)     # Biased assimilation values
-evidence_vals <- c(0.15)  # Evidence effect values
+evidence_vals <- c(0.1)  # Evidence effect values
 bias_vals     <- c(0.1)     # Biased assimilation values
 
 # For a lag of 1, we compare naturalvariability[i] with distributions[i+1]
 lagParam            <- 1     # Define a user-controllable lag (default = 1)
 shiftingbaselines1  <- 1     
-nRuns               <- 5     # Number of model iterations
-frac_opp_01         <- 0.4   # Fraction of population opposing climate policy at t=0
-frac_neut_01        <- 0.2   # Fraction of population neutral at t=0
+nRuns               <- 100     # Number of model iterations
+frac_opp_01         <- 0.5   # Fraction of population opposing climate policy at t=0
+frac_neut_01        <- 0.3   # Fraction of population neutral at t=0
 temp_0              <- 0     # Initial temperature (°C) in 2020 = 1.21 °C
 
 
@@ -66,7 +66,10 @@ for (i in seq_along(evidence_vals)) {
         )
         
         # Find sequence endpoints for this run
-        sequence_indices <- identify_anomaly_sequences(anomLag, seq_length)
+        sequence_indices <- identify_anomaly_sequences(anomLag, seq_length, 
+                                            sign_filter = "positive")
+        # sequence_indices <- identify_anomaly_sequences(weatherLag, seq_length, 
+        #                                     sign_filter = "positive")
         true_positions <- which(sequence_indices)
         
         if (length(true_positions) == 0) {
@@ -121,7 +124,7 @@ for (i in seq_along(evidence_vals)) {
         geom_line(aes(y=weatherLag, color="Weather"), size=1) +
         geom_line(aes(y=DistLag, color="Climate Policy Support"), size=1) +
         scale_color_manual(values=c("Weather"="#023743", "Climate Policy Support"="#72874E")) +
-        labs(title=paste0("Avg Weather and Climate Support Around Anomaly Length ", seq_length,
+        labs(title=paste0("Avg Weather and Climate Support Around Anom Length ", seq_length,
                           "\n(EvidenceEffect = ", evidence_vals[i], 
                           ", BiasedAssimilation = ", bias_vals[j], ")"),
              subtitle=paste0("Based on ", valid_windows, " windows"),
@@ -135,9 +138,10 @@ for (i in seq_along(evidence_vals)) {
       
       # Save the weather plot
       outfile_weather_ts <- paste0("../results/composites/",
-                                   "weather_timeseries_seq", seq_length,
+                                   "composite_weather_anomSeq", seq_length,
                                    "_Evidence", evidence_vals[i], 
-                                   "_Bias", bias_vals[j], ".png")
+                                   "_Bias", bias_vals[j], 
+                                   "_nRuns", nRuns, ".png")
       ggsave(filename=outfile_weather_ts, plot=weather_ts_plot, width=8, height=6)
       
       # Create anomaly vs distribution time series plot
@@ -159,9 +163,10 @@ for (i in seq_along(evidence_vals)) {
       
       # Save the anomaly plot
       outfile_anomaly_ts <- paste0("../results/composites/",
-                                   "anomaly_timeseries_seq", seq_length,
+                                   "composite_anomaly_anomSeq", seq_length,
                                    "_Evidence", evidence_vals[i], 
-                                   "_Bias", bias_vals[j], ".png")
+                                   "_Bias", bias_vals[j], 
+                                   "_nRuns", nRuns, ".png")
       ggsave(filename=outfile_anomaly_ts, plot=anomaly_ts_plot, width=8, height=6)
     }
   }
