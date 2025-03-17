@@ -9,7 +9,7 @@ library(EnvStats)
 library(randomForest)
 library(randomForestExplainer)
 
-
+setwd("/Users/jglarson/Documents/Research/social-climate-model/code")
 source("src/model_analysis/model_parametertune.R")
 
 #subset of variable to vary - those in the opinion and policy components
