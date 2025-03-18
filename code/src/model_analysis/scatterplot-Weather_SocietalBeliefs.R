@@ -14,7 +14,7 @@ library(ggplot2)
 # Parameter grids
 # evidence_vals <- c(0.05, 0.15, 0.25)  # Evidence effect values
 # bias_vals     <- c(0.1, 0.5, 0.9)     # Biased assimilation values
-evidence_vals <- c(0.05)  # Evidence effect values
+evidence_vals <- c(0.1)  # Evidence effect values
 bias_vals     <- c(0.1)     # Biased assimilation values
 
 # For a lag of 1, we compare naturalvariability[i] with distributions[i+1]
@@ -53,7 +53,8 @@ for (i in seq_along(evidence_vals)) {
     all_weatherLag <- numeric(0)
     all_anomLag <- numeric(0)
     all_DistLag <- numeric(0)
-    
+    years <- numeric(0)
+
     # Run the model {} times
     for (run_idx in 1:nRuns) {
       # Run the model
@@ -70,19 +71,26 @@ for (i in seq_along(evidence_vals)) {
       run_weatherLag <- weather_vec[1:(end_idx - lagParam)]
       run_anomLag <- anomaly_vec[1:(end_idx - lagParam)]
       run_DistLag <- distr_vec[(lagParam + 1):end_idx]
+      # Add the corresponding years from m$year
+      run_years <- m$year[1:(end_idx - lagParam)]
+
       } else {
       # For negative lag
       posLag <- abs(lagParam)
       run_weatherLag <- weather_vec[(posLag + 1):end_idx]
       run_anomLag <- anomaly_vec[(posLag + 1):end_idx]
       run_DistLag <- distr_vec[1:(end_idx - posLag)]
+      # Add the corresponding years from m$year
+      run_years <- m$year[(posLag + 1):end_idx]
+
       }
       
       # Concatenate lagged vectors from this run to the accumulated lagged vectors
       all_weatherLag <- c(all_weatherLag, run_weatherLag)
       all_anomLag <- c(all_anomLag, run_anomLag)
       all_DistLag <- c(all_DistLag, run_DistLag)
-      
+      years <- c(years, run_years)
+
       # Save the final value of this run
       run_final_dist[run_idx] <- tail(distr_vec, 1)
     }
@@ -98,13 +106,14 @@ for (i in seq_along(evidence_vals)) {
     # anomLag_std <- (anomLag - mean(anomLag, na.rm = TRUE)) / sd(anomLag, na.rm = TRUE)      
 
     # Plot the weather and distribution time series on a scatterplot
-    scatter_df <- data.frame(weatherLag = weatherLag, DistLag = DistLag)
-    scatter_plot <- ggplot(scatter_df, aes(x = weatherLag, y = DistLag)) +
-      geom_point(color = "#023743", alpha = 0.3) +
+    scatter_df <- data.frame(weatherLag = weatherLag, DistLag = DistLag, Year = years)
+    scatter_plot <- ggplot(scatter_df, aes(x = weatherLag, y = DistLag, color = Year)) +
+      geom_point(alpha = 0.7) +
+      scale_color_viridis_c(option = "plasma") +
       labs(title = paste0("Scatterplot of Weather vs Frac of Climate Policy Supporters\n(EvidenceEffect = ", 
-        evidence_vals[i], ", BiasedAssimilation = ", bias_vals[j], 
-        ", frac_opp_01 = ", frac_opp_01, ", frac_neut_01 = ", frac_neut_01,
-        ",\nLag = ", lagParam, ", nRuns = ", nRuns, ")"),
+      evidence_vals[i], ", BiasedAssimilation = ", bias_vals[j], 
+      ", frac_opp_01 = ", frac_opp_01, ", frac_neut_01 = ", frac_neut_01,
+      ",\nLag = ", lagParam, ", nRuns = ", nRuns, ")"),
       x = "Weather [K]",
       y = "Fraction of climate policy supporters") +
       xlim(-1, 5.5) +
@@ -112,46 +121,8 @@ for (i in seq_along(evidence_vals)) {
       theme_minimal()
     print(scatter_plot)
     outfile_scatter <- paste0("../results/scatterplots/scatterplot-WeatherLag_vs_DistLag-lag", lagParam,
-          "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, 
-          "_Evidence", evidence_vals[i], "_Bias", bias_vals[j], ".png")
-    ggsave(filename = outfile_scatter, plot = scatter_plot, width = 8, height = 6)
-
-    # # Plot the weather and distribution time series on a scatterplot (standardized)
-    # scatter_df <- data.frame(weatherLag_std = weatherLag_std, DistLag_std = DistLag_std)
-    # scatter_plot <- ggplot(scatter_df, aes(x = weatherLag_std, y = DistLag_std)) +
-    #   geom_point(color = "#023743", alpha = 0.3) +
-    #   labs(title = paste0("Scatterplot of Weather vs Frac of Climate Policy Supporters - Standardized\n(EvidenceEffect = ", 
-    #     evidence_vals[i], ", BiasedAssimilation = ", bias_vals[j],
-    #     ", frac_opp_01 = ", frac_opp_01, ", frac_neut_01 = ", frac_neut_01,
-    #     "\nLag = ", lagParam, ", nRuns = ", nRuns, ")"),
-    #   x = "Standardized Weather",
-    #   y = "Standardized Distribution Column 3 (DistLag_std)") +
-    #   xlim(-3.5, 3.5) +
-    #   ylim(-3.5, 3.5) +
-    #   theme_minimal()
-    # print(scatter_plot)
-    # outfile_scatter <- paste0("../results/scatterplots/scatterplot-weatherLag_vs_DistLag-standardized-lag", lagParam,
-    #       "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, 
-    #       "_Evidence", evidence_vals[i], "_Bias", bias_vals[j], ".png")
-    # ggsave(filename = outfile_scatter, plot = scatter_plot, width = 8, height = 6)
-
-    # Plot the anomaly and distribution time series on a scatterplot
-    scatter_df <- data.frame(anomLag = anomLag, DistLag = DistLag)
-    scatter_plot <- ggplot(scatter_df, aes(x = anomLag, y = DistLag)) +
-      geom_point(color = "#023743", alpha = 0.3) +
-      labs(title = paste0("Scatterplot of Perceived Anomaly vs Frac of Climate Policy Supporters\n(EvidenceEffect = ", 
-        evidence_vals[i], ", BiasedAssimilation = ", bias_vals[j],
-        ", frac_opp_01 = ", frac_opp_01, ", frac_neut_01 = ", frac_neut_01,
-        ",\nLag = ", lagParam, ", nRuns = ", nRuns, ")"),
-      x = "Perceived Anomaly [K]",
-      y = "Fraction of climate policy supporters") +
-      xlim(-2, 2) +
-      ylim(-0.1, 1.1) +
-      theme_minimal()
-    print(scatter_plot)
-    outfile_scatter <- paste0("../results/scatterplots/scatterplot-AnomLag_vs_DistLag-lag", lagParam,
-          "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, 
-          "_Evidence", evidence_vals[i], "_Bias", bias_vals[j], ".png")
+        "_opp", frac_opp_01, "_neut", frac_neut_01, "_nRuns", nRuns, 
+        "_Evidence", evidence_vals[i], "_Bias", bias_vals[j], ".png")
     ggsave(filename = outfile_scatter, plot = scatter_plot, width = 8, height = 6)
 
     # # Plot the anomaly and distribution time series on a scatterplot (standardized)
