@@ -158,167 +158,188 @@ source("src/model_analysis/model_parametertune.R")
 # fwrite(testgrid,file="../results/MC Runs/parameter_tune_mitigation.csv")
 
 # #-------------Monte Carlo of full model, with mitigation, policy, and option parameters weighted by tuning-derived probability----------
-# source("src/model.R")
+source("src/model.R")
 
-# polopparams=fread("../results/MC Runs/parameter_tune.csv")
-# mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
+print('reading in MC Runs files')
 
-# #initial opinion distribution - not varied, but fixed at particular values from Pew Opinion Data
-# frac_opp_01=0.07 
-# frac_neut_01=0.22 
+polopparams=fread("../results/MC Runs/parameter_tune.csv")
+mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
 
-# mc=100000
-# params=matrix(nrow=mc,ncol=22)
-# pol=matrix(nrow=mc,ncol=81);ems=matrix(nrow=mc,ncol=81);climtemp=matrix(nrow=mc,ncol=81)
+#initial opinion distribution - not varied, but fixed at particular values from Pew Opinion Data
+frac_opp_01=0.07 
+frac_neut_01=0.22 
 
-# set.seed(2090)
-# i=0
-# while(i<=mc){
-#   skip_to_next=FALSE
-#   #draw mitigation, policy and opinion parameters, weighting by tuned probability
-#   polops=as.numeric(polopparams[sample(1:dim(polopparams)[1],size=1,prob=polopparams$sampleweight),1:9])
-#   homophily_param1=polops[1];forcestrong1=polops[2];forceweak1=polops[3];evidenceeffect1=polops[4];policyopinionfeedback_01=polops[5]
-#   pol_response1=polops[6];pol_feedback1=polops[7];biassedassimilation1=polops[8];shiftingbaselines1=polops[9]
+mc=100000
+params=matrix(nrow=mc,ncol=22)
+pol=matrix(nrow=mc,ncol=81);ems=matrix(nrow=mc,ncol=81);climtemp=matrix(nrow=mc,ncol=81)
+
+set.seed(2090)
+i=0
+
+print('starting while loop')
+
+while(i<=mc){
+  skip_to_next=FALSE
+  #draw mitigation, policy and opinion parameters, weighting by tuned probability
+  polops=as.numeric(polopparams[sample(1:dim(polopparams)[1],size=1,prob=polopparams$sampleweight),1:9])
+  homophily_param1=polops[1];forcestrong1=polops[2];forceweak1=polops[3];evidenceeffect1=polops[4];policyopinionfeedback_01=polops[5]
+  pol_response1=polops[6];pol_feedback1=polops[7];biassedassimilation1=polops[8];shiftingbaselines1=polops[9]
   
-#   mit=as.numeric(mitparams[sample(1:dim(mitparams)[1],size=1,prob=mitparams$sampleweight),1:2])
-#   m_max1=mit[1];r_max1=mit[2]
+  mit=as.numeric(mitparams[sample(1:dim(mitparams)[1],size=1,prob=mitparams$sampleweight),1:2])
+  m_max1=mit[1];r_max1=mit[2]
   
-#   #uniform sampling of other model parameters -mostly adoption-related
-#   ced_param1=runif(1,0,0.5)
-#   policy_pbcchange_max1=runif(1,0,1)
-#   pbc_01=runif(1,-2,0)
-#   pbc_steep1=runif(1,1,3)
-#   opchangeparam=runif(1,0,1);pbc_opinionchange1=c(opchangeparam,0,-1*opchangeparam) #constrain opinion effect on adoption to be symmetric for opposers and supporters
-#   etc_total1=runif(1,0,2)
-#   normeffect1=runif(1,0,1)
-#   adopt_effect1=runif(1,0,0.3)
-#   lbd_param01=runif(1,0,0.3)
-#   lag_param01=round(runif(1,0,30))
+  #uniform sampling of other model parameters -mostly adoption-related
+  ced_param1=runif(1,0,0.5)
+  policy_pbcchange_max1=runif(1,0,1)
+  pbc_01=runif(1,-2,0)
+  pbc_steep1=runif(1,1,3)
+  opchangeparam=runif(1,0,1);pbc_opinionchange1=c(opchangeparam,0,-1*opchangeparam) #constrain opinion effect on adoption to be symmetric for opposers and supporters
+  etc_total1=runif(1,0,2)
+  normeffect1=runif(1,0,1)
+  adopt_effect1=runif(1,0,0.3)
+  lbd_param01=runif(1,0,0.3)
+  lag_param01=round(runif(1,0,30))
   
-#   #also add feedback from temperature to bau emissions
-#   temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
-  
-#   m=tryCatch(model(), error = function(e) { skip_to_next <<- TRUE})
-  
-#   if(skip_to_next) { next } 
-  
-#   #save output
-#   params[i,]=c(polops,mit,ced_param1,policy_pbcchange_max1,pbc_01,pbc_steep1,opchangeparam,etc_total1,normeffect1,adopt_effect1,lbd_param01,lag_param01,temp_emissionsparam01)
-#   pol[i,]=m$policy;ems[i,]=m$totalemissions
-#   climtemp[i,]=m$temp[,1]
-  
-#   if(i%%1000==0) print(i)
-#   i=i+1
-# }
-# colnames(params)=c(colnames(polopparams)[1:9],colnames(mitparams)[1:2],"ced","policy_pbc","pbc_init","pbc_steep","policy_adoption","etc_total","normeffect","adopt_effect","lbd_param","lag_param","temp_emissions")
-# dir.create("../results/MC Runs/MC Runs_TunedParams/")
-# fwrite(params,file="../results/MC Runs/MC Runs_TunedParams/params.csv")
-# fwrite(pol,file="../results/MC Runs/MC Runs_TunedParams/policy.csv")
-# fwrite(ems,file="../results/MC Runs/MC Runs_TunedParams/emissions.csv")
-# fwrite(climtemp,file="../results/MC Runs/MC Runs_TunedParams/temperature.csv")
+#also add feedback from temperature to bau emissions
+temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
+
+m=tryCatch(model(), error = function(e) { 
+    skip_to_next <<- TRUE
+    print(paste("Error occurred, skipping iteration", i, ":", e$message))
+})
+
+if(skip_to_next) { 
+    if(!exists("e")) print(paste("Skipping iteration", i)) # In case skip_to_next was set elsewhere
+    next 
+}
+
+#save output
+params[i,]=c(polops,mit,ced_param1,policy_pbcchange_max1,pbc_01,pbc_steep1,opchangeparam,etc_total1,normeffect1,adopt_effect1,lbd_param01,lag_param01,temp_emissionsparam01)
+pol[i,]=m$policy;ems[i,]=m$totalemissions
+climtemp[i,]=m$temp[,1]
+
+if(i%%1000==0) print(i)
+i=i+1
+}
+colnames(params)=c(colnames(polopparams)[1:9],colnames(mitparams)[1:2],"ced","policy_pbc","pbc_init","pbc_steep","policy_adoption","etc_total","normeffect","adopt_effect","lbd_param","lag_param","temp_emissions")
+dir.create("../results/MC Runs/MC Runs_TunedParams/")
+fwrite(params,file="../results/MC Runs/MC Runs_TunedParams/params.csv")
+fwrite(pol,file="../results/MC Runs/MC Runs_TunedParams/policy.csv")
+fwrite(ems,file="../results/MC Runs/MC Runs_TunedParams/emissions.csv")
+fwrite(climtemp,file="../results/MC Runs/MC Runs_TunedParams/temperature.csv")
+
+
 # ####------kmeans clustering of tuned output---------
-# params=fread("../results/MC Runs/MC Runs_TunedParams/params.csv")
-# pol=fread("../results/MC Runs/MC Runs_TunedParams/policy.csv")
-# ems=fread("../results/MC Runs/MC Runs_TunedParams/emissions.csv")
-# mc=dim(params)[1]
 
-# df=cbind(pol,ems)
-# df_scaled=scale(df)
-# #drop zero variance columns
-# nacols=which(apply(df_scaled,MARGIN=2,function(x) sum(is.na(x)))==mc)
-# df_scaled=df_scaled[,-nacols]
 
-# #visualize ideal number of clusters
-# nclustertest=2:9
-# wss=numeric(length=length(nclustertest))
-# set.seed(2090)
-# for(i in 1:length(nclustertest)){
-#   wss[i]=kmeans(df_scaled,nclustertest[i],iter.max=20)$tot.withinss
-#   print(i)
-# }
-# pdf(file="../results/figureS5.pdf")
-# plot(x=nclustertest,y=wss,type="b",xlab="Number of Clusters",ylab="Within Sum of Squares")
-# dev.off()
+params=fread("../results/MC Runs/MC Runs_TunedParams/params.csv")
+pol=fread("../results/MC Runs/MC Runs_TunedParams/policy.csv")
+ems=fread("../results/MC Runs/MC Runs_TunedParams/emissions.csv")
+mc=dim(params)[1]
 
-# #five clusters looks good
-# nclus=5
-# set.seed(2090)
-# test=kmeans(df_scaled,nclus)
+df=cbind(pol,ems)
+df_scaled=scale(df)
+#drop zero variance columns
+nacols=which(apply(df_scaled,MARGIN=2,function(x) sum(is.na(x)))==mc)
+df_scaled=df_scaled[,-nacols]
 
-# #plot outcomes over time for different clusters
-# ems=as.data.frame(ems)
-# ems$cluster=test$cluster
+#visualize ideal number of clusters
+nclustertest=2:9
+wss=numeric(length=length(nclustertest))
+set.seed(2090)
+for(i in 1:length(nclustertest)){
+  wss[i]=kmeans(df_scaled,nclustertest[i],iter.max=20)$tot.withinss
+  print(i)
+}
+pdf(file="../results/figureS5.pdf")
+plot(x=nclustertest,y=wss,type="b",xlab="Number of Clusters",ylab="Within Sum of Squares")
+dev.off()
 
-# clems=ems%>%
-#   group_by(cluster)%>%
-#   summarize_all(mean)
-# colnames(clems)=c("cluster",2020:2100)
-# clems=melt(clems,id.vars="cluster")
-# colnames(clems)=c("Cluster","Year","Emissions")
-# clems$Cluster=as.factor(clems$Cluster)
+#five clusters looks good
+nclus=5
+set.seed(2090)
+test=kmeans(df_scaled,nclus)
 
-# nruns=data.frame(table(ems$cluster))
-# colnames(nruns)=c("Cluster","nsims")
-# nruns$nsims=nruns$nsims/mc*100
-# clems$Year=as.numeric(as.character(clems$Year))
+#plot outcomes over time for different clusters
+ems=as.data.frame(ems)
+ems$cluster=test$cluster
 
-# clems=merge(clems,nruns)
+clems=ems%>%
+  group_by(cluster)%>%
+  summarize_all(mean)
+colnames(clems)=c("cluster",2020:2100)
+clems=melt(clems,id.vars="cluster")
+colnames(clems)=c("Cluster","Year","Emissions")
+clems$Cluster=as.factor(clems$Cluster)
 
-# #add names of scenarios and order from most to least common
-# clems$Cluster=fct_relevel(clems$Cluster, "2","3","1","5","4")
-# clems$Cluster=fct_recode(clems$Cluster,"Modal Path"="2","Aggresive Action"="3","Technical Challenges"="1","Little and Late"="4","Delayed Recognition"="5")
+nruns=data.frame(table(ems$cluster))
+colnames(nruns)=c("Cluster","nsims")
+nruns$nsims=nruns$nsims/mc*100
+clems$Year=as.numeric(as.character(clems$Year))
 
-# cols=c("#FED789", "#023743", "#72874E", "#476F84", "#A4BED5", "#c42449")
-# a=ggplot(clems,aes(x=Year,y=Emissions,group=Cluster,col=Cluster,lwd=nsims))+geom_line()+theme_bw()+theme(text=element_text(size=16))
-# a=a+scale_color_manual(values=cols)+labs(x="",color="Cluster",lwd="Percent of Runs",y="Global Emissions (GtC per year)")+guides(color = guide_legend(override.aes = list(size = 2)))
-# a=a+theme(legend.position="none")
+clems=merge(clems,nruns)
+
+#add names of scenarios and order from most to least common
+clems$Cluster=fct_relevel(clems$Cluster, "2","3","1","5","4")
+clems$Cluster=fct_recode(clems$Cluster,"Modal Path"="2","Aggresive Action"="3","Technical Challenges"="1","Little and Late"="4","Delayed Recognition"="5")
+
+cols=c("#FED789", "#023743", "#72874E", "#476F84", "#A4BED5", "#c42449")
+a=ggplot(clems,aes(x=Year,y=Emissions,group=Cluster,col=Cluster,lwd=nsims))+geom_line()+theme_bw()+theme(text=element_text(size=16))
+a=a+scale_color_manual(values=cols)+labs(x="",color="Cluster",lwd="Percent of Runs",y="Global Emissions (GtC per year)")+guides(color = guide_legend(override.aes = list(size = 2)))
+a=a+theme(legend.position="none")
 # ggsave("../results/figure3_emissions.pdf",plot=a) 
+ggsave(paste0("../results/figure3_emissions", fig_suffix, ".pdf"), plot=a)
 
-# pol=as.data.frame(pol)
-# pol$cluster=test$cluster
-# clpol=pol%>%
-#   group_by(cluster)%>%
-#   summarize_all(mean)
-# colnames(clpol)=c("cluster",2020:2100)
-# clpol=melt(clpol,id.vars="cluster")
-# colnames(clpol)=c("Cluster","Year","Policy")
-# clpol$Cluster=as.factor(clpol$Cluster)
-# clpol=merge(clpol,nruns)
-# clpol$Year=as.numeric(as.character(clpol$Year))
 
-# clpol$Cluster=fct_relevel(clpol$Cluster, "2","3","1","5","4")
-# clpol$Cluster=fct_recode(clpol$Cluster,"Modal Path"="2","Aggresive Action"="3","Technical Challenges"="1","Little and Late"="4","Delayed Recognition"="5")
+pol=as.data.frame(pol)
+pol$cluster=test$cluster
+clpol=pol%>%
+  group_by(cluster)%>%
+  summarize_all(mean)
+colnames(clpol)=c("cluster",2020:2100)
+clpol=melt(clpol,id.vars="cluster")
+colnames(clpol)=c("Cluster","Year","Policy")
+clpol$Cluster=as.factor(clpol$Cluster)
+clpol=merge(clpol,nruns)
+clpol$Year=as.numeric(as.character(clpol$Year))
 
-# b=ggplot(clpol,aes(x=Year,y=Policy,group=Cluster,col=Cluster,lwd=nsims))+geom_line()+theme_bw()
-# b=b+scale_color_manual(values=cols)+labs(x="",color="Cluster",lwd="Percent of Runs",y="Climate Policy Stringency")+ theme(legend.position="none",text=element_text(size=16))
+clpol$Cluster=fct_relevel(clpol$Cluster, "2","3","1","5","4")
+clpol$Cluster=fct_recode(clpol$Cluster,"Modal Path"="2","Aggresive Action"="3","Technical Challenges"="1","Little and Late"="4","Delayed Recognition"="5")
+
+b=ggplot(clpol,aes(x=Year,y=Policy,group=Cluster,col=Cluster,lwd=nsims))+geom_line()+theme_bw()
+b=b+scale_color_manual(values=cols)+labs(x="",color="Cluster",lwd="Percent of Runs",y="Climate Policy Stringency")+ theme(legend.position="none",text=element_text(size=16))
 # ggsave("../results/figure3_policy.pdf",plot=b)
+ggsave(paste0("../results/figure3_policy", fig_suffix, ".pdf"), plot=a)
 
-# #parameter combinations associated with each cluster
-# params_cluster=scale(params)
-# params_cluster=data.frame(params_cluster,cluster=test$cluster)
-# params_cluster=params_cluster%>%
-#   group_by(cluster)%>%
-#   summarize_all(mean)
 
-# colnames(params_cluster)=c("Cluster",colnames(params_cluster)[2:10],"Max Mit. Rate","Max Mit Time","CED","Policy-Adoption","ACost_Init","ACost_Steep","Opinion-Adoption","ETC Effect","Social Norm Effect","Adoption Effect","LBD Effect","Lag Time","Temp-Emissions")
-# #drop weak force as it doesn't add anything interesting over just the strong force
-# params_cluster=params_cluster[,-which(colnames(params_cluster)=="Weak.Force")]
+#parameter combinations associated with each cluster
+params_cluster=scale(params)
+params_cluster=data.frame(params_cluster,cluster=test$cluster)
+params_cluster=params_cluster%>%
+  group_by(cluster)%>%
+  summarize_all(mean)
 
-# params_cluster=melt(params_cluster,id.var="Cluster")
-# params_cluster$Cluster=as.factor(params_cluster$Cluster)
+colnames(params_cluster)=c("Cluster",colnames(params_cluster)[2:10],"Max Mit. Rate","Max Mit Time","CED","Policy-Adoption","ACost_Init","ACost_Steep","Opinion-Adoption","ETC Effect","Social Norm Effect","Adoption Effect","LBD Effect","Lag Time","Temp-Emissions")
+#drop weak force as it doesn't add anything interesting over just the strong force
+params_cluster=params_cluster[,-which(colnames(params_cluster)=="Weak.Force")]
 
-# params_cluster$Cluster=fct_relevel(params_cluster$Cluster, "2","3","1","5","4")
-# params_cluster$Cluster=fct_recode(params_cluster$Cluster,"Modal Path"="2","Aggresive Action"="3","Technical Challenges"="1","Little and Late"="4","Delayed Recognition"="5")
+params_cluster=melt(params_cluster,id.var="Cluster")
+params_cluster$Cluster=as.factor(params_cluster$Cluster)
 
-# #order parameters to group by component
-# params_cluster$variable=fct_relevel(params_cluster$variable,"Homophily","Strong.Force","Evidence","Pol.Opinion","CED","Policy-Adoption","ACost_Init","ACost_Steep","Opinion-Adoption","ETC Effect","Social Norm Effect","Status.Quo.Bias","Pol.Int.Feedback","Max Mit. Rate","Max Mit Time","LBD Effect","Lag Time","Temp-Emissions","Adoption Effect","Biased.Assimilation","Shifting.Baselines")
+params_cluster$Cluster=fct_relevel(params_cluster$Cluster, "2","3","1","5","4")
+params_cluster$Cluster=fct_recode(params_cluster$Cluster,"Modal Path"="2","Aggresive Action"="3","Technical Challenges"="1","Little and Late"="4","Delayed Recognition"="5")
+
+#order parameters to group by component
+params_cluster$variable=fct_relevel(params_cluster$variable,"Homophily","Strong.Force","Evidence","Pol.Opinion","CED","Policy-Adoption","ACost_Init","ACost_Steep","Opinion-Adoption","ETC Effect","Social Norm Effect","Status.Quo.Bias","Pol.Int.Feedback","Max Mit. Rate","Max Mit Time","LBD Effect","Lag Time","Temp-Emissions","Adoption Effect","Biased.Assimilation","Shifting.Baselines")
   
-# d=ggplot(params_cluster,aes(x=variable,y=value,group=Cluster,fill=Cluster))+geom_bar(stat="identity",position="dodge")
-# d=d+scale_fill_manual(values=cols)+labs(x="",y="Cluster Mean Value",fill="Cluster")+theme_bw()+theme(axis.text.x = element_text(angle = 90))
-# d=d+theme(legend.position="none")
+d=ggplot(params_cluster,aes(x=variable,y=value,group=Cluster,fill=Cluster))+geom_bar(stat="identity",position="dodge")
+d=d+scale_fill_manual(values=cols)+labs(x="",y="Cluster Mean Value",fill="Cluster")+theme_bw()+theme(axis.text.x = element_text(angle = 90))
+d=d+theme(legend.position="none")
 # ggsave("../results/figureS3.pdf",plot=d)
+ggsave(paste0("../results/figureS3", fig_suffix, ".pdf"), plot=a)
 
-# #run cluster emissions paths through the climate component to generate temperature trajectories
+
+#run cluster emissions paths through the climate component to generate temperature trajectories
 
 # emissionssplit=split(clems,clems$Cluster)
 # source("src/climate_component.R")
@@ -364,38 +385,38 @@ source("src/model_analysis/model_parametertune.R")
 
 #-------------Random Forest Modeling of Model Output ---------------------
 
-years=2020:2100
+# years=2020:2100
 
-params=fread("../results/MC Runs/MC Runs_TunedParams/params.csv")
-pol=fread("../results/MC Runs/MC Runs_TunedParams/policy.csv")
-ems=fread("../results/MC Runs/MC Runs_TunedParams/emissions.csv")
-colnames(params)=c(colnames(params)[1:9],"Max Mit. Rate","Max Mit Time","CED","Policy-Adoption","ACost_Init","ACost_Steep","Opinion-Adoption","ETC Effect","Social Norm Effect","Adoption Effect","LBD Effect","Lag Time","Temp-Emissions")
+# params=fread("../results/MC Runs/MC Runs_TunedParams/params.csv")
+# pol=fread("../results/MC Runs/MC Runs_TunedParams/policy.csv")
+# ems=fread("../results/MC Runs/MC Runs_TunedParams/emissions.csv")
+# colnames(params)=c(colnames(params)[1:9],"Max Mit. Rate","Max Mit Time","CED","Policy-Adoption","ACost_Init","ACost_Steep","Opinion-Adoption","ETC Effect","Social Norm Effect","Adoption Effect","LBD Effect","Lag Time","Temp-Emissions")
 
-y_ems=rowSums(ems) #dependent variable is cumulative emissions over the 21st century
-y_pol=as.matrix(pol)[,which(years==2030)]
+# y_ems=rowSums(ems) #dependent variable is cumulative emissions over the 21st century
+# y_pol=as.matrix(pol)[,which(years==2030)]
 
-sampsize=10000
-samp=sample(1:length(y_ems),sampsize,replace=FALSE)
+# sampsize=10000
+# samp=sample(1:length(y_ems),sampsize,replace=FALSE)
 
-rf_ems=randomForest(x=params[samp,],y=y_ems[samp],importance=TRUE, tree=TRUE,nodesize=100,mtry=5,ntree=300)
-rf_pol=randomForest(x=params[samp,],y=y_pol[samp],importance=TRUE,tree=TRUE,nodesize=100,mtry=5,ntree=300)
+# rf_ems=randomForest(x=params[samp,],y=y_ems[samp],importance=TRUE, tree=TRUE,nodesize=100,mtry=5,ntree=300)
+# rf_pol=randomForest(x=params[samp,],y=y_pol[samp],importance=TRUE,tree=TRUE,nodesize=100,mtry=5,ntree=300)
 
-min_depth_ems=min_depth_distribution(rf_ems)
-min_depth_pol=min_depth_distribution(rf_pol)
+# min_depth_ems=min_depth_distribution(rf_ems)
+# min_depth_pol=min_depth_distribution(rf_pol)
 
-a=plot_min_depth_distribution(min_depth_ems, mean_sample = "all_trees", k = 10)
-a=a+labs(x="",title="Cumulative Emissions 2020-2100")
-ggsave("../results/figureS4_emissions.pdf",plot=a)
+# a=plot_min_depth_distribution(min_depth_ems, mean_sample = "all_trees", k = 10)
+# a=a+labs(x="",title="Cumulative Emissions 2020-2100")
+# ggsave("../results/figureS4_emissions.pdf",plot=a)
 
-b=plot_min_depth_distribution(min_depth_pol, mean_sample = "all_trees", k = 10)
-b=b+labs(x="",title="2030 Policy")
-ggsave("../results/figureS4_policy.pdf",plot=b)
+# b=plot_min_depth_distribution(min_depth_pol, mean_sample = "all_trees", k = 10)
+# b=b+labs(x="",title="2030 Policy")
+# ggsave("../results/figureS4_policy.pdf",plot=b)
 
 
-#random forest interactions
-imp_ems=important_variables(rf_ems, k = 8, measures = c("mean_min_depth", "no_of_nodes"))
-imp_pol=important_variables(rf_pol, k=8, measures=c("mean_min_depth","no_of_nodes"))
-int_ems=min_depth_interactions(rf_ems,imp_ems)
-int_pol=min_depth_interactions(rf_pol,imp_pol)
+# #random forest interactions
+# imp_ems=important_variables(rf_ems, k = 8, measures = c("mean_min_depth", "no_of_nodes"))
+# imp_pol=important_variables(rf_pol, k=8, measures=c("mean_min_depth","no_of_nodes"))
+# int_ems=min_depth_interactions(rf_ems,imp_ems)
+# int_pol=min_depth_interactions(rf_pol,imp_pol)
 
-save(rf_ems,rf_pol,imp_ems,imp_pol,int_ems,int_pol,file="../results/MC Runs/randomforests.Rdat")
+# save(rf_ems,rf_pol,imp_ems,imp_pol,int_ems,int_pol,file="../results/MC Runs/randomforests.Rdat")
