@@ -12,6 +12,8 @@ library(randomForestExplainer)
 setwd("/Users/jglarson/Documents/Research/social-climate-model/code")
 source("src/model_analysis/model_parametertune.R")
 
+fig_suffix = 'natVarx2'
+
 # #subset of variable to vary - those in the opinion and policy components
 
 # nsim=20000
@@ -203,7 +205,7 @@ while(i<=mc){
 #also add feedback from temperature to bau emissions
 temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
 
-m=tryCatch(model(), error = function(e) { 
+m=tryCatch(model(natvar_multiplier = 16), error = function(e) { 
     skip_to_next <<- TRUE
     print(paste("Error occurred, skipping iteration", i, ":", e$message))
 })
