@@ -247,18 +247,19 @@ i=i+1
 }
 colnames(params)=c(colnames(polopparams)[1:9],colnames(mitparams)[1:2],"ced","policy_pbc","pbc_init","pbc_steep","policy_adoption","etc_total","normeffect","adopt_effect","lbd_param","lag_param","temp_emissions")
 dir.create("../results/MC Runs/MC Runs_TunedParams/")
-fwrite(params,file="../results/MC Runs/MC Runs_TunedParams/params.csv")
-fwrite(pol,file="../results/MC Runs/MC Runs_TunedParams/policy.csv")
-fwrite(ems,file="../results/MC Runs/MC Runs_TunedParams/emissions.csv")
-fwrite(climtemp,file="../results/MC Runs/MC Runs_TunedParams/temperature.csv")
+fwrite(params,file=paste0("../results/MC Runs/MC Runs_TunedParams/params", fig_suffix, ".csv"))
+fwrite(pol,file=paste0("../results/MC Runs/MC Runs_TunedParams/policy", fig_suffix, ".csv"))
+fwrite(ems,file=paste0("../results/MC Runs/MC Runs_TunedParams/emissions", fig_suffix, ".csv"))
+fwrite(climtemp,file=paste0("../results/MC Runs/MC Runs_TunedParams/temperature", fig_suffix, ".csv"))
 
 
 # ####------kmeans clustering of tuned output---------
 
 
-params=fread("../results/MC Runs/MC Runs_TunedParams/params.csv")
-pol=fread("../results/MC Runs/MC Runs_TunedParams/policy.csv")
-ems=fread("../results/MC Runs/MC Runs_TunedParams/emissions.csv")
+params=fread(paste0("../results/MC Runs/MC Runs_TunedParams/params", fig_suffix, ".csv"))
+pol=fread(paste0("../results/MC Runs/MC Runs_TunedParams/policy", fig_suffix, ".csv"))
+ems=fread(paste0("../results/MC Runs/MC Runs_TunedParams/emissions", fig_suffix, ".csv"))
+
 mc=dim(params)[1]
 
 df=cbind(pol,ems)

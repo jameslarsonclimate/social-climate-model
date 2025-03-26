@@ -170,87 +170,87 @@ ts[16:20] <- seq(peak - peak/5, 0, length.out = 5)
 # fwrite(testgrid,file="../results/MC Runs/parameter_tune_mitigation.csv")
 
 # #-------------Monte Carlo of full model, with mitigation, policy, and option parameters weighted by tuning-derived probability----------
-source("src/model.R")
+# source("src/model.R")
 
-print('reading in MC Runs files')
+# print('reading in MC Runs files')
 
-polopparams=fread("../results/MC Runs/parameter_tune.csv")
-mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
+# polopparams=fread("../results/MC Runs/parameter_tune.csv")
+# mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
 
-#initial opinion distribution - not varied, but fixed at particular values from Pew Opinion Data
-frac_opp_01=0.07 
-frac_neut_01=0.22 
+# #initial opinion distribution - not varied, but fixed at particular values from Pew Opinion Data
+# frac_opp_01=0.07 
+# frac_neut_01=0.22 
 
-mc=100000
-params=matrix(nrow=mc,ncol=22)
-pol=matrix(nrow=mc,ncol=81)
-ems=matrix(nrow=mc,ncol=81)
-climtemp=matrix(nrow=mc,ncol=81)
+# mc=100000
+# params=matrix(nrow=mc,ncol=22)
+# pol=matrix(nrow=mc,ncol=81)
+# ems=matrix(nrow=mc,ncol=81)
+# climtemp=matrix(nrow=mc,ncol=81)
 
-set.seed(2090)
-i=0
+# set.seed(2090)
+# i=0
 
-print('starting while loop')
+# print('starting while loop')
 
-while(i<=mc){
-  skip_to_next=FALSE
-  #draw mitigation, policy and opinion parameters, weighting by tuned probability
-  polops=as.numeric(polopparams[sample(1:dim(polopparams)[1],size=1,prob=polopparams$sampleweight),1:9])
-  homophily_param1=polops[1]
-  forcestrong1=polops[2]
-  forceweak1=polops[3]
-  evidenceeffect1=polops[4]
-  policyopinionfeedback_01=polops[5]
-  pol_response1=polops[6]
-  pol_feedback1=polops[7]
-  biassedassimilation1=polops[8]
-  shiftingbaselines1=polops[9]
+# while(i<=mc){
+#   skip_to_next=FALSE
+#   #draw mitigation, policy and opinion parameters, weighting by tuned probability
+#   polops=as.numeric(polopparams[sample(1:dim(polopparams)[1],size=1,prob=polopparams$sampleweight),1:9])
+#   homophily_param1=polops[1]
+#   forcestrong1=polops[2]
+#   forceweak1=polops[3]
+#   evidenceeffect1=polops[4]
+#   policyopinionfeedback_01=polops[5]
+#   pol_response1=polops[6]
+#   pol_feedback1=polops[7]
+#   biassedassimilation1=polops[8]
+#   shiftingbaselines1=polops[9]
   
-  mit=as.numeric(mitparams[sample(1:dim(mitparams)[1],size=1,prob=mitparams$sampleweight),1:2])
-  m_max1=mit[1]
-  r_max1=mit[2]
+#   mit=as.numeric(mitparams[sample(1:dim(mitparams)[1],size=1,prob=mitparams$sampleweight),1:2])
+#   m_max1=mit[1]
+#   r_max1=mit[2]
   
-  #uniform sampling of other model parameters -mostly adoption-related
-  ced_param1=runif(1,0,0.5)
-  policy_pbcchange_max1=runif(1,0,1)
-  pbc_01=runif(1,-2,0)
-  pbc_steep1=runif(1,1,3)
-  opchangeparam=runif(1,0,1)
-  pbc_opinionchange1=c(opchangeparam,0,-1*opchangeparam) #constrain opinion effect on adoption to be symmetric for opposers and supporters
-  etc_total1=runif(1,0,2)
-  normeffect1=runif(1,0,1)
-  adopt_effect1=runif(1,0,0.3)
-  lbd_param01=runif(1,0,0.3)
-  lag_param01=round(runif(1,0,30))
+#   #uniform sampling of other model parameters -mostly adoption-related
+#   ced_param1=runif(1,0,0.5)
+#   policy_pbcchange_max1=runif(1,0,1)
+#   pbc_01=runif(1,-2,0)
+#   pbc_steep1=runif(1,1,3)
+#   opchangeparam=runif(1,0,1)
+#   pbc_opinionchange1=c(opchangeparam,0,-1*opchangeparam) #constrain opinion effect on adoption to be symmetric for opposers and supporters
+#   etc_total1=runif(1,0,2)
+#   normeffect1=runif(1,0,1)
+#   adopt_effect1=runif(1,0,0.3)
+#   lbd_param01=runif(1,0,0.3)
+#   lag_param01=round(runif(1,0,30))
   
-#also add feedback from temperature to bau emissions
-temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
+# #also add feedback from temperature to bau emissions
+# temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
 
-m=tryCatch(model(), error = function(e) {  # temperature_anomaly = ts
-    skip_to_next <<- TRUE
-    print(paste("Error occurred, skipping iteration", i, ":", e$message))
-})
+# m=tryCatch(model(), error = function(e) {  # temperature_anomaly = ts
+#     skip_to_next <<- TRUE
+#     print(paste("Error occurred, skipping iteration", i, ":", e$message))
+# })
 
-if(skip_to_next) { 
-    if(!exists("e")) print(paste("Skipping iteration", i)) # In case skip_to_next was set elsewhere
-    next 
-}
+# if(skip_to_next) { 
+#     if(!exists("e")) print(paste("Skipping iteration", i)) # In case skip_to_next was set elsewhere
+#     next 
+# }
 
-#save output
-params[i,]=c(polops,mit,ced_param1,policy_pbcchange_max1,pbc_01,pbc_steep1,opchangeparam,etc_total1,normeffect1,adopt_effect1,lbd_param01,lag_param01,temp_emissionsparam01)
-pol[i,]=m$policy
-ems[i,]=m$totalemissions
-climtemp[i,]=m$temp[,1]
+# #save output
+# params[i,]=c(polops,mit,ced_param1,policy_pbcchange_max1,pbc_01,pbc_steep1,opchangeparam,etc_total1,normeffect1,adopt_effect1,lbd_param01,lag_param01,temp_emissionsparam01)
+# pol[i,]=m$policy
+# ems[i,]=m$totalemissions
+# climtemp[i,]=m$temp[,1]
 
-if(i%%1000==0) print(i)
-i=i+1
-}
-colnames(params)=c(colnames(polopparams)[1:9],colnames(mitparams)[1:2],"ced","policy_pbc","pbc_init","pbc_steep","policy_adoption","etc_total","normeffect","adopt_effect","lbd_param","lag_param","temp_emissions")
-dir.create("../results/MC Runs/MC Runs_TunedParams/")
-fwrite(params,file="../results/MC Runs/MC Runs_TunedParams/params.csv")
-fwrite(pol,file="../results/MC Runs/MC Runs_TunedParams/policy.csv")
-fwrite(ems,file="../results/MC Runs/MC Runs_TunedParams/emissions.csv")
-fwrite(climtemp,file="../results/MC Runs/MC Runs_TunedParams/temperature.csv")
+# if(i%%1000==0) print(i)
+# i=i+1
+# }
+# colnames(params)=c(colnames(polopparams)[1:9],colnames(mitparams)[1:2],"ced","policy_pbc","pbc_init","pbc_steep","policy_adoption","etc_total","normeffect","adopt_effect","lbd_param","lag_param","temp_emissions")
+# dir.create("../results/MC Runs/MC Runs_TunedParams/")
+# fwrite(params,file="../results/MC Runs/MC Runs_TunedParams/params.csv")
+# fwrite(pol,file="../results/MC Runs/MC Runs_TunedParams/policy.csv")
+# fwrite(ems,file="../results/MC Runs/MC Runs_TunedParams/emissions.csv")
+# fwrite(climtemp,file="../results/MC Runs/MC Runs_TunedParams/temperature.csv")
 
 
 # ####------kmeans clustering of tuned output---------
