@@ -72,7 +72,7 @@ pbc_steep1=2
 #opinion effect on adoption - to what extent does opinion on climate change affect probability of adopting mitigative behaviors?
 #parameterized as a shift in the midpoint of the adoption-pbc curve to the left => negative numbers mean adoption more likely conditional on pbc
 #defined relative to neutral, so middle value should be 0
-pbc_opinionchange1 = c(0.2, 0, -0.5)  # effect of climate chnage opinion on probability of adoption for opposition, neutral, support
+pbc_opinionchange1=c(0.2,0,-0.5) #effect of climate chnage opinion on probability of adoption for opposition, neutral, support
 
 #initial pbc
 pbc_01=-1.5
@@ -108,11 +108,9 @@ forcefunc=function(force_opp=forcestrong1,force_neut=forceweak1,force_supp=force
 
 #Emissions depend on bau emissions, adoption of mitigative behaviours, and policy
 
-# emissions=read.csv("../data/emissions_ssp3_rcp7.csv")
-emissions = read.csv("../data/emissions_ssp3_rcp7-moreRegions.csv")
+emissions=read.csv("../data/emissions_ssp3_rcp7.csv")
 bau1=emissions[,3]/1000*12/(12+16+16) #conversion factor from MtCO2 per year to GtC per year
-# bau_outside1=emissions[,4]/1000*12/(12+16+16)
-bau_outside1=emissions[,6:9]/1000*12/(12+16+16)
+bau_outside1=emissions[,4]/1000*12/(12+16+16)
 
 #the temp_emissionsparam parameter controls a feedback on baseline emissions from temperature change
 #by default it is set to zero, but distributions in monte carlo runs are drawn from Woodard, Davis and Randerson 2019, PNAS
@@ -158,7 +156,5 @@ biassedassimilation1=0
 #a value of 1 means baselines shift according to pareameters estimated in Moore et al 2019
 shiftingbaselines1=0
 
-# control the natural variability multiplier. Defaults to 8, set by author
-natvar_multiplier1 = 8
-
-
+# This parameter scales the natural variability in the weather data to give a better fit
+natvar_multiplier1 = 8 
