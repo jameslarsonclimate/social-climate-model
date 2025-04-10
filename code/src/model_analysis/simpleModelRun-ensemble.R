@@ -14,14 +14,50 @@ evidenceeffect1 <- 0.15    # Strength of evidence effect
 biassedassimilation1 <- 0.1  # Strength of biased assimilation
 shiftingbaselines1 <- 1   # Whether shifting baselines are active
 
-# Create a timeseries with a triangular pulse from index 10 to 20
-# Initialize a vector of 81 zeros and define the peak value
-ts <- numeric(81)
-peak <- 2
+##### Create a timeseries with a triangular pulse from index 10 to 20
+# # Initialize a vector of 81 zeros and define the peak value
+# ts <- numeric(81)
+# peak <- 2
 
-# Create ascending values from index 10 to 15 and descending values from index 16 to 20
-ts[11:15] <- seq(0, peak, length.out = 6)
-ts[16:21] <- seq(peak - peak/5, 0, length.out = 5)
+# # Create ascending values from index 10 to 15 and descending values from index 16 to 20
+# ts[11:15] <- seq(0, peak, length.out = 6)
+# ts[16:21] <- seq(peak - peak/5, 0, length.out = 5)
+
+#### Create a timeseries with specific pattern:
+# - Zero for first 29 years
+# - Ramp down to -1 over 5 years (years 30-34)
+# - Stay at -1 for 10 years (years 35-44)
+# - Zero for remaining years
+ts <- numeric(81)
+
+# Ramp down from 0 to -1 over 5 years (timesteps 30-34)
+ts[30:34] <- seq(0, -1, length.out = 5)
+
+# Constant -1 for 10 years (timesteps 35-44)
+ts[35:44] <- -1
+
+# The rest remains at 0 (default)
+
+#### Create a timeseries with a pulsed cooling pattern:
+# - First 10 timesteps are 0
+# - Then 4 cycles of: 4 years cooling (-0.2, -0.4, -0.6, -0.8) followed by 4 years of 0
+# - Remaining timesteps are 0
+ts <- numeric(81)
+
+# First 10 timesteps are already 0 (default)
+
+# Define the cooling pattern to repeat
+cooling_pattern <- c(-0.2, -0.4, -0.6, -0.8, 0, 0, 0, 0)
+
+# Loop through 4 cycles of the pattern
+for (cycle in 1:4) {
+  # Calculate starting index for this cycle
+  start_idx <- 10 + (cycle-1) * 8 + 1
+  end_idx <- start_idx + 7
+  
+  # Apply the pattern
+  ts[start_idx:end_idx] <- cooling_pattern
+}
   
 # Number of runs in ensemble
 num_runs <- 100
@@ -35,7 +71,7 @@ for (i in 1:num_runs) {
   # ts <- create_pulse_timeseries()
   
   # Run the model and store the result
-  results_list[[i]] <- model()  # model(temperature_anomaly = ts)
+  results_list[[i]] <- model(temperature_anomaly = ts)  # model(temperature_anomaly = ts)
   
   # Print progress
   if (i %% 10 == 0) print(paste("Completed run", i, "of", num_runs))
