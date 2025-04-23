@@ -12,8 +12,11 @@ library(randomForestExplainer)
 setwd("/Users/jglarson/Documents/Research/social-climate-model/code")
 source("src/model_analysis/model_parametertune.R")
 
-fig_suffix = '_pulseTempAnom_2K_2030-2040'
+# fig_suffix = '_pulseTempAnom_2K_2030-2040'
+# fig_suffix = '_pulseTempAnom_2K_2070-2080'
+fig_suffix = '_noNatVar'
 # fig_suffix = ''
+# fig_suffix = '_fixedNatVar-mediumClimateSupport'
 
 # Create a timeseries with a triangular pulse from index 10 to 20
 # Initialize a vector of 81 zeros and define the peak value
@@ -21,153 +24,77 @@ ts <- numeric(81)
 peak <- 2
 
 # Create ascending values from index 10 to 15 and descending values from index 16 to 20
-ts[10:15] <- seq(0, peak, length.out = 6)
-ts[16:20] <- seq(peak - peak/5, 0, length.out = 5)
+# ts[10:15] <- seq(0, peak, length.out = 6)
+# ts[16:20] <- seq(peak - peak/5, 0, length.out = 5)
+ts[50:55] <- seq(0, peak, length.out = 6)
+ts[56:60] <- seq(peak - peak/5, 0, length.out = 5)
 
-# #subset of variable to vary - those in the opinion and policy components
+# Example output of internally generated natural variability that results in:
+# - Majority climate supporters in ~2055
+# - Net zero emissions in ~2090
+# ts <- c(
+#   0.133842953, -0.065487578, 0.129109393, -0.069017929, 0.584610252,
+#   0.319442202, 0.350141883, 0.856237555, 0.740352139, 0.318956116,
+#   0.505064617, 0.760360126, 0.094969291, -0.073465609, -0.116369872,
+#   -0.473726221, 0.157055352, -0.064971138, -0.132389645, 0.028965936,
+#   0.257804372, 0.325864269, 0.596301545, 0.310239613, -0.005382159,
+#   -0.125759004, -0.276082519, -0.480876377, -0.537635965, -0.435412122,
+#   -0.297650389, -0.319626429, -0.561412574, -0.715974137, -0.663435558,
+#   -0.390001544, -0.427180852, -0.408288461, 0.175796509, -0.226157358,
+#   -0.395769509, -0.250313217, -0.365319772, -0.231098545, 0.018702495,
+#   -0.242858404, 0.037601432, -0.040663705, 0.301615875, 0.126242778,
+#   -0.394601911, -0.117267255, 0.143090743, -0.127437175, 0.095114001,
+#   0.699648894, 0.942651981, 0.387641568, 0.861152703, 0.908385819,
+#   0.588097841, 0.917275321, 0.721406489, 0.535314193, 0.159254638,
+#   0.119618600, -0.114804506, 0.381691350, 0.274759474, -0.309654467,
+#   -0.162296890, -0.411838048, -0.242283146, -0.167290071, 0.028700409,
+#   -0.032134208, -0.398540297, -0.037209780, -0.202788485, -0.274764916,
+#   -0.518708527
+# )
 
-# nsim=20000
+# Example output of internally generated natural variability that results in:
+# - Majority climate supporters in ~2035
+# - Net zero emissions in ~2075
+# This is a climate that promotes climate supporters
+# ts <- c(
+#   -0.67704994, -0.56296169, 0.20469505, 0.12178787, -0.30266837, -0.07048941,
+#   0.28024932, 0.24712123, -0.17678515, 0.04101050, 0.24998563, -0.34139183,
+#   0.18872790, 0.35319768, 0.47587127, 0.16041274, 0.04916426, 0.51155494,
+#   0.65448188, 0.48125646, 0.76822399, 0.64792114, 0.74081283, 0.77439964,
+#   0.69447310, 0.52472408, 0.51376338, 0.16855018, 0.49650381, 0.58099224,
+#   0.48498498, 0.38242786, 0.52401343, 0.38257102, 0.69391815, -0.25488174,
+#   0.48000086, 0.48987867, 0.55391545, 0.34511112, 0.69226122, 0.40424713,
+#   0.35856940, 0.98332664, 0.34301646, 0.53542841, 0.38079007, 0.01473457,
+#   0.28090790, -0.02899917, 0.06952627, 0.53095578, -0.21523872, -0.19720691,
+#   0.11654373, -0.31103421, -0.02856493, 0.20379062, -0.18102896, -0.23051458,
+#   -0.30129623, -0.47995420, 0.06583502, -0.10761788, -0.14177160, -0.07291975,
+#   -0.37901846, -0.23060744, -0.51540471, -0.21383997, -0.30768690, -0.62547881,
+#   -0.35078094, -0.43146621, -0.60706820, -0.33365032, -0.07809506, -0.11361601,
+#   -0.48523043, -0.19303042, 0.04642298
+# )
 
-# params=matrix(nrow=nsim,ncol=9)
-# optune=array(dim=c(8,3,nsim))
-# poltune=matrix(nrow=nsim,ncol=8)
+# # Example output of internally generated natural variability that results in:
+# # - Climate supporters never reach majority
+# # - Emissions stay high (SSP3-7.0) for entirety of run
+# # This is a climate that promotes buisness as usual
+# ts <- c(
+#   0.37927546, 0.14797994, -0.07297981, -0.08728853, -0.07830655, -0.08790408,
+#   -0.05810093, -0.20510265, 0.04376236, 0.23367906, 0.05704081, 0.50227240,
+#   0.39932231, -0.24663818, 0.19560222, 0.16719105, -0.10275608, -0.44936831,
+#   -0.06344066, 0.11405526, -0.43049336, -0.63392917, 0.11367537, -0.46577790,
+#   -0.15761725, -0.21891219, 0.13652073, -0.19472288, -0.42080276, -0.23087182,
+#   -0.14347206, -0.44581006, 0.46876776, 0.02828554, -0.40988185, -0.18645090,
+#   -0.71127151, -0.68891421, -0.12533891, -0.46600504, -0.43007705, -0.67696496,
+#   0.04989338, 0.08060462, 0.18540005, 0.36929543, 0.05028143, 0.23517306,
+#   0.43408447, -0.14329964, 0.12233230, -0.03682000, 0.12615687, -0.08833765,
+#   0.02127670, 0.17222456, 0.55058025, 0.28175860, -0.06390461, 0.43561294,
+#   0.10091578, -0.45414046, 0.24005863, 0.15483816, -0.15760568, 0.23584144,
+#   0.26816849, 0.02089773, -0.22644128, 0.08683933, 0.10918248, 0.37218345,
+#   0.24975125, -0.23387813, -0.43169722, -0.27474710, -0.23422222, -0.58773169,
+#   -0.17133926, -0.60449470, -0.61034812
+# )
 
-# for(i in 1:nsim){
-#   #draw homophily parameter
-#   homophily_param_tune=max(1-rbeta(1,3,10),0.33333334)
-#   forcestrong_tune=runif(1,0,1)
-#   forceweak_tune=runif(1,0,forcestrong_tune)
-#   evidenceeffect_tune=runif(1,0,0.3)
-#   policyopinionfeedback_param_tune=runif(1,0,0.005)
-#   pol_response_tune=runif(1,1,30)
-#   pol_feedback_tune=runif(1,pol_response_tune*-1,pol_response_tune)
-#   biassedassimilation_tune=runif(1,0,1)
-#   shiftingbaselines_tune=ifelse(runif(1,0,1)>0.75,0,1)
-  
-  
-#   params[i,]=c(homophily_param_tune,forcestrong_tune,forceweak_tune,evidenceeffect_tune,policyopinionfeedback_param_tune,pol_response_tune,pol_feedback_tune,biassedassimilation_tune,shiftingbaselines_tune)
-#   m=model_tune(homophily_param = homophily_param_tune,forcestrong = forcestrong_tune,forceweak = forceweak_tune,evidenceeffect = evidenceeffect_tune,policyopinionfeedback_param = policyopinionfeedback_param_tune,pol_response = pol_response_tune,pol_feedback = pol_feedback_tune,biassedassimilation = biassedassimilation_tune,shiftingbaselines=shiftingbaselines_tune)
-#   optune[,,i]=m$distributions;poltune[i,]=m$policy
-  
-#   if(i%%1000==0) print(i)
-  
-# }
 
-# #compare output to observations
-# op=read.csv("../data/Data for Hindcasting/opinion/pew_final.csv")
-# op=op[-1,] #omit initialization year
-# pol=read.csv("../data/Data for Hindcasting/policy/worldbank_carbonprices_finalforpewcountries.csv")
-# pol=pol[2:8,3]
-
-# #calculate total error for each simulation
-# operror=numeric(length=nsim);polerror=numeric(length=nsim)
-
-# for(i in 1:nsim){
-#   operror[i]=sqrt(mean(as.matrix((op[,c(4,3,2)]/100-optune[c(4,5,6,8),,i])^2)))
-#   polerror[i]=sqrt(mean((pol-poltune[i,2:8])^2))
-  
-#   if(i%%1000==0) print(i)
-# }
-
-# #get relative performace - standardize across all model runs
-# operror=(operror-mean(operror))/sd(operror)
-# polerror=(polerror-mean(polerror))/sd(polerror)
-# toterror=(operror+polerror)/2 
-
-# cor=apply(params,MARGIN=2,function(x) cor(x,toterror))
-# covparamserror=data.frame(params=c("Homophily","Strong Force","Weak Force","Evidence","Pol-Opinion","Status-Quo Bias","Pol Int Feedback","Biased Assimilation","Shifting Baselines"),cor=cor)
-
-# sampleweight=(-1*toterror)-min(-1*toterror) #convert to strictly positive metric increasing in model performance
-# sampleweight=sampleweight/sum(sampleweight) #convert to "probability"
-
-# #plot paremter densities before and after tuning
-# densplots=list()
-# pdf(file="../results/figureS1a.pdf")
-# par(mfrow=c(3,3))
-
-# for(i in 1:dim(params)[2]){
-#   priordens=density(params[,i])
-#   postdens=density(params[,i],weights=sampleweight)
-#   plot(x=priordens$x,y=priordens$y,col="#135678",lwd=2,xlab="",ylab="Density",main=covparamserror$params[i],las=1,type="l",ylim=range(c(priordens$y,postdens$y)),cex=1.5)
-#   lines(x=postdens$x,y=postdens$y,col="#84c3a0",lwd=2)
-#   if(i==3) legend("topright",legend=c("Prior","Posterior"),lwd=2,col=c("#135678","#84c3a0"),bty="n",cex=1.5)
-# }
-# dev.off()
-
-# #calculate covariance of parameters, weighting by error
-# samp=sample(1:nsim,nsim,replace=TRUE,prob=sampleweight)
-
-# postcov=cor(params[samp,])
-# diag(postcov)=NA
-# postcov[3,2]=NA;postcov[2,3]=NA #weak and strong forces are mechanically correlated
-# colnames(postcov)=covparamserror$params;rownames(postcov)=covparamserror$params
-# postcov[which(upper.tri(postcov))]=NA
-# pdf(file="../results/figureS1b.pdf")
-# par(mar=c(9,9,1,6))
-# plot(postcov[-1,-9],axis.col=list(side=1,las=2),axis.row=list(side=2,las=1),xlab="",ylab="",main="",na.col="grey",col=c('#fc8d59','#fee08b','#d9ef8b','#91cf60','#1a9850'))
-# dev.off()
-
-# params_tot=cbind(params,sampleweight)
-# colnames(params_tot)=c(as.character(covparamserror$params),"sampleweight")
-# dir.create("../results/MC Runs/")
-# fwrite(params_tot,file="../results/MC Runs/parameter_tune.csv")
-
-# #-----Code to fit m_max and r_max given Andersson 2019 study of the effects of carbon tax in Sweden --------------
-
-# #Andersson finds a mean Swedish CO2 tax over the 1991 - 2005 period reduced emissions by 12.5% in 2005
-# #simulate emissions reduction under real policy values given range of m_max and r_max to fit observations
-
-# tax=c(rep(30,9),seq(44,109,length.out=6)) #based on descriptions of Swedish tax scheme
-
-# nsamp=10000
-# testgrid=matrix(nrow=nsamp,ncol=2)
-# for(i in 1:nsamp){
-#   testgrid[i,1]=runif(1,min=0.01,max=0.1)
-#   testgrid[i,2]=runif(1,min=5,max=70)
-# }
-
-# #simulate policy effect using emissions module
-
-# mitigationcalibration=function(policy,mmax_t,rmax,r0=2){
-#   mit=matrix(nrow=length(policy),ncol=length(policy))
-#     for(i in 1:length(policy)){
-#      m_t=mmax_t*log(policy[i])/log(300) #300 is maximum value policy can take
-#      #lifetime of investments also depends on policy
-#      r_t=min(r0*(1+policy[i]/10),rmax)
-#      #add effect of current policy
-#      #mitigation is a t*t matrix of zeroes - fill in columns representing persistent effect of yearly mitigation activity
-#      futuretime=i:length(policy)-i
-#      mit[,i]=c(rep(0,i-1),m_t*exp(-futuretime/r_t))
-#    }
-#    totmit=rowSums(mit)
-#    return(totmit[length(policy)]*100)
-#  }
-
-#  calib=numeric(length=dim(testgrid)[1])
-#  for(j in 1:length(calib)){
-#    calib[j]=mitigationcalibration(tax,testgrid[j,1],testgrid[j,2])
-#  }
- 
-# testerror=sqrt((calib-12.5)^2)
-# testerror=(testerror-mean(testerror))/sd(testerror)
-# sampleweight=(-1*testerror)-min(-1*testerror) #convert to strictly positive metric increasing in model performance
-# sampleweight=sampleweight/sum(sampleweight) #convert to "probability"
-# pdf(file="../results/figureS2.pdf")
-# par(mfrow=c(1,2))
-# titles=c("Max Annual Mitigation","Max Mitigation Scaling")
-# xlabs=c("Fraction Emissions","Years")
-# for(i in 1:dim(testgrid)[2]){
-#   priordens=density(testgrid[,i])
-#   postdens=density(testgrid[,i],weights=sampleweight)
-#   plot(x=priordens$x,y=priordens$y,col="#135678",lwd=2,xlab=xlabs[i],ylab="Density",main=titles[i],las=1,type="l",ylim=range(c(priordens$y,postdens$y)),cex=1.5)
-#   lines(x=postdens$x,y=postdens$y,col="#84c3a0",lwd=2)
-#   if(i==1) legend("topright",legend=c("Prior","Posterior"),lwd=2,col=c("#135678","#84c3a0"),bty="n",cex=1.5)
-# }
-# dev.off()
-# testgrid=cbind(testgrid,sampleweight)
-# colnames(testgrid)=c("m_max","r_max","sampleweight")
-
-# fwrite(testgrid,file="../results/MC Runs/parameter_tune_mitigation.csv")
 
 # #-------------Monte Carlo of full model, with mitigation, policy, and option parameters weighted by tuning-derived probability----------
 source("src/model.R")
@@ -227,7 +154,7 @@ while(i<=mc){
 temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
 
 # If updating the model parameters, make sure to update fig_suffix as well!
-m=tryCatch(model(temperature_anomaly = ts), error = function(e) {  # model(temperature_anomaly = ts)
+m=tryCatch(model(natvar_multiplier = 0), error = function(e) {  # model(temperature_anomaly = ts)
     skip_to_next <<- TRUE
     print(paste("Error occurred, skipping iteration", i, ":", e$message))
 })

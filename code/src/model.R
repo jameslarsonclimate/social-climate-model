@@ -95,7 +95,7 @@ model=function(time=1:81,
   bau_mass[1,]=mass_0
   
   if(is.null(natvar)) naturalvariability=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
-  if(!is.null(natvar)) naturalvariability=natvar
+  if(!is.null(natvar)) naturalvariability=natvar*natvar_multiplier
   
   weather=numeric(length=length(time))
   weather[1]=temperature[1,1]+naturalvariability[1]
@@ -137,8 +137,8 @@ model=function(time=1:81,
     evidence[t,]=temp5[[2]]
     
   }
-  a=list(time,distributions,policy,pbc,nadopters,adoptersfrac,emissions,mitigation,bau+bau_outside_region,mass,temperature,bau_temp,evidence,anomaly,year0:(year0+length(time)-1),totalemissions, weather)
-  names(a)=c("time","distributions","policy","pbc","nadopters","adoptersfrac","emissions","mitigation","bau_total","mass","temp","bau_temp","evidence","anomaly","year","totalemissions", "weather")
+  a=list(time,distributions,policy,pbc,nadopters,adoptersfrac,emissions,mitigation,bau+bau_outside_region,mass,temperature,bau_temp,evidence,anomaly,year0:(year0+length(time)-1),totalemissions, weather, naturalvariability)
+  names(a)=c("time","distributions","policy","pbc","nadopters","adoptersfrac","emissions","mitigation","bau_total","mass","temp","bau_temp","evidence","anomaly","year","totalemissions", "weather", "naturalvariability")
   
   return(a)
 }
