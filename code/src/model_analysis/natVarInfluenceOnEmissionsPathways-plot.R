@@ -15,15 +15,11 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_pulseTempAnom_2K_2030-2040'
 # fig_suffix = '_pulseTempAnom_2K_2070-2080'
 fig_suffix = ''
+fig_suffix = '_noNatVar'
+# fig_suffix = '_fixedNatVar-lowClimateSupport'
+# fig_suffix = '_fixedNatVar-mediumClimateSupport'
+# fig_suffix = '_fixedNatVar-highClimateSupport'
 
-# Create a timeseries with a triangular pulse from index 10 to 20
-# Initialize a vector of 81 zeros and define the peak value
-ts <- numeric(81)
-peak <- 2
-
-# Create ascending values from index 10 to 15 and descending values from index 16 to 20
-ts[10:15] <- seq(0, peak, length.out = 6)
-ts[16:20] <- seq(peak - peak/5, 0, length.out = 5)
 
 
 # ####------kmeans clustering of tuned output---------
@@ -36,6 +32,24 @@ print(paste("Reading emissions file:", emissions_file))
 ems=fread(emissions_file)
 
 mc=dim(params)[1]
+
+
+########## Add a user-defined mask of values to the data ###########################
+
+# mask <- params$Evidence > 0.2
+# mask_title = "Evidence>0.2"
+
+mask <- params$"Shifting Baselines" == 0
+mask_title = "shiftingBaselines=0"
+
+if (exists("mask")) {
+  print(paste("Masking values outside", mask_title))
+  ems <- ems[mask, , drop = FALSE]
+  params <- params[mask, , drop = FALSE]
+  pol <- pol[mask, , drop = FALSE]
+}
+
+
 
 
 ##########################################################################################################
@@ -85,16 +99,13 @@ plot_emission_trajectories <- function(ems_data, alpha = 0.001, n_sample = NULL,
   mid_year <- years[mid_col]
   mid_values <- ems_matrix[, mid_col]
   
-  # Create title with suffix if provided
-  main_title <- "Global Emissions Trajectories (2020-2100)\n"
+  # Create title with mask title and suffix if provided
+  main_title <- "Global Emissions Trajectories (2020-2100)"
   if (!is.null(title_suffix) && title_suffix != "") {
-  main_title <- paste0(main_title, "-", title_suffix)
+    main_title <- paste0(main_title, " - ", title_suffix)
   }
+  main_title <- paste0(main_title, "\nMask: ", mask_title)
 
-        # title = paste0("Emissions Trajectories and Densities by Sequential Subset",
-            #  if (title_suffix != '') paste0("\n", title_suffix) else "\n"),
-
-  
   # Find y-axis limits to ensure both plots align
   y_min <- min(df_long$emission, na.rm = TRUE)
   y_max <- max(df_long$emission, na.rm = TRUE)
@@ -175,11 +186,11 @@ plot_emission_trajectories <- function(ems_data, alpha = 0.001, n_sample = NULL,
 
 # 2. Plot all trajectories with very low alpha (for a final visualization)
 # full_plot <- plot_emission_trajectories(ems, alpha = 0.01, title_suffix = fig_suffix)
-# ggsave(paste0("../results/all_emission_trajectories", fig_suffix, ".jpg"), full_plot, width = 10, height = 7)
+# ggsave(paste0("../results/all_emission_trajectories", fig_suffix, "_", mask_title, ".jpg"), full_plot, width = 10, height = 7)
 
 # 3. For faster preview or interactive exploration, plot a sample
 # preview_plot <- plot_emission_trajectories(ems, alpha = 0.003, n_sample = 15000, title_suffix = fig_suffix)
-# ggsave(paste0("../results/emission_trajectories-preview", fig_suffix, ".jpg"), preview_plot, width = 10, height = 7)
+# ggsave(paste0("../results/emission_trajectories-preview", fig_suffix, "_", mask_title, ".jpg"), preview_plot, width = 10, height = 7)
 
 
 
@@ -239,7 +250,8 @@ plot_decadal_emission_densities <- function(ems_data, years = 2020:2100, title_s
   combined_plot <- wrap_plots(plot_list, ncol = 3) +
     plot_annotation(
       title = paste0("Emissions Distribution at Start of Each Decade", 
-                     if (title_suffix != '') paste0("\n", title_suffix) else "\n"),
+                     if (title_suffix != '') paste0("\n", title_suffix) else "\n",
+                     if (exists("mask_title") && mask_title != "") paste0(" - Mask: ", mask_title) else ""),
       subtitle = paste0(nrow(ems_matrix), " simulated pathways"),
       theme = theme(
         plot.title = element_text(size = 16, hjust = 0.5),
@@ -251,7 +263,9 @@ plot_decadal_emission_densities <- function(ems_data, years = 2020:2100, title_s
 
 # Example usage:
 decade_density_plot <- plot_decadal_emission_densities(ems, years = 2020:2100, title_suffix = fig_suffix)
-ggsave(paste0("../results/emissions_decade_density", fig_suffix, ".png"), decade_density_plot, width = 12, height = 9)
+ggsave(paste0("../results/emissions_decade_density", fig_suffix, 
+              if (exists("mask_title") && mask_title != "") paste0("_", mask_title) else "", ".png"),
+       decade_density_plot, width = 12, height = 9)
 
 
 
@@ -423,15 +437,15 @@ plot_emission_trajectories_by_sequential_subsets <- function(
     p1 + p_2040 + p_mid + p_2080 + plot_layout(ncol = 4, widths = c(4, 1, 1, 1))
   })
   
-  # Stack all rows vertically
+  # Stack all rows vertically with mask_title in the overall title
   combined_plot <- wrap_plots(row_plots, ncol = 1) +
     plot_annotation(
-      title = paste0("Emissions Trajectories and Densities by Sequential Subset",
-             if (title_suffix != '') paste0("\n", title_suffix) else "\n"),
+      title = paste0("Emissions Trajectories and Densities by Sequential Subset\n", 
+      title_suffix, " Mask: ", mask_title),
       subtitle = paste0(nrow(ems_matrix), " simulated pathways, 10 sequential subsets"),
       theme = theme(
-        plot.title = element_text(size = 16, hjust = 0.5),
-        plot.subtitle = element_text(size = 12, hjust = 0.5)
+   plot.title = element_text(size = 16, hjust = 0.5),
+   plot.subtitle = element_text(size = 12, hjust = 0.5)
       )
     )
   return(combined_plot)
@@ -440,5 +454,5 @@ plot_emission_trajectories_by_sequential_subsets <- function(
 # Example usage:
 # subset_density_plot <- plot_emission_trajectories_by_sequential_subsets(
 #   ems, alpha = 0.003, years = 2020:2100, title_suffix = fig_suffix)
-# ggsave(paste0("../results/emissions_sequential_subset_density", fig_suffix, ".png"),
+# ggsave(paste0("../results/emissions_sequential_subset_density", fig_suffix, "_", mask_title, ".png"),
 #        subset_density_plot, width = 16, height = 22)
