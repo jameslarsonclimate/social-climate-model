@@ -14,9 +14,9 @@ source("src/model_analysis/model_parametertune.R")
 
 # fig_suffix = '_pulseTempAnom_2K_2030-2040'
 # fig_suffix = '_pulseTempAnom_2K_2070-2080'
-fig_suffix = ''
+# fig_suffix = ''
 fig_suffix = '_noNatVar'
-# fig_suffix = '_fixedNatVar-lowClimateSupport'
+# fig_suffix = '_fixedNatVar-lackOfClimateSupport'
 # fig_suffix = '_fixedNatVar-mediumClimateSupport'
 # fig_suffix = '_fixedNatVar-highClimateSupport'
 
@@ -39,8 +39,15 @@ mc=dim(params)[1]
 # mask <- params$Evidence > 0.2
 # mask_title = "Evidence>0.2"
 
-mask <- params$"Shifting Baselines" == 0
-mask_title = "shiftingBaselines=0"
+mask <- params$Evidence > 0.2 & params$"Shifting Baselines" != 0
+mask_title = "Evidence>0.2_and_ShiftingBaselines!=0"
+
+# mask <- params$"Shifting Baselines" == 0
+# mask_title = "shiftingBaselines=0"
+
+# mask_title = ''
+# rm(mask)
+
 
 if (exists("mask")) {
   print(paste("Masking values outside", mask_title))
@@ -220,28 +227,34 @@ plot_decadal_emission_densities <- function(ems_data, years = 2020:2100, title_s
   # Color palette for decades
   colors <- colorRampPalette(c("#A4BED5", "#476F84", "#023743"))(length(decade_years))
   
+  # Define x‐axis maxima for each of the 9 density plots
+  x_max_values <- c(1.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.5, 1.5, 1.5)
+
   # Create density plots for each decade
   plot_list <- lapply(seq_along(decade_indices), function(i) {
-    idx <- decade_indices[i]
-    year <- decade_years[i]
-    vals <- ems_matrix[, idx]
+    idx      <- decade_indices[i]
+    year     <- decade_years[i]
+    vals     <- ems_matrix[, idx]
     mean_val <- mean(vals, na.rm = TRUE)
     p <- ggplot() +
       geom_density(aes(y = vals), fill = colors[i], color = colors[i], alpha = 0.7) +
-      ylim(y_min, 22) +
+      ylim(-2, 22) +
+      xlim(0, x_max_values[i]) +
       labs(x = NULL, y = NULL, title = as.character(year)) +
       theme_minimal(base_size = 13) +
       theme(
         panel.background = element_rect(fill = "white", color = NA),
-        plot.background = element_rect(fill = "white", color = NA),
-        panel.grid = element_blank(),
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(),
-        plot.title = element_text(size = 13, hjust = 0.5),
-        plot.margin = ggplot2::margin(t = 30, r = 5, b = 5, l = 5, unit = "pt")
+        plot.background  = element_rect(fill = "white", color = NA),
+        panel.grid       = element_blank(),
+        axis.text.y      = element_blank(),
+        axis.ticks.y     = element_blank(),
+        plot.title       = element_text(size = 13, hjust = 0.5),
+        plot.margin      = ggplot2::margin(t = 30, r = 5, b = 5, l = 5, unit = "pt")
       ) +
       geom_hline(yintercept = mean_val, linetype = "dashed", color = "black", size = 0.5) +
-      annotate("text", x = Inf, y = mean_val, label = sprintf("Mean: %.1f", mean_val),
+      annotate("text",
+               x     = Inf, y = mean_val,
+               label = sprintf("Mean: %.1f", mean_val),
                hjust = 1.1, vjust = -0.5, size = 3)
     p
   })

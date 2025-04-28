@@ -91,7 +91,7 @@ ts[16:21] <- seq(peak - peak/5, 0, length.out = 5)
 
 
 # Run the model
-m <- model(natvar_multiplier = 0)
+m <- model()
 
 # Create a scaling coefficient for the secondary axis
 coeff <- 0.05
