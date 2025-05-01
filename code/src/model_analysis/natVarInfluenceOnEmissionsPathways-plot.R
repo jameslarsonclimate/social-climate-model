@@ -14,8 +14,8 @@ source("src/model_analysis/model_parametertune.R")
 
 # fig_suffix = '_pulseTempAnom_2K_2030-2040'
 # fig_suffix = '_pulseTempAnom_2K_2070-2080'
-# fig_suffix = ''
-fig_suffix = '_noNatVar'
+fig_suffix = ''
+# fig_suffix = '_noNatVar'
 # fig_suffix = '_fixedNatVar-lackOfClimateSupport'
 # fig_suffix = '_fixedNatVar-mediumClimateSupport'
 # fig_suffix = '_fixedNatVar-highClimateSupport'
@@ -45,8 +45,8 @@ mask_title = "Evidence>0.2_and_ShiftingBaselines!=0"
 # mask <- params$"Shifting Baselines" == 0
 # mask_title = "shiftingBaselines=0"
 
-# mask_title = ''
-# rm(mask)
+mask_title = ''
+rm(mask)
 
 
 if (exists("mask")) {
@@ -275,10 +275,10 @@ plot_decadal_emission_densities <- function(ems_data, years = 2020:2100, title_s
 }
 
 # Example usage:
-decade_density_plot <- plot_decadal_emission_densities(ems, years = 2020:2100, title_suffix = fig_suffix)
-ggsave(paste0("../results/emissions_decade_density", fig_suffix, 
-              if (exists("mask_title") && mask_title != "") paste0("_", mask_title) else "", ".png"),
-       decade_density_plot, width = 12, height = 9)
+# decade_density_plot <- plot_decadal_emission_densities(ems, years = 2020:2100, title_suffix = fig_suffix)
+# ggsave(paste0("../results/emissions_decade_density", fig_suffix, 
+#               if (exists("mask_title") && mask_title != "") paste0("_", mask_title) else "", ".png"),
+#        decade_density_plot, width = 12, height = 9)
 
 
 

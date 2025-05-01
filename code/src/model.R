@@ -80,7 +80,7 @@ model=function(time=1:81,
   totalemissions=numeric(length=length(time))
   totalemissions[1]=(bau[1]+bau_outside_region[1])*(1+(temp_emissionsparam*temp_0[1]))
   
-  mitigation=matrix(0,nrow=length(time),ncol=length(time)) #must be all zeroes to start
+  mitigation=matrix(0,nrow=length(time),ncol=length(time)) # must be all zeroes to start
   
   temperature=matrix(nrow=length(time),ncol=2)
   temperature[1,]=temp_0

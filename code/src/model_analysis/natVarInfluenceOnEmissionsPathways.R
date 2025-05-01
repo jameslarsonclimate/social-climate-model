@@ -13,8 +13,8 @@ setwd("/Users/jglarson/Documents/Research/social-climate-model/code")
 source("src/model_analysis/model_parametertune.R")
 
 # fig_suffix = '_pulseTempAnom_2K_2030-2040'
-# fig_suffix = '_pulseTempAnom_2K_2070-2080'
-fig_suffix = '_noNatVar'
+fig_suffix = '_pulseTempAnom_2K_2070-2080'
+# fig_suffix = '_noNatVar'
 # fig_suffix = ''
 # fig_suffix = '_fixedNatVar-mediumClimateSupport'
 
@@ -113,6 +113,9 @@ params=matrix(nrow=mc,ncol=22)
 pol=matrix(nrow=mc,ncol=81)
 ems=matrix(nrow=mc,ncol=81)
 climtemp=matrix(nrow=mc,ncol=81)
+dist <- array(NA, dim = c(mc, 81, 3))
+natvar=matrix(nrow=mc,ncol=81)
+weather=matrix(nrow=mc,ncol=81)
 
 set.seed(2090)
 i=0
@@ -154,7 +157,7 @@ while(i<=mc){
 temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
 
 # If updating the model parameters, make sure to update fig_suffix as well!
-m=tryCatch(model(natvar_multiplier = 0), error = function(e) {  # model(temperature_anomaly = ts)
+m=tryCatch(model(temperature_anomaly = ts), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier = 0
     skip_to_next <<- TRUE
     print(paste("Error occurred, skipping iteration", i, ":", e$message))
 })
@@ -169,6 +172,9 @@ params[i,]=c(polops,mit,ced_param1,policy_pbcchange_max1,pbc_01,pbc_steep1,opcha
 pol[i,]=m$policy
 ems[i,]=m$totalemissions
 climtemp[i,]=m$temp[,1]
+dist[i,,]=m$distributions
+natvar[i,]=m$naturalvariability
+weather[i,]=m$weather
 
 if(i%%1000==0) print(i)
 i=i+1
@@ -180,6 +186,10 @@ fwrite(params,file=paste0("../results/MC Runs/MC Runs_TunedParams/params", fig_s
 fwrite(pol,file=paste0("../results/MC Runs/MC Runs_TunedParams/policy", fig_suffix, ".csv"))
 fwrite(ems,file=paste0("../results/MC Runs/MC Runs_TunedParams/emissions", fig_suffix, ".csv"))
 fwrite(climtemp,file=paste0("../results/MC Runs/MC Runs_TunedParams/temperature", fig_suffix, ".csv"))
+# fwrite(dist,file=paste0("../results/MC Runs/MC Runs_TunedParams/distributions", fig_suffix, ".csv"))
+save(dist, file=paste0("../results/MC Runs/MC Runs_TunedParams/distributions", fig_suffix, ".Rdata"))
+fwrite(natvar,file=paste0("../results/MC Runs/MC Runs_TunedParams/natvar", fig_suffix, ".csv"))
+fwrite(weather,file=paste0("../results/MC Runs/MC Runs_TunedParams/weather", fig_suffix, ".csv"))
 
 
 # ####------kmeans clustering of tuned output---------

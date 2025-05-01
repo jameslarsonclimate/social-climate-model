@@ -259,3 +259,100 @@ fig_quantiles <- fig_quantiles_top / fig_quantiles_bottom +
 
 print(fig_quantiles)
 ggsave(paste0("../results/emissions_quantiles_", mask_title, ".png"), plot = fig_quantiles, width = 8, height = 8)
+
+
+
+######################################################################################################
+
+# -----------------------------------------------------------
+# Two-panel figure: quantiles for all experiments and differences vs default
+# -----------------------------------------------------------
+
+# Prepare long-format data for all experiments
+# Calculate median, 5%, and 95% quantiles for each experiment and year
+quantile_long <- lapply(seq_along(experiment_suffixes), function(i) {
+  suffix <- experiment_suffixes[i]
+  exp_name <- experiment_names[i]
+  emissions_file <- paste0("../results/MC Runs/MC Runs_TunedParams/emissions", suffix, ".csv")
+  if (!file.exists(emissions_file)) return(NULL)
+  ems <- fread(emissions_file)
+  params <- fread(paste0("../results/MC Runs/MC Runs_TunedParams/params", suffix, ".csv"))
+  mask <- params$Evidence > 0.2 & params$"Shifting Baselines" != 0
+  if (exists("mask")) ems <- ems[mask, , drop = FALSE]
+  data.frame(
+    Experiment = exp_name,
+    year = years,
+    median = apply(ems, 2, median, na.rm = TRUE),
+    q05 = apply(ems, 2, quantile, probs = 0.05, na.rm = TRUE),
+    q95 = apply(ems, 2, quantile, probs = 0.95, na.rm = TRUE)
+  )
+})
+quantile_long <- do.call(rbind, quantile_long)
+
+# Get default run quantiles for difference plot
+default_quant <- subset(quantile_long, Experiment == "default run")
+
+# Calculate differences for each experiment vs default run
+quantile_diff_long <- merge(
+  quantile_long, 
+  default_quant[, c("year", "median", "q05", "q95")], 
+  by = "year", suffixes = c("", "_default")
+)
+quantile_diff_long$median_diff <- quantile_diff_long$median - quantile_diff_long$median_default
+quantile_diff_long$q05_diff <- quantile_diff_long$q05 - quantile_diff_long$q05_default
+quantile_diff_long$q95_diff <- quantile_diff_long$q95 - quantile_diff_long$q95_default
+
+# Remove default run from difference plot (difference is always zero)
+quantile_diff_long <- subset(quantile_diff_long, Experiment != "default run")
+
+# Set up color palette for experiments
+exp_colors <- RColorBrewer::brewer.pal(max(3, length(experiment_names)), "Set1")
+names(exp_colors) <- experiment_names
+
+# Top panel: All experiments, median and quantile ribbons
+fig_quantiles_all <- ggplot(quantile_long, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
+  geom_ribbon(aes(ymin = q05, ymax = q95), alpha = 0.18, color = NA) +
+  geom_line(aes(y = median), size = 1.1) +
+  geom_line(aes(y = q05), linetype = "dashed", size = 0.7) +
+  geom_line(aes(y = q95), linetype = "dashed", size = 0.7) +
+  scale_color_manual(values = exp_colors) +
+  scale_fill_manual(values = exp_colors) +
+  labs(
+    x = "",
+    y = "Emissions (GtC per year)",
+    title = "Median and 5–95% Quantile Range of Emissions Pathways"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "bottom")
+
+# Bottom panel: Difference vs default run
+fig_quantiles_diff <- ggplot(quantile_diff_long, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
+  geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff), alpha = 0.18, color = NA) +
+  geom_line(aes(y = median_diff), size = 1.1) +
+  geom_line(aes(y = q05_diff), linetype = "dashed", size = 0.7) +
+  geom_line(aes(y = q95_diff), linetype = "dashed", size = 0.7) +
+  scale_color_manual(values = exp_colors[names(exp_colors) != "default run"]) +
+  scale_fill_manual(values = exp_colors[names(exp_colors) != "default run"]) +
+  labs(
+    x = "Year",
+    y = "Difference from Default (GtC per year)",
+    title = "Difference in Median and 5–95% Quantiles vs Default Run"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "bottom")
+
+# Combine the two panels
+fig_combined <- fig_quantiles_all / fig_quantiles_diff +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom", legend.box = "horizontal") &
+  guides(color = guide_legend(ncol = 2), fill = guide_legend(ncol = 2))
+
+print(fig_combined)
+ggsave(
+  filename = paste0("../results/emissions_quantiles_all_and_diff", # fig_suffix, 
+                    if (exists("mask_title") && mask_title != "") paste0("_", mask_title) else "", ".png"),
+  plot = fig_combined,
+  width = 10, height = 8
+)
+
+
