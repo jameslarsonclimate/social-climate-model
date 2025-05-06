@@ -10,8 +10,8 @@ experiment_suffixes <- c(
   "_noNatVar",
   "_pulseTempAnom_2K_2030-2040",
   "_pulseTempAnom_2K_2070-2080",
-  "_fixedNatVar-lackOfClimateSupport",
-  "_fixedNatVar-mediumClimateSupport",
+  "_fixedNatVar-lowClimateSupport",
+  "_fixedNatVar-moderateClimateSupport",
   "_fixedNatVar-highClimateSupport"
 )
 
@@ -27,11 +27,16 @@ year_indices <- c(
   "2080" = which(years == 2080)
 )
 
-mask <- params$Evidence > 0.2 & params$"Shifting Baselines" != 0
-mask_title = "Evidence>0.2_and_ShiftingBaselines!=0"
+# mask <- params$Evidence > 0.2 & params$"Shifting Baselines" != 0
+# mask_title = "Evidence>0.2_and_ShiftingBaselines!=0"
 
-rm(mask)
-rm(mask_title)
+
+if (exists("mask")) {
+  rm(mask)
+}
+if (exists("mask_title")) {
+  rm(mask_title)
+}
 
 
 ######################################################################################################
@@ -277,5 +282,89 @@ ggsave(
   filename = paste0("../results/temperature_quantiles_all_and_diff", # fig_suffix, 
                     if (exists("mask_title") && mask_title != "") paste0("_", mask_title) else "", ".png"),
   plot = fig_combined_temp,
+  width = 8, height = 10
+)
+
+# dist = load(file=paste0("../results/MC Runs/MC Runs_TunedParams/distributions", suffix, ".Rdata"))
+
+# --- Climate Supporters Analysis ---
+
+quantile_long_support <- lapply(seq_along(experiment_suffixes), function(i) {
+  suffix <- experiment_suffixes[i]
+  exp_name <- experiment_names[i]
+  dist_file <- paste0("../results/MC Runs/MC Runs_TunedParams/distributions", suffix, ".Rdata")
+  if (!file.exists(dist_file)) return(NULL)
+  load(dist_file) # loads 'dist' array: [run, year, group]
+  params <- fread(paste0("../results/MC Runs/MC Runs_TunedParams/params", suffix, ".csv"))
+  # Apply mask if it exists
+  if (exists("mask")) dist <- dist[mask, , , drop = FALSE]
+  # Extract climate supporters (3rd group)
+  supporters <- dist[, , 3, drop = FALSE]
+  # supporters is [run, year, 1], so drop third dim
+  supporters <- matrix(supporters, nrow = dim(supporters)[1], ncol = dim(supporters)[2])
+  data.frame(
+    Experiment = exp_name,
+    year = years,
+    median = apply(supporters, 2, median, na.rm = TRUE),
+    q05 = apply(supporters, 2, quantile, probs = 0.05, na.rm = TRUE),
+    q95 = apply(supporters, 2, quantile, probs = 0.95, na.rm = TRUE)
+  )
+})
+quantile_long_support <- do.call(rbind, quantile_long_support)
+
+# Get default run quantiles for difference plot
+default_quant_support <- subset(quantile_long_support, Experiment == "default run")
+
+# Calculate differences for each experiment vs default run
+quantile_diff_long_support <- merge(
+  quantile_long_support, 
+  default_quant_support[, c("year", "median", "q05", "q95")], 
+  by = "year", suffixes = c("", "_default")
+)
+quantile_diff_long_support$median_diff <- quantile_diff_long_support$median - quantile_diff_long_support$median_default
+quantile_diff_long_support$q05_diff <- quantile_diff_long_support$q05 - quantile_diff_long_support$q05_default
+quantile_diff_long_support$q95_diff <- quantile_diff_long_support$q95 - quantile_diff_long_support$q95_default
+quantile_diff_long_support <- subset(quantile_diff_long_support, Experiment != "default run")
+
+fig_quantiles_all_support <- ggplot(quantile_long_support, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
+  geom_ribbon(aes(ymin = q05, ymax = q95, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  geom_line(aes(y = median, color = Experiment), size = 1.1, show.legend = TRUE) +
+  geom_line(aes(y = q05), linetype = "dotted", size = 0.7, show.legend = FALSE) +
+  geom_line(aes(y = q95), linetype = "dashed", size = 0.7, show.legend = FALSE) +
+  scale_color_manual(values = exp_colors) +
+  scale_fill_manual(values = exp_colors) +
+  labs(
+    x = "",
+    y = "Fraction Climate Supporters",
+    title = "Median and 5–95% Quantile Range of Climate Supporters"
+  ) +
+  theme_minimal(base_size = 14)
+
+fig_quantiles_diff_support <- ggplot(quantile_diff_long_support, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
+  geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  geom_line(aes(y = median_diff, color = Experiment), size = 1.1, show.legend = FALSE) +
+  geom_line(aes(y = q05_diff), linetype = "dotted", size = 0.7, show.legend = FALSE) +
+  geom_line(aes(y = q95_diff), linetype = "dashed", size = 0.7, show.legend = FALSE) +
+  scale_color_manual(values = exp_colors[names(exp_colors) != "default run"]) +
+  scale_fill_manual(values = exp_colors[names(exp_colors) != "default run"]) +
+  labs(
+    x = "Year",
+    y = "Difference from Default (Fraction)",
+    title = "Difference in Median and 5–95% Quantiles vs Default Run (Climate Supporters)"
+  ) +
+  theme_minimal(base_size = 14)
+
+fig_combined_support <- fig_quantiles_all_support / fig_quantiles_diff_support +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom", legend.box = "horizontal") &
+  guides(
+    color = guide_legend(ncol = 2, override.aes = list(linetype = 1, size = 1.1)),
+    fill = guide_legend(ncol = 2)
+  )
+
+ggsave(
+  filename = paste0("../results/supporters_quantiles_all_and_diff", # fig_suffix, 
+                    if (exists("mask_title") && mask_title != "") paste0("_", mask_title) else "", ".png"),
+  plot = fig_combined_support,
   width = 8, height = 10
 )
