@@ -154,10 +154,11 @@ print('Reading in new data')
 # fig_suffix = '_pulseTempAnom_2K_2030-2040'
 # fig_suffix = ''
 # fig_suffix = '_pulseTempAnom_2K_2070-2080'
-fig_suffix = '_noNatVar'
+# fig_suffix = '_noNatVar'
 # fig_suffix = '_fixedNatVar-highClimateSupport'
 # fig_suffix = '_fixedNatVar-mediumClimateSupport'
 # fig_suffix = '_fixedNatVar-lackOfClimateSupport'
+fig_suffix = '_varyInitialDistribution'
 
 params=fread(paste0("../results/MC Runs/MC Runs_TunedParams/params", fig_suffix, ".csv"))
 pol=fread(paste0("../results/MC Runs/MC Runs_TunedParams/policy", fig_suffix, ".csv"))

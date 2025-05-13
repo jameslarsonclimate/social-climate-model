@@ -14,11 +14,13 @@ source("src/model_analysis/model_parametertune.R")
 
 # fig_suffix = '_pulseTempAnom_2K_2030-2040'
 # fig_suffix = '_pulseTempAnom_2K_2070-2080'
-fig_suffix = '_noNatVar'
+# fig_suffix = '_noNatVar'
 # fig_suffix = ''
 # fig_suffix = '_fixedNatVar-highClimateSupport'
 # fig_suffix = '_fixedNatVar-moderateClimateSupport'
 # fig_suffix = '_fixedNatVar-lowClimateSupport'
+fig_suffix = '_varyInitialDistribution'
+
 
 # Create a timeseries with a triangular pulse from index 10 to 20
 # Initialize a vector of 81 zeros and define the peak value
@@ -82,22 +84,22 @@ peak <- 2
 # # - Climate supporters never reach majority
 # # - Emissions stay high (SSP3-7.0) for entirety of run
 # # This is a climate that promotes low climate support (buisness as usual)
-ts <- c(
-  0.37927546, 0.14797994, -0.07297981, -0.08728853, -0.07830655, -0.08790408,
-  -0.05810093, -0.20510265, 0.04376236, 0.23367906, 0.05704081, 0.50227240,
-  0.39932231, -0.24663818, 0.19560222, 0.16719105, -0.10275608, -0.44936831,
-  -0.06344066, 0.11405526, -0.43049336, -0.63392917, 0.11367537, -0.46577790,
-  -0.15761725, -0.21891219, 0.13652073, -0.19472288, -0.42080276, -0.23087182,
-  -0.14347206, -0.44581006, 0.46876776, 0.02828554, -0.40988185, -0.18645090,
-  -0.71127151, -0.68891421, -0.12533891, -0.46600504, -0.43007705, -0.67696496,
-  0.04989338, 0.08060462, 0.18540005, 0.36929543, 0.05028143, 0.23517306,
-  0.43408447, -0.14329964, 0.12233230, -0.03682000, 0.12615687, -0.08833765,
-  0.02127670, 0.17222456, 0.55058025, 0.28175860, -0.06390461, 0.43561294,
-  0.10091578, -0.45414046, 0.24005863, 0.15483816, -0.15760568, 0.23584144,
-  0.26816849, 0.02089773, -0.22644128, 0.08683933, 0.10918248, 0.37218345,
-  0.24975125, -0.23387813, -0.43169722, -0.27474710, -0.23422222, -0.58773169,
-  -0.17133926, -0.60449470, -0.61034812
-)
+# ts <- c(
+#   0.37927546, 0.14797994, -0.07297981, -0.08728853, -0.07830655, -0.08790408,
+#   -0.05810093, -0.20510265, 0.04376236, 0.23367906, 0.05704081, 0.50227240,
+#   0.39932231, -0.24663818, 0.19560222, 0.16719105, -0.10275608, -0.44936831,
+#   -0.06344066, 0.11405526, -0.43049336, -0.63392917, 0.11367537, -0.46577790,
+#   -0.15761725, -0.21891219, 0.13652073, -0.19472288, -0.42080276, -0.23087182,
+#   -0.14347206, -0.44581006, 0.46876776, 0.02828554, -0.40988185, -0.18645090,
+#   -0.71127151, -0.68891421, -0.12533891, -0.46600504, -0.43007705, -0.67696496,
+#   0.04989338, 0.08060462, 0.18540005, 0.36929543, 0.05028143, 0.23517306,
+#   0.43408447, -0.14329964, 0.12233230, -0.03682000, 0.12615687, -0.08833765,
+#   0.02127670, 0.17222456, 0.55058025, 0.28175860, -0.06390461, 0.43561294,
+#   0.10091578, -0.45414046, 0.24005863, 0.15483816, -0.15760568, 0.23584144,
+#   0.26816849, 0.02089773, -0.22644128, 0.08683933, 0.10918248, 0.37218345,
+#   0.24975125, -0.23387813, -0.43169722, -0.27474710, -0.23422222, -0.58773169,
+#   -0.17133926, -0.60449470, -0.61034812
+# )
 
 
 
@@ -110,8 +112,8 @@ polopparams=fread("../results/MC Runs/parameter_tune.csv")
 mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
 
 #initial opinion distribution - not varied, but fixed at particular values from Pew Opinion Data
-frac_opp_01=0.07 
-frac_neut_01=0.22 
+# frac_opp_01=0.07 
+# frac_neut_01=0.22 
 
 mc=100000
 params=matrix(nrow=mc,ncol=22)
@@ -121,6 +123,8 @@ climtemp=matrix(nrow=mc,ncol=81)
 dist <- array(NA, dim = c(mc, 81, 3))
 natvar=matrix(nrow=mc,ncol=81)
 weather=matrix(nrow=mc,ncol=81)
+frac_neut_mat=matrix(nrow=mc,ncol=81)
+frac_opp_mat=matrix(nrow=mc,ncol=81)
 
 set.seed(2090)
 i=0
@@ -158,11 +162,20 @@ while(i<=mc){
   lbd_param01=runif(1,0,0.3)
   lag_param01=round(runif(1,0,30))
   
+  # uniform sampling of initial opinion fractions with individual bounds and sum constraint
+  repeat {
+    frac_opp_01  <- runif(1, 0.1, 0.8)
+    frac_neut_01 <- runif(1, 0.1, 0.8)
+    s <- frac_opp_01 + frac_neut_01
+    # enforce sum between 0.2 and 0.8 and each frac between 0.2 and 0.8
+    if (s >= 0.2 && s <= 0.8) break
+  }
+
 #also add feedback from temperature to bau emissions
 temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
 
 # If updating the model parameters, make sure to update fig_suffix as well!
-m=tryCatch(model(natvar_multiplier = 0), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier = 0
+m=tryCatch(model(), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier = 0
     skip_to_next <<- TRUE
     print(paste("Error occurred, skipping iteration", i, ":", e$message))
 })
@@ -180,6 +193,8 @@ climtemp[i,]=m$temp[,1]
 dist[i,,]=m$distributions
 natvar[i,]=m$naturalvariability
 weather[i,]=m$weather
+frac_neut_mat[i,]=frac_neut_01
+frac_opp_mat[i,]=frac_opp_01
 
 if(i%%1000==0) print(i)
 i=i+1

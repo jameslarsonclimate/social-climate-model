@@ -12,7 +12,8 @@ experiment_suffixes <- c(
   "_pulseTempAnom_2K_2070-2080",
   "_fixedNatVar-lowClimateSupport",
   "_fixedNatVar-moderateClimateSupport",
-  "_fixedNatVar-highClimateSupport"
+  "_fixedNatVar-highClimateSupport" # ,
+  # "_varyInitialDistribution"
 )
 
 
@@ -88,7 +89,7 @@ names(exp_colors) <- experiment_names
 
 # Top panel: All experiments, median and quantile ribbons
 fig_quantiles_all <- ggplot(quantile_long, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
-  geom_ribbon(aes(ymin = q05, ymax = q95, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  # geom_ribbon(aes(ymin = q05, ymax = q95, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
   geom_line(aes(y = median, color = Experiment), size = 1.1, show.legend = TRUE) +
   geom_line(aes(y = q05), linetype = "dotted", size = 0.7, show.legend = FALSE) +
   geom_line(aes(y = q95), linetype = "dashed", size = 0.7, show.legend = FALSE) +
@@ -103,7 +104,7 @@ fig_quantiles_all <- ggplot(quantile_long, aes(x = year, group = Experiment, col
 
 # Bottom panel: Difference vs default run
 fig_quantiles_diff <- ggplot(quantile_diff_long, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
-  geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  # geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
   geom_line(aes(y = median_diff, color = Experiment), size = 1.1, show.legend = FALSE) +
   geom_line(aes(y = q05_diff), linetype = "dotted", size = 0.7, show.legend = FALSE) +
   geom_line(aes(y = q95_diff), linetype = "dashed", size = 0.7, show.legend = FALSE) +
@@ -166,7 +167,7 @@ quantile_diff_long_pol$q95_diff <- quantile_diff_long_pol$q95 - quantile_diff_lo
 quantile_diff_long_pol <- subset(quantile_diff_long_pol, Experiment != "default run")
 
 fig_quantiles_all_pol <- ggplot(quantile_long_pol, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
-  geom_ribbon(aes(ymin = q05, ymax = q95, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  # geom_ribbon(aes(ymin = q05, ymax = q95, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
   geom_line(aes(y = median, color = Experiment), size = 1.1, show.legend = TRUE) +
   geom_line(aes(y = q05), linetype = "dotted", size = 0.7, show.legend = FALSE) +
   geom_line(aes(y = q95), linetype = "dashed", size = 0.7, show.legend = FALSE) +
@@ -180,7 +181,7 @@ fig_quantiles_all_pol <- ggplot(quantile_long_pol, aes(x = year, group = Experim
   theme_minimal(base_size = 14)
 
 fig_quantiles_diff_pol <- ggplot(quantile_diff_long_pol, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
-  geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  # geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
   geom_line(aes(y = median_diff, color = Experiment), size = 1.1, show.legend = FALSE) +
   geom_line(aes(y = q05_diff), linetype = "dotted", size = 0.7, show.legend = FALSE) +
   geom_line(aes(y = q95_diff), linetype = "dashed", size = 0.7, show.legend = FALSE) +
@@ -243,7 +244,7 @@ quantile_diff_long_temp$q95_diff <- quantile_diff_long_temp$q95 - quantile_diff_
 quantile_diff_long_temp <- subset(quantile_diff_long_temp, Experiment != "default run")
 
 fig_quantiles_all_temp <- ggplot(quantile_long_temp, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
-  geom_ribbon(aes(ymin = q05, ymax = q95, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  # geom_ribbon(aes(ymin = q05, ymax = q95, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
   geom_line(aes(y = median, color = Experiment), size = 1.1, show.legend = TRUE) +
   geom_line(aes(y = q05), linetype = "dotted", size = 0.7, show.legend = FALSE) +
   geom_line(aes(y = q95), linetype = "dashed", size = 0.7, show.legend = FALSE) +
@@ -257,7 +258,7 @@ fig_quantiles_all_temp <- ggplot(quantile_long_temp, aes(x = year, group = Exper
   theme_minimal(base_size = 14)
 
 fig_quantiles_diff_temp <- ggplot(quantile_diff_long_temp, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
-  geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  # geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
   geom_line(aes(y = median_diff, color = Experiment), size = 1.1, show.legend = FALSE) +
   geom_line(aes(y = q05_diff), linetype = "dotted", size = 0.7, show.legend = FALSE) +
   geom_line(aes(y = q95_diff), linetype = "dashed", size = 0.7, show.legend = FALSE) +
@@ -327,7 +328,7 @@ quantile_diff_long_support$q95_diff <- quantile_diff_long_support$q95 - quantile
 quantile_diff_long_support <- subset(quantile_diff_long_support, Experiment != "default run")
 
 fig_quantiles_all_support <- ggplot(quantile_long_support, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
-  geom_ribbon(aes(ymin = q05, ymax = q95, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  # geom_ribbon(aes(ymin = q05, ymax = q95, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
   geom_line(aes(y = median, color = Experiment), size = 1.1, show.legend = TRUE) +
   geom_line(aes(y = q05), linetype = "dotted", size = 0.7, show.legend = FALSE) +
   geom_line(aes(y = q95), linetype = "dashed", size = 0.7, show.legend = FALSE) +
@@ -338,10 +339,15 @@ fig_quantiles_all_support <- ggplot(quantile_long_support, aes(x = year, group =
     y = "Fraction Climate Supporters",
     title = "Median and 5–95% Quantile Range of Climate Supporters"
   ) +
-  theme_minimal(base_size = 14)
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "bottom", legend.box = "horizontal") +
+  guides(
+    color = guide_legend(ncol = 2),
+    fill  = guide_legend(ncol = 2)
+  )
 
 fig_quantiles_diff_support <- ggplot(quantile_diff_long_support, aes(x = year, group = Experiment, color = Experiment, fill = Experiment)) +
-  geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
+  # geom_ribbon(aes(ymin = q05_diff, ymax = q95_diff, fill = Experiment), alpha = 0.18, color = NA, show.legend = FALSE) +
   geom_line(aes(y = median_diff, color = Experiment), size = 1.1, show.legend = FALSE) +
   geom_line(aes(y = q05_diff), linetype = "dotted", size = 0.7, show.legend = FALSE) +
   geom_line(aes(y = q95_diff), linetype = "dashed", size = 0.7, show.legend = FALSE) +
@@ -366,5 +372,7 @@ ggsave(
   filename = paste0("../results/supporters_quantiles_all_and_diff", # fig_suffix, 
                     if (exists("mask_title") && mask_title != "") paste0("_", mask_title) else "", ".png"),
   plot = fig_combined_support,
+  # plot = fig_quantiles_all_support,
   width = 8, height = 10
+  # width = 8, height = 6
 )
