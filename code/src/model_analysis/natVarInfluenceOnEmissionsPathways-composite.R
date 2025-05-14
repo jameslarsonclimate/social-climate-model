@@ -9,6 +9,19 @@ data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
 fig_suffix <- "_varyInitialDistribution"
 years     <- 2020:2100
 
+# user‐adjustable analysis window and percentile threshold:
+analysis_years <- c(2070, 2079)   # e.g. c(2030, 2039) or c(2070, 2079)
+pct_threshold  <- 0.01            # e.g. 0.10 for 10%, 0.05 for 5%
+
+# dynamically build labels for titles and file names:
+analysis_label <- paste0(analysis_years[1], "-", analysis_years[2])
+pct_label      <- paste0(pct_threshold * 100, "pct")
+fig_title      <- paste0(
+  "Impact of Natural Variability Extremes (", analysis_label, ") at ",
+  pct_threshold * 100, "% Threshold"
+)
+
+
 # ---- Load data ----
 ems    <- fread(paste0(data_dir, "emissions",   fig_suffix, ".csv"))
 clim   <- fread(paste0(data_dir, "temperature", fig_suffix, ".csv"))
@@ -19,11 +32,15 @@ clim_mat   <- as.matrix(clim)
 natvar_mat <- as.matrix(natvar)
 
 # ---- Identify bottom/top 10% runs by avg natvar in 2030–2039 ----
-idx_range <- 11:20
+idx_range <- which(years >= analysis_years[1] & years <= analysis_years[2])
 avg_nat   <- rowMeans(natvar_mat[, idx_range], na.rm=TRUE)
-q10_90    <- quantile(avg_nat, c(0.1, 0.9), na.rm=TRUE)
-bottom_idx <- which(avg_nat <=  q10_90[1])
-top_idx    <- which(avg_nat >=  q10_90[2])
+# q10_90    <- quantile(avg_nat, c(0.1, 0.9), na.rm=TRUE)
+q_vals    <- c(pct_threshold, 1 - pct_threshold)
+q_thresh  <- quantile(avg_nat, q_vals, na.rm=TRUE)
+# bottom_idx <- which(avg_nat <=  q10_90[1])
+# top_idx    <- which(avg_nat >=  q10_90[2])
+bottom_idx <- which(avg_nat <= q_thresh[1])
+top_idx    <- which(avg_nat >= q_thresh[2])
 
 # ---- Subsets ----
 subs <- list(
@@ -35,8 +52,8 @@ subs <- list(
 # ---- Common settings ----
 colors   <- c("Bottom 10%"="#0072B2","Top 10%"="#D55E00","Default"="#009E73")
 fig_title <- paste0(
-  "Impact of Natural Variability Extremes (2030–2039) on Pathways:\n",
-  "Comparing Top and Bottom 10% of Runs by Avg. Natural Variability\n",
+  "Impact of Natural Variability Extremes (", analysis_label, ") at ",
+  pct_threshold * 100, "% Threshold of Natural Variability\n",
   fig_suffix
 )
 
@@ -94,7 +111,8 @@ fig_ems <- (p_all_ems / p_diff_ems) +
   theme(legend.position="bottom", legend.box="horizontal") &
   guides(color=guide_legend(ncol=2), fill=guide_legend(ncol=2))
 
-ggsave(paste0("../results/emissions_natvar_extremes", fig_suffix, ".png"), fig_ems, width=8, height=10)
+ggsave(paste0("../results/emissions_natvar_extremes", fig_suffix, "_", analysis_label, "_", pct_label, ".png"), 
+fig_ems, width=8, height=10)
 
 
 # ---- Temperature plot ----
@@ -150,7 +168,7 @@ fig_temp <- (p_all_temp / p_diff_temp) +
   theme(legend.position="bottom", legend.box="horizontal") &
   guides(color=guide_legend(ncol=2), fill=guide_legend(ncol=2))
 
-ggsave(paste0("../results/temperature_natvar_extremes", fig_suffix, ".png"), fig_temp, width=8, height=10)
+ggsave(paste0("../results/temperature_natvar_extremes", fig_suffix, "_", analysis_label, "_", pct_label, ".png"), fig_temp, width=8, height=10)
 
 
 # ---- Climate Supporters plot ----
@@ -215,4 +233,4 @@ fig_sup <- (p_all_sup / p_diff_sup) +
   theme(legend.position="bottom", legend.box="horizontal") &
   guides(color=guide_legend(ncol=2), fill=guide_legend(ncol=2))
 
-ggsave(paste0("../results/supporters_natvar_extremes", fig_suffix, ".png"), fig_sup, width=8, height=10)
+ggsave(paste0("../results/supporters_natvar_extremes", fig_suffix, "_", analysis_label, "_", pct_label, ".png"), fig_sup, width=8, height=10)
