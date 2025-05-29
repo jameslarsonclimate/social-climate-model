@@ -8,14 +8,15 @@ library(ggridges)
 setwd("/Users/jglarson/Documents/Research/social-climate-model/code")
 source("src/model_analysis/model_parametertune.R")
 
-fig_suffix = '_pulseTempAnom_2K_2030-2040'
+# fig_suffix = '_pulseTempAnom_2K_2030-2040'
 # fig_suffix = '_pulseTempAnom_2K_2070-2080'
 # fig_suffix = ''
 # fig_suffix = '_noNatVar'
 # fig_suffix = '_fixedNatVar-lackOfClimateSupport'
 # fig_suffix = '_fixedNatVar-mediumClimateSupport'
 # fig_suffix = '_fixedNatVar-highClimateSupport'
-fig_suffix = "_varyInitialDistribution"
+# fig_suffix = "_varyInitialDistribution"
+fig_suffix = "_initClimSupport40percent"
 
 
 

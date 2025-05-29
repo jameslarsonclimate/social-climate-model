@@ -6,12 +6,14 @@ library(RColorBrewer)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix <- "_varyInitialDistribution"
+# fig_suffix <- "_varyInitialDistribution"
+fig_suffix <- "_initClimSupport40percent"
+# fig_suffix <- ""
 years     <- 2020:2100
 
 # user‐adjustable analysis window and percentile threshold:
-analysis_years <- c(2070, 2079)   # e.g. c(2030, 2039) or c(2070, 2079)
-pct_threshold  <- 0.01            # e.g. 0.10 for 10%, 0.05 for 5%
+analysis_years <- c(2030, 2039)   # e.g. c(2030, 2039) or c(2070, 2079)
+pct_threshold  <- 0.10            # e.g. 0.10 for 10%, 0.05 for 5%
 
 # dynamically build labels for titles and file names:
 analysis_label <- paste0(analysis_years[1], "-", analysis_years[2])
@@ -91,9 +93,11 @@ p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Experiment, fill=Experi
   theme_minimal(base_size=14)
 
 p_diff_ems <- ggplot(dt_diff_ems, aes(year, median_diff, color=Experiment, fill=Experiment)) +
-  geom_line(size=1.1) +
-  scale_color_manual(values=colors["Top 10%"]) +
-  scale_fill_manual(values=colors["Top 10%"]) +
+  geom_line(size=1.1, show.legend = FALSE) +
+  # scale_color_manual(values=colors["Top 10%"]) +
+  # scale_fill_manual(values=colors["Top 10%"]) +
+  scale_color_manual(values=colors) +
+  scale_fill_manual(values=colors) +
   labs(
     x="Year",
     y="Diff vs Bottom 10% (GtC/yr)",
@@ -150,9 +154,9 @@ p_all_temp <- ggplot(dt_long_temp, aes(year, median, color=Experiment, fill=Expe
   theme_minimal(base_size=14)
 
 p_diff_temp <- ggplot(dt_diff_temp, aes(year, median_diff, color=Experiment, fill=Experiment)) +
-  geom_line(size=1.1) +
-  scale_color_manual(values=colors["Top 10%"]) +
-  scale_fill_manual(values=colors["Top 10%"]) +
+  geom_line(size=1.1, show.legend = FALSE) +
+  scale_color_manual(values=colors) +
+  scale_fill_manual(values=colors) +
   labs(
     x="Year",
     y="Diff vs Bottom 10% (°C)",
@@ -215,9 +219,9 @@ p_all_sup <- ggplot(dt_long_sup, aes(year, median, color=Experiment, fill=Experi
   theme_minimal(base_size=14)
 
 p_diff_sup <- ggplot(dt_diff_sup, aes(year, median_diff, color=Experiment, fill=Experiment)) +
-  geom_line(size=1.1) +
-  scale_color_manual(values=colors["Top 10%"]) +
-  scale_fill_manual(values=colors["Top 10%"]) +
+  geom_line(size=1.1, show.legend = FALSE) +
+  scale_color_manual(values=colors) +
+  scale_fill_manual(values=colors) +
   labs(
     x="Year",
     y="Diff vs Bottom 10% (Fraction)",

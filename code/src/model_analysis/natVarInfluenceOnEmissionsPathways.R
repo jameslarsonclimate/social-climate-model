@@ -19,7 +19,8 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_fixedNatVar-highClimateSupport'
 # fig_suffix = '_fixedNatVar-moderateClimateSupport'
 # fig_suffix = '_fixedNatVar-lowClimateSupport'
-fig_suffix = '_varyInitialDistribution'
+# fig_suffix = '_varyInitialDistribution'
+fig_suffix = '_initClimSupport40percent'
 
 
 # Create a timeseries with a triangular pulse from index 10 to 20
@@ -170,6 +171,10 @@ while(i<=mc){
     # enforce sum between 0.2 and 0.8 and each frac between 0.2 and 0.8
     if (s >= 0.2 && s <= 0.8) break
   }
+
+  # Set the initial opinion distribution
+  frac_opp_01 = 0.3
+  frac_neut_01 = 0.3
 
 #also add feedback from temperature to bau emissions
 temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
