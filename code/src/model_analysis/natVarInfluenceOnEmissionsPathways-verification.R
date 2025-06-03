@@ -38,7 +38,7 @@ library(ggplot2)
 df <- data.frame(remaining = one_minus_s)
 library(scales)  # for comma formatting
 ggplot(df, aes(x = remaining)) +
-  geom_histogram(bins = 50, fill = "#0072B2", color = "white", alpha = 0.8) +
+  # geom_histogram(bins = 50, fill = "#0072B2", color = "white", alpha = 0.8) +
   geom_density(aes(y = ..count..), color = "#D55E00", size = 1) +
   scale_y_continuous(
     breaks = c(0, 100000, 200000, 300000),
