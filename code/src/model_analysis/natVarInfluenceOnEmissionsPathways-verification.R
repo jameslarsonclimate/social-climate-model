@@ -1,61 +1,88 @@
-library(data.table)
-library(ggplot2)
-library(patchwork)
-library(RColorBrewer)
+# Install the ‘sn’ package if it’s not already installed
+if (!require(sn)) {
+  install.packages("sn")
+  library(sn)
+} else {
+  library(sn)
+}
 
-# ---- Load data ----
-data_dir <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix <- ""  # or your suffix
-fig_suffix <-"_varyInitialDistribution"
-print(paste0(data_dir, "emissions",    fig_suffix, ".csv"))
+set.seed(123)  # for reproducibility
 
-ems    <- fread(paste0(data_dir, "emissions",    fig_suffix, ".csv"))
-clim   <- fread(paste0(data_dir, "temperature",  fig_suffix, ".csv"))
-natvar <- fread(paste0(data_dir, "natvar",       fig_suffix, ".csv"))
+# Parameters for the skew-normal
+# xi: location (center of the distribution)
+# omega: scale (controls spread)
+# alpha: shape (positive → right skew, negative → left skew)
+xi    <- 0.37
+omega <- 0.2
+alpha <- 2.8
 
-# to matrices
-ems_mat    <- as.matrix(ems)
-clim_mat   <- as.matrix(clim)
-natvar_mat <- as.matrix(natvar)
+N <- 100000
+frac_supp_0 <- numeric(N)
 
-years <- 2020:2100
-
-# Draw 100,000 valid (frac_opp + frac_neut) sums and plot 1 - s
-n <- 100000
-s_vals <- replicate(n, {
-  repeat {
-    frac_opp  <- runif(1, 0.1, 0.8)
-    frac_neut <- runif(1, 0.1, 0.8)
-    s <- frac_opp + frac_neut
-    if (s >= 0.2 && s <= 0.8) break
+# Draw frac_supp_0 from a skew-normal until they lie between 0.3 and 0.8
+i <- 1
+while (i <= N) {
+  x <- rsn(1, xi = xi, omega = omega, alpha = alpha)
+  if (x >= 0.30 && x <= 0.80) {
+    frac_supp_0[i] <- x    
+    i <- i + 1
   }
-  s
-})
-one_minus_s <- 1 - s_vals
+}
 
-# Plot distribution of (1 - s)
-library(ggplot2)
-df <- data.frame(remaining = one_minus_s)
-library(scales)  # for comma formatting
-ggplot(df, aes(x = remaining)) +
-  # geom_histogram(bins = 50, fill = "#0072B2", color = "white", alpha = 0.8) +
-  geom_density(aes(y = ..count..), color = "#D55E00", size = 1) +
-  scale_y_continuous(
-    breaks = c(0, 100000, 200000, 300000),
-    labels = comma
-  ) +
-  theme_minimal(base_size = 14) +
-  labs(
-    title = "Distribution of 1 - (frac_opp + frac_neut)",
-    x     = "1 - s",
-    y     = "Count"
-  )
+frac_opp_0 <- numeric(N)
+for (i in seq_len(N)) {
+  attempts <- 0
+  repeat {
+    attempts <- attempts + 1
+    x <- rsn(1, xi = 0.3, omega = 0.2, alpha = 1)
+    # print x every time i is a multiple of 100
+    if (i %% 100 == 0) {
+      print(paste0("i = ", i, " | x = ", signif(x, 4)))
+    }
+    # print x every 100 iterations of the repeat loop
+    if (attempts %% 100 == 0) {
+      print(paste0("i = ", i, " | attempts = ", attempts, " | x = ", signif(x, 4)))
+    }
+    upper <- 1 - frac_supp_0[i]
+    if (x >= 0.1 && x <= upper) {
+      frac_opp_0[i] <- x
+      break
+    }
+  }
+}
 
-  # Save the last plot to file
-  ggsave(
-    filename = paste0("../results/hist_remaining", fig_suffix, ".png"),
-    plot     = last_plot(),
-    width    = 8,
-    height   = 6,
-    dpi      = 300
-  )
+# # remainder goes to neutral
+frac_neut_0 <- 1 - (frac_supp_0 + frac_opp_0)
+ 
+# ---- Plot skew‐normal frac_supp_0 and the other fractions ----
+hist(frac_supp_0,
+     breaks      = 100,
+     probability = TRUE,
+     col         = "lightblue",
+     border      = "white",
+     xlim        = c(0, 0.80),
+     ylim   = c(0, 5),
+     main        = "Skew‐Normal Samples of frac_supp_0, frac_opp_0, frac_neut_0",
+     xlab        = "Fraction",
+     ylab        = "Density")
+
+# density curves
+dens_sup   <- density(frac_supp_0)
+dens_opp   <- density(frac_opp_0)
+dens_neut  <- density(frac_neut_0)
+
+# plot densities
+lines(dens_sup,   lwd = 2, col = "darkblue",    lty = 1)
+lines(dens_opp,   lwd = 2, col = "forestgreen", lty = 2)
+lines(dens_neut,  lwd = 2, col = "purple",      lty = 4)
+
+# median of support
+abline(v = median(frac_supp_0), col = "red", lwd = 2, lty = 3)
+
+# legend
+legend("topright",
+       legend = c("frac_supp_0", "frac_opp_0", "frac_neut_0", "median(frac_supp_0)"),
+       col    = c("darkblue",    "forestgreen",   "purple",       "red"),
+       lwd    = c(2,             2,               2,              2),
+       lty    = c(1,             2,               4,              3),
+       bty    = "n")

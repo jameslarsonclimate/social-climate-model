@@ -2,7 +2,14 @@ library(data.table)
 library(ggplot2)
 
 # ---- Setup ----
-fig_suffix         <- "_initClimSupport40percent"
+# fig_suffix         <- "_initClimSupport40percent"
+# fig_suffix = ''
+# fig_suffix = '_pulseTempAnom_2K_2030-2040'
+# fig_suffix = '_noNatVar'
+fig_suffix = '_varyInitialDistribution'
+
+
+
 data_dir           <- "../results/MC Runs/MC Runs_TunedParams/"
 title_suffix       <- fig_suffix
 params_file        <- paste0(data_dir, "params",   fig_suffix, ".csv")
@@ -52,66 +59,68 @@ for (i in seq_len(n_params)) {
 # map numeric Index → actual parameter names
 results[, Parameter := names(params_dt)[Index]]
 
-# ---- Plot coefficients from univariate regressions ----
-# 'results' must contain Parameter (factor) and Estimate
-p <- ggplot(results, aes(x = Parameter, y = Estimate)) +
-  geom_col(fill = "steelblue") +
-  coord_flip() +
-  labs(
-    title = paste0(
-      if (standardize_params && standardize_ems) "Standardized coefficients\n" else
-      if (standardize_params)    "Coefficients (standardized params)\n" else
-      if (standardize_ems)       "Coefficients (standardized ems)\n" else
-                                  "Univariate regression slopes\n",
-      "Sum of Emissions ~ Each Parameter"
-    ),
-    x = "Model Parameter",
-    y = "Slope Estimate"
-  ) +
-  theme_minimal(base_size = 14)
-
-# ---- Save plot ----
-ggsave(filename = paste0("../results/regressions/paramRegression", fig_suffix, ".jpg"), plot = p, width = 8, height = 6)
+# # ---- Plot coefficients from univariate regressions ----
+# # 'results' must contain Parameter (factor) and Estimate
+# p <- ggplot(results, aes(x = Parameter, y = Estimate)) +
+#   geom_col(fill = "steelblue") +
+#   coord_flip() +
+#   labs(
+#     title = paste0(
+#       if (standardize_params && standardize_ems) "Standardized coefficients\n" else
+#       if (standardize_params)    "Coefficients (standardized params)\n" else
+#       if (standardize_ems)       "Coefficients (standardized ems)\n" else
+#                                   "Univariate regression slopes\n",
+#       "Sum of Emissions ~ Each Parameter"
+#     ),
+#     x = "Model Parameter",
+#     y = "Slope Estimate (GtC/σ)"
+#   ) +
+#   theme_minimal(base_size = 14) +
+#   ylim(-165, 150)
 
 
+# # ---- Save plot ----
+# ggsave(filename = paste0("../results/regressions/paramRegression", fig_suffix, ".jpg"), plot = p, width = 8, height = 6)
 
-# ---- Scatterplot: Integrated Emissions vs Evidence (param column 4) ----
-# extract raw x, y
-x <- params_dt[[2]]    # Evidence is the 4th column
-y <- ems_dt$ems
 
-# apply optional standardization
-if (standardize_params) x <- as.numeric(scale(x))
-if (standardize_ems)    y <- as.numeric(scale(y))
 
-# fit univariate regression
-fit_evd <- lm(y ~ x)
-slope   <- coef(fit_evd)[2]
+# # ---- Scatterplot: Integrated Emissions vs Evidence (param column 4) ----
+# # extract raw x, y
+# x <- params_dt[[2]]    # Evidence is the 4th column
+# y <- ems_dt$ems
 
-# assemble data.frame
-df_evd <- data.table(Evidence = x, Emissions = y)
+# # apply optional standardization
+# if (standardize_params) x <- as.numeric(scale(x))
+# if (standardize_ems)    y <- as.numeric(scale(y))
 
-# plot scatter + regression line
-p_evd <- ggplot(df_evd, aes(x = Evidence, y = Emissions)) +
-  geom_point(alpha = 0.03) +
-  geom_smooth(method = "lm", se = FALSE, color = "firebrick", linewidth = 1) +
-  labs(
-    title = paste0(
-      "Emissions vs Evidence (col 4) — slope = ",
-      round(slope, 3)
-    ),
-    x = paste0(if (standardize_params) "Std. " else "", "Evidence"),
-    y = paste0(if (standardize_ems)    "Std. " else "", "Integrated Emissions")
-  ) +
-  theme_minimal(base_size = 14)
+# # fit univariate regression
+# fit_evd <- lm(y ~ x)
+# slope   <- coef(fit_evd)[2]
 
-# save plot
-ggsave(
-  filename = paste0("../results/regressions/ems_vs_evidence", fig_suffix, ".png"),
-  plot     = p_evd,
-  width    = 6,
-  height   = 5
-)
+# # assemble data.frame
+# df_evd <- data.table(Evidence = x, Emissions = y)
+
+# # plot scatter + regression line
+# p_evd <- ggplot(df_evd, aes(x = Evidence, y = Emissions)) +
+#   geom_point(alpha = 0.03) +
+#   geom_smooth(method = "lm", se = FALSE, color = "firebrick", linewidth = 1) +
+#   labs(
+#     title = paste0(
+#       "Emissions vs Evidence (col 4) — slope = ",
+#       round(slope, 3)
+#     ),
+#     x = paste0(if (standardize_params) "Std. " else "", "Evidence"),
+#     y = paste0(if (standardize_ems)    "Std. " else "", "Integrated Emissions")
+#   ) +
+#   theme_minimal(base_size = 14)
+
+# # save plot
+# ggsave(
+#   filename = paste0("../results/regressions/ems_vs_evidence", fig_suffix, ".png"),
+#   plot     = p_evd,
+#   width    = 6,
+#   height   = 5
+# )
 
 
 # ---- Prepare correlation labels ----
@@ -138,9 +147,11 @@ p <- ggplot(results, aes(x = Parameter, y = Estimate)) +
       "Sum of Emissions ~ Each Parameter"
     ),
     x = "Model Parameter",
-    y = "Slope Estimate"
+    y = "Slope Estimate (GtC/σ)"
   ) +
-  theme_minimal(base_size = 14)
+  theme_minimal(base_size = 14) + 
+  ylim(-150, 150)
+
 
 # ---- Save plot ----
 ggsave(
@@ -150,43 +161,43 @@ ggsave(
   height   = 6
 )
 
-# ---- Scatterplots & linear fits for all parameters ----
-# assume y <- ems_dt$ems and params_dt already loaded & optionally standardized
+# # ---- Scatterplots & linear fits for all parameters ----
+# # assume y <- ems_dt$ems and params_dt already loaded & optionally standardized
 
-# 1. combine emissions and all 22 parameters into one data.table
-dt_all <- cbind(
-  Emissions = y,
-  params_dt
-)
+# # 1. combine emissions and all 22 parameters into one data.table
+# dt_all <- cbind(
+#   Emissions = y,
+#   params_dt
+# )
 
-# 2. melt to long format for faceting
-dt_long <- melt(
-  dt_all,
-  id.vars       = "Emissions",
-  measure.vars  = names(params_dt),
-  variable.name = "Parameter",
-  value.name    = "Value"
-)
+# # 2. melt to long format for faceting
+# dt_long <- melt(
+#   dt_all,
+#   id.vars       = "Emissions",
+#   measure.vars  = names(params_dt),
+#   variable.name = "Parameter",
+#   value.name    = "Value"
+# )
 
-# 3. make Parameter a factor in the original order
-dt_long[, Parameter := factor(Parameter, levels = names(params_dt))]
+# # 3. make Parameter a factor in the original order
+# dt_long[, Parameter := factor(Parameter, levels = names(params_dt))]
 
-# 4. plot with one panel per parameter
-p_all <- ggplot(dt_long, aes(x = Value, y = Emissions)) +
-  geom_point(alpha = 0.01) +
-  geom_smooth(method = "lm", se = FALSE, color = "firebrick", linewidth = 0.8) +
-  facet_wrap(~ Parameter, scales = "free_x", ncol = 4) +
-  labs(
-    title = "Integrated Emissions vs Each Model Parameter",
-    x     = "Parameter Value",
-    y     = "Integrated Emissions"
-  ) +
-  theme_minimal(base_size = 12)
+# # 4. plot with one panel per parameter
+# p_all <- ggplot(dt_long, aes(x = Value, y = Emissions)) +
+#   geom_point(alpha = 0.01) +
+#   geom_smooth(method = "lm", se = FALSE, color = "firebrick", linewidth = 0.8) +
+#   facet_wrap(~ Parameter, scales = "free_x", ncol = 4) +
+#   labs(
+#     title = "Integrated Emissions vs Each Model Parameter",
+#     x     = "Parameter Value",
+#     y     = "Integrated Emissions"
+#   ) +
+#   theme_minimal(base_size = 12)
 
-# 5. save figure
-ggsave(
-  filename = paste0("../results/regressions/ems_vs_all_params", fig_suffix, ".png"),
-  plot     = p_all,
-  width    = 12,
-  height   = 10
-)
+# # 5. save figure
+# ggsave(
+#   filename = paste0("../results/regressions/ems_vs_all_params", fig_suffix, ".png"),
+#   plot     = p_all,
+#   width    = 12,
+#   height   = 10
+# )

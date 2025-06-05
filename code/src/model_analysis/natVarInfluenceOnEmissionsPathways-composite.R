@@ -7,12 +7,12 @@ library(RColorBrewer)
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
 # fig_suffix <- "_varyInitialDistribution"
-fig_suffix <- "_initClimSupport40percent"
-# fig_suffix <- ""
+# fig_suffix <- "_initClimSupport40percent"
+fig_suffix <- ""
 years     <- 2020:2100
 
 # user‐adjustable analysis window and percentile threshold:
-analysis_years <- c(2030, 2039)   # e.g. c(2030, 2039) or c(2070, 2079)
+analysis_years <- c(2020, 2039)   # e.g. c(2030, 2039) or c(2070, 2079)
 pct_threshold  <- 0.10            # e.g. 0.10 for 10%, 0.05 for 5%
 
 # dynamically build labels for titles and file names:

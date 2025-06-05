@@ -11,6 +11,7 @@ model=function(time=1:81,
                homophily_param=homophily_param1,
                frac_opp_0=frac_opp_01,
                frac_neut_0=frac_neut_01,
+               frac_supp_0=NULL,         
                forcestrong=forcestrong1,
                forceweak=forceweak1,
                ced_param=ced_param1,
@@ -50,8 +51,13 @@ model=function(time=1:81,
                temperature_anomaly=NULL
                ){
   
-  startdist=c(frac_opp_0,frac_neut_0,1-(frac_opp_0+frac_neut_0))
+  # if user did not supply frac_supp_0, compute as complement
+  if (is.null(frac_supp_0)) {
+    frac_supp_0 <- 1 - (frac_opp_0 + frac_neut_0)
+  }
   
+  startdist <- c(frac_opp_0, frac_neut_0, frac_supp_0)
+
   params_opp=c(homophily_param,(1-homophily_param)/2,(1-homophily_param)/2)
   params_neut=c((1-homophily_param)/2,homophily_param,(1-homophily_param)/2)
   params_supp=c((1-homophily_param)/2,(1-homophily_param)/2,homophily_param)
