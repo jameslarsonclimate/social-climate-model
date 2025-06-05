@@ -6,7 +6,9 @@ library(ggplot2)
 # fig_suffix = ''
 # fig_suffix = '_pulseTempAnom_2K_2030-2040'
 # fig_suffix = '_noNatVar'
-fig_suffix = '_varyInitialDistribution'
+# fig_suffix = '_varyInitialDistribution'
+fig_suffix = '_initClimSupportNormalDistribution'
+
 
 
 
@@ -18,7 +20,13 @@ print(params_file)
 print(ems_file)
 
 # ---- Load data ----
-params_dt <- fread(params_file)            # 100000 × 22
+params_dt <- fread(params_file)            # 100000 × 22 (or x 24)
+
+# if both frac_neut_01 and frac_opp_01 exist, compute support as the remainder
+if ( all(c("frac_neut_01","frac_opp_01") %in% names(params_dt)) ) {
+  params_dt[, frac_supp_01 := 1 - (frac_neut_01 + frac_opp_01)]
+}
+
 ems       <- fread(ems_file)               # single-column of length 100000
 ems_dt <- data.table(ems = rowSums(as.matrix(fread(ems_file)), na.rm=TRUE))
 setnames(ems_dt, names(ems_dt), "ems")     
@@ -161,43 +169,47 @@ ggsave(
   height   = 6
 )
 
-# # ---- Scatterplots & linear fits for all parameters ----
-# # assume y <- ems_dt$ems and params_dt already loaded & optionally standardized
 
-# # 1. combine emissions and all 22 parameters into one data.table
-# dt_all <- cbind(
-#   Emissions = y,
-#   params_dt
-# )
 
-# # 2. melt to long format for faceting
-# dt_long <- melt(
-#   dt_all,
-#   id.vars       = "Emissions",
-#   measure.vars  = names(params_dt),
-#   variable.name = "Parameter",
-#   value.name    = "Value"
-# )
+# ---- Scatterplots & linear fits for all parameters ----
+# assume y <- ems_dt$ems and params_dt already loaded & optionally standardized
 
-# # 3. make Parameter a factor in the original order
-# dt_long[, Parameter := factor(Parameter, levels = names(params_dt))]
+# 1. combine emissions and all 22 parameters into one data.table
+dt_all <- cbind(
+  Emissions = y,
+  params_dt
+)
 
-# # 4. plot with one panel per parameter
-# p_all <- ggplot(dt_long, aes(x = Value, y = Emissions)) +
-#   geom_point(alpha = 0.01) +
-#   geom_smooth(method = "lm", se = FALSE, color = "firebrick", linewidth = 0.8) +
-#   facet_wrap(~ Parameter, scales = "free_x", ncol = 4) +
-#   labs(
-#     title = "Integrated Emissions vs Each Model Parameter",
-#     x     = "Parameter Value",
-#     y     = "Integrated Emissions"
-#   ) +
-#   theme_minimal(base_size = 12)
+# 2. melt to long format for faceting
+dt_long <- melt(
+  dt_all,
+  id.vars       = "Emissions",
+  measure.vars  = names(params_dt),
+  variable.name = "Parameter",
+  value.name    = "Value"
+)
 
-# # 5. save figure
-# ggsave(
-#   filename = paste0("../results/regressions/ems_vs_all_params", fig_suffix, ".png"),
-#   plot     = p_all,
-#   width    = 12,
-#   height   = 10
-# )
+setDT(dt_long)   # now it’s a data.table
+
+# 3. make Parameter a factor in the original order
+dt_long[, Parameter := factor(Parameter, levels = names(params_dt))]
+
+# 4. plot with one panel per parameter
+p_all <- ggplot(dt_long, aes(x = Value, y = Emissions)) +
+  geom_point(alpha = 0.01) +
+  geom_smooth(method = "lm", se = FALSE, color = "firebrick", linewidth = 0.8) +
+  facet_wrap(~ Parameter, scales = "free_x", ncol = 4) +
+  labs(
+    title = "Integrated Emissions vs Each Model Parameter",
+    x     = "Parameter Value",
+    y     = "Integrated Emissions"
+  ) +
+  theme_minimal(base_size = 12)
+
+# 5. save figure
+ggsave(
+  filename = paste0("../results/regressions/ems_vs_all_params", fig_suffix, ".png"),
+  plot     = p_all,
+  width    = 12,
+  height   = 10
+)

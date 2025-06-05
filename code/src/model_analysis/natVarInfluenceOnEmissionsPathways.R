@@ -8,6 +8,7 @@ library(forcats)
 library(EnvStats)
 library(randomForest)
 library(randomForestExplainer)
+library(sn)
 
 setwd("/Users/jglarson/Documents/Research/social-climate-model/code")
 source("src/model_analysis/model_parametertune.R")
@@ -20,7 +21,8 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_fixedNatVar-moderateClimateSupport'
 # fig_suffix = '_fixedNatVar-lowClimateSupport'
 # fig_suffix = '_varyInitialDistribution'
-fig_suffix = '_initClimSupport40percent'
+# fig_suffix = '_initClimSupport40percent'
+fig_suffix = '_initClimSupportNormalDistribution'
 
 
 # Create a timeseries with a triangular pulse from index 10 to 20
@@ -117,7 +119,7 @@ mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
 # frac_neut_01=0.22 
 
 mc=100000
-params=matrix(nrow=mc,ncol=22)
+params=matrix(nrow=mc,ncol=24)
 pol=matrix(nrow=mc,ncol=81)
 ems=matrix(nrow=mc,ncol=81)
 climtemp=matrix(nrow=mc,ncol=81)
@@ -163,24 +165,46 @@ while(i<=mc){
   lbd_param01=runif(1,0,0.3)
   lag_param01=round(runif(1,0,30))
   
-  # uniform sampling of initial opinion fractions with individual bounds and sum constraint
-  repeat {
-    frac_opp_01  <- runif(1, 0.1, 0.8)
-    frac_neut_01 <- runif(1, 0.1, 0.8)
-    s <- frac_opp_01 + frac_neut_01
-    # enforce sum between 0.2 and 0.8 and each frac between 0.2 and 0.8
-    if (s >= 0.2 && s <= 0.8) break
-  }
+  # # uniform sampling of initial opinion fractions with individual bounds and sum constraint
+  # repeat {
+  #   frac_opp_01  <- runif(1, 0.1, 0.8)
+  #   frac_neut_01 <- runif(1, 0.1, 0.8)
+  #   s <- frac_opp_01 + frac_neut_01
+  #   # enforce sum between 0.2 and 0.8 and each frac between 0.2 and 0.8
+  #   if (s >= 0.2 && s <= 0.8) break
+  # }
 
-  # Set the initial opinion distribution
-  frac_opp_01 = 0.3
-  frac_neut_01 = 0.3
+# ---- Sample initial opinion fractions via skew-normal ----
+# Support: skew-normal truncated to [0.3,0.8]
+repeat {
+  x_sup <- rsn(1, xi = 0.37, omega = 0.2, alpha = 2.8)
+  if (x_sup >= 0.30 && x_sup <= 0.80) {
+    frac_supp_01 <- x_sup
+    break
+  }
+}
+
+# Opposition: skew-normal truncated to [0.1, 1 - frac_supp_01]
+repeat {
+  x_opp <- rsn(1, xi = 0.3, omega = 0.2, alpha = 1)
+  if (x_opp >= 0.10 && x_opp <= (1 - frac_supp_01)) {
+    frac_opp_01 <- x_opp
+    break
+  }
+}
+# Neutral is the remainder
+frac_neut_01 <- 1 - (frac_supp_01 + frac_opp_01)
+
+
+  # # Set the initial opinion distribution
+  # frac_opp_01 = 0.3
+  # frac_neut_01 = 0.3
 
 #also add feedback from temperature to bau emissions
 temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
 
 # If updating the model parameters, make sure to update fig_suffix as well!
-m=tryCatch(model(), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier = 0
+m=tryCatch(model(frac_supp_0 = frac_supp_01), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier = 0
     skip_to_next <<- TRUE
     print(paste("Error occurred, skipping iteration", i, ":", e$message))
 })
@@ -191,7 +215,7 @@ if(skip_to_next) {
 }
 
 #save output
-params[i,]=c(polops,mit,ced_param1,policy_pbcchange_max1,pbc_01,pbc_steep1,opchangeparam,etc_total1,normeffect1,adopt_effect1,lbd_param01,lag_param01,temp_emissionsparam01)
+params[i,]=c(polops,mit,ced_param1,policy_pbcchange_max1,pbc_01,pbc_steep1,opchangeparam,etc_total1,normeffect1,adopt_effect1,lbd_param01,lag_param01,temp_emissionsparam01, frac_neut_01, frac_opp_01)
 pol[i,]=m$policy
 ems[i,]=m$totalemissions
 climtemp[i,]=m$temp[,1]
@@ -204,7 +228,7 @@ frac_opp_mat[i,]=frac_opp_01
 if(i%%1000==0) print(i)
 i=i+1
 }
-colnames(params)=c(colnames(polopparams)[1:9],colnames(mitparams)[1:2],"ced","policy_pbc","pbc_init","pbc_steep","policy_adoption","etc_total","normeffect","adopt_effect","lbd_param","lag_param","temp_emissions")
+colnames(params)=c(colnames(polopparams)[1:9],colnames(mitparams)[1:2],"ced","policy_pbc","pbc_init","pbc_steep","policy_adoption","etc_total","normeffect","adopt_effect","lbd_param","lag_param","temp_emissions", "frac_neut_01", "frac_opp_01")
 
 dir.create("../results/MC Runs/MC Runs_TunedParams/")
 fwrite(params,file=paste0("../results/MC Runs/MC Runs_TunedParams/params", fig_suffix, ".csv"))

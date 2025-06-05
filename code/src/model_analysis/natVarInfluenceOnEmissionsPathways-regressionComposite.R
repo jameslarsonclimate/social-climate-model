@@ -4,7 +4,7 @@ library(ggplot2)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir         <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix       <- "_initClimSupport40percent"
+fig_suffix = '_initClimSupportNormalDistribution'
 years            <- 2020:2100
 
 # Optional standardization flags
@@ -12,7 +12,7 @@ standardize_params <- TRUE
 standardize_ems    <- FALSE
 
 # Analysis window and percentile threshold
-analysis_years <- c(2030, 2039)
+analysis_years <- c(2020, 2039)
 pct_threshold  <- 0.10
 
 # Labels for titles and filenames
@@ -21,6 +21,12 @@ pct_label      <- paste0(pct_threshold * 100, "pct")
 
 # ---- Load data ----
 params_dt <- fread(paste0(data_dir, "params",    fig_suffix, ".csv"))  # 100k × 22
+
+# if both frac_neut_01 and frac_opp_01 exist, compute support as the remainder
+if ( all(c("frac_neut_01","frac_opp_01") %in% names(params_dt)) ) {
+  params_dt[, frac_supp_01 := 1 - (frac_neut_01 + frac_opp_01)]
+}
+
 ems_df    <- fread(paste0(data_dir, "emissions", fig_suffix, ".csv"))  # 100k × years
 natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar",   fig_suffix, ".csv")))
 
@@ -79,7 +85,7 @@ results_top    <- run_univariate(top_params_dt,    top_ems_dt)[   , Subset := "T
 
 # Combine and set factor order
 both_results <- rbind(results_bottom, results_top)
-both_results[, Parameter := factor(Parameter, levels = names(params_dt))]
+# both_results[, Parameter := factor(Parameter, levels = names(params_dt))]
 
 # ---- Plot Bottom vs Top slopes ----
 p <- ggplot(both_results, aes(x = Parameter, y = Estimate, fill = Subset)) +
@@ -101,7 +107,39 @@ p <- ggplot(both_results, aes(x = Parameter, y = Estimate, fill = Subset)) +
     fill = ""
   ) +
   theme_minimal(base_size = 14) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  ylim(-150, 150)
+
+
+
+# # ---- Prepare correlation labels ----
+# # compute signed correlation coefficient from R²
+# results[, corr  := sign(Estimate) * sqrt(R2)]
+# # horizontal justification: place labels just outside bar ends
+# results[, hjust := ifelse(Estimate >= 0, -0.1, 1.1)]
+
+# # ---- Plot coefficients with R correlation labels ----
+# p <- ggplot(results, aes(x = Parameter, y = Estimate)) +
+#   geom_col(fill = "steelblue") +
+#   geom_text(
+#     aes(label = sprintf("%.2f", corr), hjust = hjust),
+#     size  = 3,
+#     color = "black"
+#   ) +
+#   coord_flip() +
+#   labs(
+#     title = paste0(
+#       if (standardize_params && standardize_ems) "Standardized coefficients\n" else
+#       if (standardize_params)    "Coefficients (standardized params)\n" else
+#       if (standardize_ems)       "Coefficients (standardized ems)\n" else
+#                                   "Univariate regression slopes\n",
+#       "Integrated Emissions ~ Each Parameter"
+#     ),
+#     x = "Model Parameter",
+#     y = "Slope Estimate (GtC/σ)"
+#   ) +
+#   theme_minimal(base_size = 14) +
+#   ylim(-150, 150)
 
 # ---- Save plot ----
 ggsave(
