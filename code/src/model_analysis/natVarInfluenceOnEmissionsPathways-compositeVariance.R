@@ -6,9 +6,9 @@ library(RColorBrewer)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir       <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix     <- "_initClimSupport40percent"
-# fig_suffix <- ""
-fig_suffix = '_initClimSupportNormalDistribution'
+# fig_suffix     <- "_initClimSupport40percent"
+fig_suffix <- ""
+# fig_suffix = '_initClimSupportNormalDistribution'
 years          <- 2020:2100
 
 # user‐adjustable analysis window and percentile threshold
@@ -34,7 +34,7 @@ natvar_mat <- as.matrix(natvar_df)
 
 # ---- Identify bottom/top runs by natvar standard deviation ----
 idx_range <- which(years >= analysis_years[1] & years <= analysis_years[2])
-sd_nat    <- apply(natvar_mat[, idx_range, drop=FALSE], 1, sd, na.rm=TRUE)
+sd_nat    <- apply(temp_mat[, idx_range, drop=FALSE], 1, sd, na.rm=TRUE)
 q_vals    <- c(pct_threshold, 1 - pct_threshold)
 q_thresh  <- quantile(sd_nat, q_vals, na.rm=TRUE)
 
