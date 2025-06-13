@@ -7,7 +7,7 @@ library(RColorBrewer)
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir        <- "../results/MC Runs/MC Runs_TunedParams/"
 fig_suffix      <- "_initClimSupportNormalDistribution"
-pct_threshold   <- 0.05
+pct_threshold   <- 0.1
 years           <- 2020:2100
 max_dur         <- length(years) - 1
 start_years_all <- years
@@ -37,8 +37,8 @@ for (dur in 1:max_dur) {
     avg_nat   <- rowMeans(natvar_mat[, idx_range, drop=FALSE], na.rm=TRUE)
     qv        <- quantile(avg_nat, c(pct_threshold, 1 - pct_threshold), na.rm=TRUE)
     subsets   <- list(
-      "Bottom 10%" = which(avg_nat <= qv[1]),
-      "Top 10%"    = which(avg_nat >= qv[2])
+      "Coldest 10%" = which(avg_nat <= qv[1]),
+      "Hottest 10%"    = which(avg_nat >= qv[2])
     )
 
     for (lbl in names(subsets)) {
@@ -65,16 +65,24 @@ dt_heat <- rbindlist(res)[!is.na(zero_year)]
 
 
 
+# ---- Compute net‐zero year for median of all runs ----
+med_all <- apply(ems_mat, 2, median, na.rm=TRUE)
+zz_all  <- which(med_all <= 0)
+zero_year_all <- if (length(zz_all)>0) years[min(zz_all)] else NA_integer_
+
+
 # ---- Plot heatmap ----
 p <- ggplot(dt_heat, aes(x = start_year, y = duration, fill = zero_year)) +
   geom_tile() +
-  scale_fill_viridis(name="Net-Zero Year", na.value="grey80") +
+  scale_fill_viridis(name="Net-Zero Year", na.value="grey80", option = "C") +
   guides(fill = guide_colorbar(barwidth = unit(5, "cm"),  # increase width
                                barheight = unit(0.5, "cm"))) +
   facet_wrap(~ subset, ncol = 1) +
   labs(
     title = paste0("Heatmap of Median Emissions Net-Zero Year\n",
-                   fig_suffix, " at ", pct_threshold*100, "% extremes"),
+                   fig_suffix, " at ", pct_threshold*100, "% extremes\n",
+                   "Median Year of Net Zero for All Runs is ", zero_year_all
+                   ),
     x = "Starting Year of Extreme Period",
     y = "Duration of Extreme Period (years)"
   ) +
@@ -99,14 +107,9 @@ ggsave(
 
 
 
-# ---- Compute net‐zero year for median of all runs ----
-med_all <- apply(ems_mat, 2, median, na.rm=TRUE)
-zz_all  <- which(med_all <= 0)
-zero_year_all <- if (length(zz_all)>0) years[min(zz_all)] else NA_integer_
-
 # ---- Build difference table ----
 dt_diffzero <- copy(dt_heat)[
-  , diff := zero_year_all - zero_year
+  , diff := zero_year - zero_year_all
 ]
 
 # find symmetric limits
@@ -117,17 +120,18 @@ p_diff <- ggplot(dt_diffzero, aes(x = start_year, y = duration, fill = diff)) +
   geom_tile() +
   facet_wrap(~ subset, ncol = 1) +
   scale_fill_stepsn(
-    colors = rev(brewer.pal(9, "RdBu")),
+    colors = brewer.pal(9, "RdBu"),
     limits = c(-5, 5),
-    breaks = seq(-5, 5, by = 1),
-    name   = "All Runs - Subset\n(Net-Zero Years)"
+    breaks = c(-5, -4 ,-3 ,-2 ,-1, 1, 2, 3, 4, 5),
+    name   = "Subset - All Runs\n(Net-Zero Years)"
   ) +
   guides(fill = guide_colorbar(barwidth = unit(5, "cm"),  # increase width
                                barheight = unit(0.5, "cm"))) +
   labs(
     title = paste0(
       "Difference in Net-Zero Year of Subsets vs Median All Runs\n",
-      fig_suffix, " at ", pct_threshold*100, "% extremes"
+      fig_suffix, " at ", pct_threshold*100, "% extremes\n",
+      "Median Year of Net Zero for All Runs is ", zero_year_all
     ),
     x = "Starting Year of Extreme Period",
     y = "Duration of Extreme Period (years)"
