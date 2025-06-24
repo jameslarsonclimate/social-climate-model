@@ -48,13 +48,13 @@ top_idx    <- which(avg_nat >= q_thresh[2])
 
 # ---- Subsets ----
 subs <- list(
-  "Bottom 10%" = list(ems=ems_mat[bottom_idx, ], temp=clim_mat[bottom_idx, ]),
-  "Top 10%"    = list(ems=ems_mat[top_idx, ],    temp=clim_mat[top_idx, ]),
+  "Coldest 10%" = list(ems=ems_mat[bottom_idx, ], temp=clim_mat[bottom_idx, ]),
+  "Hottest 10%"    = list(ems=ems_mat[top_idx, ],    temp=clim_mat[top_idx, ]),
   "Default"    = list(ems=ems_mat,               temp=clim_mat)
 )
 
 # ---- Common settings ----
-colors   <- c("Bottom 10%"="#0072B2","Top 10%"="#D55E00","Default"="#009E73")
+colors   <- c("Coldest 10%"="#0072B2", "Hottest 10%"="#D55E00","Default"="#009E73")
 fig_title <- paste0(
   "Impact of Natural Variability Extremes (", analysis_label, ") at ",
   pct_threshold * 100, "% Threshold of Natural Variability\n",
@@ -79,7 +79,7 @@ base_default <- dt_long_ems[Experiment == "Default", .(year, median_default = me
 
 # 2. merge only Bottom and Top runs with the Default baseline
 dt_diff_ems <- merge(
-  dt_long_ems[Experiment %in% c("Bottom 10%", "Top 10%")],
+  dt_long_ems[Experiment %in% c("Coldest 10%", "Hottest 10%")],
   base_default,
   by = "year"
 )
@@ -102,9 +102,9 @@ p_diff_ems <- ggplot(dt_diff_ems, aes(year, median_diff, color=Experiment, fill=
   scale_fill_manual(values=colors) +
   labs(
     x="Year",
-    y="Diff vs Bottom 10% (GtC/yr)",
+    y="Diff vs Median (GtC/yr)",
     title=paste0(
-      "Differences vs Bottom 10%: Emissions (GtC/yr)\n",
+      "Differences vs Median%: Emissions (GtC/yr)\n",
       "Cumulative emissions difference (hot decade): ",
       round(sum(dt_diff_ems[Experiment == "Top 10%"]$median_diff),2)," GtC"
     )
@@ -139,7 +139,7 @@ base_default_temp <- dt_long_temp[Experiment == "Default", .(year, median_defaul
 
 # 2. merge only Bottom and Top runs with the Default baseline
 dt_diff_temp <- merge(
-  dt_long_temp[Experiment %in% c("Bottom 10%", "Top 10%")],
+  dt_long_temp[Experiment %in% c("Coldest 10%", "Hottest 10%")],
   base_default_temp,
   by = "year"
 )
@@ -161,9 +161,9 @@ p_diff_temp <- ggplot(dt_diff_temp, aes(year, median_diff, color=Experiment, fil
   scale_fill_manual(values=colors) +
   labs(
     x="Year",
-    y="Diff vs Bottom 10% (°C)",
+    y="Diff vs Median (°C)",
     title=paste0(
-      "Differences vs Bottom 10%: Temperature (°C)"
+      "Differences vs Median: Temperature (°C)"
     )
   ) +
   theme_minimal(base_size=14)
@@ -183,8 +183,8 @@ load(dist_file)   # loads 'dist' array [run, year, group]
 supporters_mat <- dist[,,3]
 
 subs_sup <- list(
-  "Bottom 10%" = list(sup = supporters_mat[bottom_idx, ]),
-  "Top 10%"    = list(sup = supporters_mat[top_idx, ]),
+  "Coldest 10%" = list(sup = supporters_mat[bottom_idx, ]),
+  "Hottest 10%"    = list(sup = supporters_mat[top_idx, ]),
   "Default"    = list(sup = supporters_mat)
 )
 
@@ -205,7 +205,7 @@ base_default_sup <- dt_long_sup[Experiment == "Default", .(year, median_default 
 
 # 2. merge only Bottom and Top runs with the Default baseline
 dt_diff_sup <- merge(
-  dt_long_sup[Experiment %in% c("Bottom 10%", "Top 10%")],
+  dt_long_sup[Experiment %in% c("Coldest 10%", "Hottest 10%")],
   base_default_sup,
   by = "year"
 )
@@ -226,9 +226,9 @@ p_diff_sup <- ggplot(dt_diff_sup, aes(year, median_diff, color=Experiment, fill=
   scale_fill_manual(values=colors) +
   labs(
     x="Year",
-    y="Diff vs Bottom 10% (Fraction)",
+    y="Diff vs Median",
     title=paste0(
-      "Differences vs Bottom 10%: Fraction of Climate Supporters"
+      "Differences vs Median: Fraction of Climate Supporters"
     )
   ) +
   theme_minimal(base_size=14)

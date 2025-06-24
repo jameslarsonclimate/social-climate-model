@@ -12,7 +12,7 @@ library(randomForestExplainer)
 setwd("/Users/jglarson/Documents/Research/social-climate-model/code")
 source("src/model_analysis/model_parametertune.R")
 
-fig_suffix = ''
+fig_suffix = ''  # Don't change this. Change the suffix below.
 
 
 
@@ -158,7 +158,9 @@ print('Reading in new data')
 # fig_suffix = '_fixedNatVar-highClimateSupport'
 # fig_suffix = '_fixedNatVar-mediumClimateSupport'
 # fig_suffix = '_fixedNatVar-lackOfClimateSupport'
-fig_suffix = '_varyInitialDistribution'
+# fig_suffix = '_varyInitialDistribution'
+fig_suffix = '_initClimSupportNormalDistribution'
+
 
 params=fread(paste0("../results/MC Runs/MC Runs_TunedParams/params", fig_suffix, ".csv"))
 pol=fread(paste0("../results/MC Runs/MC Runs_TunedParams/policy", fig_suffix, ".csv"))

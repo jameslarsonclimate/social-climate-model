@@ -1,6 +1,7 @@
 library(data.table)
 library(ggplot2)
 library(viridis)
+library(RColorBrewer)
 
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
@@ -50,14 +51,26 @@ for (dur in 1:max_dur) {
 
 dt_bin <- rbindlist(res)[!is.na(zero_year)]
 
+ # ---- Compute global median net‐zero year ----
+med_all       <- apply(ems_mat, 2, median, na.rm=TRUE)
+zz_all        <- which(med_all <= 0)
+zero_year_all <- if (length(zz_all)>0) years[min(zz_all)] else NA_integer_
+
 # ---- Plot heatmap of zero‐year by bin & duration ----
 p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
   geom_tile() +
-  scale_fill_viridis(name="Year Net-Zero", na.value="grey80", option = "C") +
+  scale_fill_viridis(
+    name = "Year Net-Zero",
+    na.value = "grey80",
+    option = "C",
+    limits = c(2084, 2091),
+    oob = scales::oob_squish  # Allow colors outside the range to be squished
+  ) +
   labs(
     title = paste0("Net-Zero Year by Natural Variability Bin and Duration\n",
-                   fig_suffix),
-    x = "NatVar Bin Center",
+                   fig_suffix, "\n",
+                   "Median Year of Net Zero for All Runs is ", zero_year_all),
+    x = "Average Natural Variability Magnitude (degC)",
     y = "Duration (yrs)"
   ) +
   theme_minimal(base_size=14) +
@@ -79,11 +92,6 @@ message("Saving: ", out_file)
 ggsave(out_file, p_bin, width=8, height=6)
 
 
- # ---- Compute global median net‐zero year ----
-med_all       <- apply(ems_mat, 2, median, na.rm=TRUE)
-zz_all        <- which(med_all <= 0)
-zero_year_all <- if (length(zz_all)>0) years[min(zz_all)] else NA_integer_
-
 # ---- Build difference table: per‐bin minus overall ----
 dt_diff <- copy(dt_bin)[
   , diff := zero_year - zero_year_all
@@ -96,10 +104,10 @@ lim <- max(abs(dt_diff$diff), na.rm=TRUE)
 p_diff <- ggplot(dt_diff, aes(x = magnitude, y = duration, fill = diff)) +
   geom_tile() +
   scale_fill_stepsn(
-    colors = RColorBrewer::brewer.pal(9, "RdBu"),
-    limits = c(-lim, lim),
-    breaks = seq(-lim, lim, length.out=9),
-    name   = "Bin − All Runs\n(Net-Zero Years)"
+    colors = brewer.pal(9, "RdBu"),
+    # limits = c(-5, 5),
+    # breaks = c(-5, -4 ,-3 ,-2 ,-1, 1, 2, 3, 4, 5),
+    name   = "Subset - All Runs\n(Net-Zero Years)"
   ) +
   guides(fill = guide_colorbar(
     barwidth  = unit(6, "cm"),
@@ -110,7 +118,7 @@ p_diff <- ggplot(dt_diff, aes(x = magnitude, y = duration, fill = diff)) +
       "Difference in Net-Zero Year by NatVar Bin vs All Runs\n",
       fig_suffix
     ),
-    x = "NatVar Bin Center",
+    x = "Average Natural Variability Magnitude (degC)",
     y = "Duration (yrs)"
   ) +
   theme_minimal(base_size=14) +

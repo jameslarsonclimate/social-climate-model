@@ -79,7 +79,10 @@ p_thr <- ggplot(dt_heat,
                 aes(x=pct_thresh, y=duration, fill=zero_year)) +
   geom_tile() +
   facet_wrap(~ subset, ncol=1) +
-  scale_fill_viridis(name="Net-Zero Year", option="C", na.value="grey80") +
+  scale_fill_viridis(name="Net-Zero Year", option="C", na.value="grey80",
+      limits = c(2084, 2091),
+      oob = scales::oob_squish  # Allow colors outside the range to be squished
+      ) +
   guides(fill=guide_colorbar(barwidth=unit(5,"cm"),
                              barheight=unit(0.5,"cm"))) +
   labs(
@@ -116,8 +119,11 @@ p_diff <- ggplot(dt_diff,
   facet_wrap(~ subset, ncol=1) +
   scale_fill_stepsn(
     colors = rev(brewer.pal(9,"RdBu")),
-    limits = c(-lim, lim),
-    breaks = seq(-lim, lim, length.out=9),
+    # limits = c(-lim, lim),
+    # breaks = seq(-lim, lim, length.out=9),
+    limits = c(-5, 5),
+    breaks = c(-5, -4 ,-3 ,-2 ,-1, 1, 2, 3, 4, 5),
+
     name   = "Subset − All Runs\n(Net-Zero Years)"
   ) +
   guides(fill=guide_colorbar(barwidth=unit(5,"cm"),
