@@ -10,6 +10,7 @@ data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
 # fig_suffix <- "_initClimSupport40percent"
 # fig_suffix <- ""
 fig_suffix = '_initClimSupportNormalDistribution'
+# fig_suffix = '_ERA5natVar'
 
 years     <- 2020:2100
 

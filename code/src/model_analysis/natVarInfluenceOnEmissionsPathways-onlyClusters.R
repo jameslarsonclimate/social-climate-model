@@ -159,7 +159,9 @@ print('Reading in new data')
 # fig_suffix = '_fixedNatVar-mediumClimateSupport'
 # fig_suffix = '_fixedNatVar-lackOfClimateSupport'
 # fig_suffix = '_varyInitialDistribution'
-fig_suffix = '_initClimSupportNormalDistribution'
+# fig_suffix = '_initClimSupportNormalDistribution'
+# fig_suffix = '_ERA5natVar'
+fig_suffix = '_ERA5natVar0.5'
 
 
 params=fread(paste0("../results/MC Runs/MC Runs_TunedParams/params", fig_suffix, ".csv"))

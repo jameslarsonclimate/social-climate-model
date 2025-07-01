@@ -6,18 +6,46 @@ library(RColorBrewer)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir      <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix    <- "_initClimSupportNormalDistribution"
+fig_suffix    <- "_initClimSupportNormalDistribution" #-natVarMultiplier10"
+# fig_suffix = '_ERA5natVar'
 years         <- 2020:2100
 start_year    <- 2025
-max_dur       <- length(years) - (start_year - min(years))
+# max_dur       <- length(years) - (start_year - min(years))
+max_dur       <- 20
 bin_centers   <- seq(-1.5, 1.5, by=0.1)
 half_width    <- 0.05
 
 # ---- Load data ----
-message("Loading: ", data_dir, "emissions", fig_suffix, ".csv")
-ems_mat    <- as.matrix(fread(paste0(data_dir, "emissions", fig_suffix, ".csv")))
-message("Loading: ", data_dir, "natvar", fig_suffix, ".csv")
-natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar",    fig_suffix, ".csv")))
+# message("Loading: ", data_dir, "emissions", fig_suffix, ".csv")
+# ems_mat    <- as.matrix(fread(paste0(data_dir, "emissions", fig_suffix, ".csv")))
+# message("Loading: ", data_dir, "natvar", fig_suffix, ".csv")
+# natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar",    fig_suffix, ".csv")))
+
+# ---- Load and append data from all suffixes ----
+
+# print reading messages and the suffixes being loaded
+fig_suffixes  <- c(
+  "_initClimSupportNormalDistribution",
+  "_initClimSupportNormalDistribution-natVarMultiplier10",
+  "_initClimSupportNormalDistribution-natVarMultiplier12"
+)
+
+message("Loading data for suffixes: \n", paste(fig_suffixes, collapse=",\n"))
+
+ems_list    <- list()
+natvar_list <- list()
+for (suffix in fig_suffixes) {
+  message("Loading: ", data_dir, "emissions", suffix, ".csv")
+  ems_list[[suffix]]    <- as.matrix(fread(paste0(data_dir, "emissions", suffix, ".csv")))
+  message("Loading: ", data_dir, "natvar", suffix, ".csv")
+  natvar_list[[suffix]] <- as.matrix(fread(paste0(data_dir, "natvar", suffix, ".csv")))
+}
+ems_mat    <- do.call(rbind, ems_list)
+natvar_mat <- do.call(rbind, natvar_list)
+
+message("Data loaded successfully.")
+fig_suffix    <- "_initClimSupportNormalDistribution-appended" # Update suffix for output
+
 
 # ---- Loop over duration & magnitude bins ----
 res <- list()
@@ -63,7 +91,7 @@ p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
     name = "Year Net-Zero",
     na.value = "grey80",
     option = "C",
-    limits = c(2084, 2091),
+    limits = c(2080, 2100),
     oob = scales::oob_squish  # Allow colors outside the range to be squished
   ) +
   labs(
@@ -105,8 +133,8 @@ p_diff <- ggplot(dt_diff, aes(x = magnitude, y = duration, fill = diff)) +
   geom_tile() +
   scale_fill_stepsn(
     colors = brewer.pal(9, "RdBu"),
-    # limits = c(-5, 5),
-    # breaks = c(-5, -4 ,-3 ,-2 ,-1, 1, 2, 3, 4, 5),
+    limits = c(-5, 5),
+    breaks = c(-5, -4 ,-3 ,-2 ,-1, 1, 2, 3, 4, 5),
     name   = "Subset - All Runs\n(Net-Zero Years)"
   ) +
   guides(fill = guide_colorbar(

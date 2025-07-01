@@ -17,7 +17,9 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_fixedNatVar-highClimateSupport'
 # fig_suffix = "_varyInitialDistribution"
 # fig_suffix = "_initClimSupport40percent"
-fig_suffix = '_initClimSupportNormalDistribution'
+# fig_suffix = '_initClimSupportNormalDistribution'
+fig_suffix = '_ERA5natVar'
+
 
 
 

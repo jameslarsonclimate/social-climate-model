@@ -22,13 +22,16 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_fixedNatVar-lowClimateSupport'
 # fig_suffix = '_varyInitialDistribution'
 # fig_suffix = '_initClimSupport40percent'
-fig_suffix = '_initClimSupportNormalDistribution'
+# fig_suffix = '_initClimSupportNormalDistribution'
+fig_suffix = '_initClimSupportNormalDistribution-natVarMultiplier14'
+# fig_suffix = '_ERA5natVar'
+# fig_suffix = '_ERA5natVar0.5'
 
 
 # Create a timeseries with a triangular pulse from index 10 to 20
 # Initialize a vector of 81 zeros and define the peak value
-ts <- numeric(81)
-peak <- 2
+# ts <- numeric(81)
+# peak <- 2
 
 # Create ascending values from index 10 to 15 and descending values from index 16 to 20
 # ts[10:15] <- seq(0, peak, length.out = 6)
@@ -113,6 +116,7 @@ print('reading in MC Runs files')
 
 polopparams=fread("../results/MC Runs/parameter_tune.csv")
 mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
+natvarERA5 = fread("../data/ERA5.annual.t2m.detrended.landOnly.1940-2024.csv")[, 1:81, with = FALSE]
 
 #initial opinion distribution - not varied, but fixed at particular values from Pew Opinion Data
 # frac_opp_01=0.07 
@@ -174,59 +178,65 @@ while(i<=mc){
   #   if (s >= 0.2 && s <= 0.8) break
   # }
 
-# ---- Sample initial opinion fractions via skew-normal ----
-# Support: skew-normal truncated to [0.3,0.8]
-repeat {
-  x_sup <- rsn(1, xi = 0.37, omega = 0.2, alpha = 2.8)
-  if (x_sup >= 0.30 && x_sup <= 0.80) {
-    frac_supp_01 <- x_sup
-    break
+  # ---- Sample initial opinion fractions via skew-normal ----
+  # Support: skew-normal truncated to [0.3,0.8]
+  repeat {
+    x_sup <- rsn(1, xi = 0.37, omega = 0.2, alpha = 2.8)
+    if (x_sup >= 0.30 && x_sup <= 0.80) {
+      frac_supp_01 <- x_sup
+      break
+    }
   }
-}
 
-# Opposition: skew-normal truncated to [0.1, 1 - frac_supp_01]
-repeat {
-  x_opp <- rsn(1, xi = 0.3, omega = 0.2, alpha = 1)
-  if (x_opp >= 0.10 && x_opp <= (1 - frac_supp_01)) {
-    frac_opp_01 <- x_opp
-    break
+  # Opposition: skew-normal truncated to [0.1, 1 - frac_supp_01]
+  repeat {
+    x_opp <- rsn(1, xi = 0.3, omega = 0.2, alpha = 1)
+    if (x_opp >= 0.10 && x_opp <= (1 - frac_supp_01)) {
+      frac_opp_01 <- x_opp
+      break
+    }
   }
-}
-# Neutral is the remainder
-frac_neut_01 <- 1 - (frac_supp_01 + frac_opp_01)
+  # Neutral is the remainder
+  frac_neut_01 <- 1 - (frac_supp_01 + frac_opp_01)
 
 
   # # Set the initial opinion distribution
   # frac_opp_01 = 0.3
   # frac_neut_01 = 0.3
 
-#also add feedback from temperature to bau emissions
-temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
+  #also add feedback from temperature to bau emissions
+  temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
 
-# If updating the model parameters, make sure to update fig_suffix as well!
-m=tryCatch(model(frac_supp_0 = frac_supp_01), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier = 0
-    skip_to_next <<- TRUE
-    print(paste("Error occurred, skipping iteration", i, ":", e$message))
-})
+  # rowvals <- as.numeric(natvarERA5[i+1, ])
+  # if (any(is.na(rowvals))) {
+  #   print(paste("NA in natvarERA5 row", i+1))
+  #   next
+  # }
 
-if(skip_to_next) { 
-    if(!exists("e")) print(paste("Skipping iteration", i)) # In case skip_to_next was set elsewhere
-    next 
-}
+  # If updating the model parameters, make sure to update fig_suffix as well!
+  m=tryCatch(model(natvar_multiplier=12), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier = 0
+      skip_to_next <<- TRUE
+      print(paste("Error occurred, skipping iteration", i, ":", e$message))
+  })
 
-#save output
-params[i,]=c(polops,mit,ced_param1,policy_pbcchange_max1,pbc_01,pbc_steep1,opchangeparam,etc_total1,normeffect1,adopt_effect1,lbd_param01,lag_param01,temp_emissionsparam01, frac_neut_01, frac_opp_01)
-pol[i,]=m$policy
-ems[i,]=m$totalemissions
-climtemp[i,]=m$temp[,1]
-dist[i,,]=m$distributions
-natvar[i,]=m$naturalvariability
-weather[i,]=m$weather
-frac_neut_mat[i,]=frac_neut_01
-frac_opp_mat[i,]=frac_opp_01
+  if(skip_to_next) { 
+      if(!exists("e")) print(paste("Skipping iteration", i)) # In case skip_to_next was set elsewhere
+      next 
+  }
 
-if(i%%1000==0) print(i)
-i=i+1
+  #save output
+  params[i,]=c(polops,mit,ced_param1,policy_pbcchange_max1,pbc_01,pbc_steep1,opchangeparam,etc_total1,normeffect1,adopt_effect1,lbd_param01,lag_param01,temp_emissionsparam01, frac_neut_01, frac_opp_01)
+  pol[i,]=m$policy
+  ems[i,]=m$totalemissions
+  climtemp[i,]=m$temp[,1]
+  dist[i,,]=m$distributions
+  natvar[i,]=m$naturalvariability
+  weather[i,]=m$weather
+  frac_neut_mat[i,]=frac_neut_01
+  frac_opp_mat[i,]=frac_opp_01
+
+  if(i%%1000==0) print(i)
+  i=i+1
 }
 colnames(params)=c(colnames(polopparams)[1:9],colnames(mitparams)[1:2],"ced","policy_pbc","pbc_init","pbc_steep","policy_adoption","etc_total","normeffect","adopt_effect","lbd_param","lag_param","temp_emissions", "frac_neut_01", "frac_opp_01")
 

@@ -16,6 +16,14 @@ data_dir           <- "../results/MC Runs/MC Runs_TunedParams/"
 title_suffix       <- fig_suffix
 params_file        <- paste0(data_dir, "params",   fig_suffix, ".csv")
 ems_file           <- paste0(data_dir, "emissions",fig_suffix, ".csv")
+natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar",    fig_suffix, ".csv")))
+
+# ---- Natural variability ----
+natvar_window <- natvar_mat[, 6:25]  # years 2025:2035
+natvar_sd  <- apply(natvar_window, 1, sd, na.rm = TRUE)   # (100000,)
+natvar_avg <- rowMeans(natvar_window, na.rm = TRUE)       # (100000,)
+
+
 print(params_file)
 print(ems_file)
 
@@ -26,6 +34,10 @@ params_dt <- fread(params_file)            # 100000 × 22 (or x 24)
 if ( all(c("frac_neut_01","frac_opp_01") %in% names(params_dt)) ) {
   params_dt[, frac_supp_01 := 1 - (frac_neut_01 + frac_opp_01)]
 }
+
+# ---- Add natural variability metrics to params_dt ----
+params_dt[, natvar_sd_2025_2035  := natvar_sd]
+params_dt[, natvar_avg_2025_2035 := natvar_avg]
 
 ems       <- fread(ems_file)               # single-column of length 100000
 ems_dt <- data.table(ems = rowSums(as.matrix(fread(ems_file)), na.rm=TRUE))

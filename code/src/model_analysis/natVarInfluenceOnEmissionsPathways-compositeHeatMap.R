@@ -6,7 +6,9 @@ library(RColorBrewer)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir        <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix      <- "_initClimSupportNormalDistribution"
+# fig_suffix      <- "_initClimSupportNormalDistribution"
+fig_suffix = '_ERA5natVar'
+
 pct_threshold   <- 0.1
 years           <- 2020:2100
 max_dur         <- length(years) - 1
