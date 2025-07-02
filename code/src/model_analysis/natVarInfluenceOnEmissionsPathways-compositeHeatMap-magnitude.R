@@ -87,13 +87,16 @@ zero_year_all <- if (length(zz_all)>0) years[min(zz_all)] else NA_integer_
 # ---- Plot heatmap of zero‐year by bin & duration ----
 p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
   geom_tile() +
-  scale_fill_viridis(
+  scale_fill_stepsn(
+    colors = viridis::viridis(10, option = "C"),
     name = "Year Net-Zero",
     na.value = "grey80",
-    option = "C",
     limits = c(2080, 2100),
-    oob = scales::oob_squish  # Allow colors outside the range to be squished
+    breaks = seq(2080, 2100, by = 2), # adjust step as needed
+    oob = scales::oob_squish
   ) +
+  guides(fill = guide_colorbar(barwidth = unit(12, "cm"), 
+                               barheight = unit(0.5, "cm"))) +
   labs(
     title = paste0("Net-Zero Year by Natural Variability Bin and Duration\n",
                    fig_suffix, "\n",
@@ -105,9 +108,7 @@ p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
   theme(
     panel.grid     = element_blank(),
     legend.position = "bottom"
-  ) +
-  guides(fill = guide_colorbar(barwidth = unit(6, "cm"),  # increase width
-                               barheight = unit(0.5, "cm"))) 
+  ) 
 
 # ---- Save figure ----
 out_dir <- "../results/heatmaps"

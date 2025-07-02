@@ -84,7 +84,58 @@ med_all       <- apply(ems_mat, 2, median, na.rm=TRUE)
 zz_all        <- which(med_all <= 0)
 zero_year_all <- if (length(zz_all)>0) years[min(zz_all)] else NA_integer_
 
+
+# Add statistical significance testing using the Sign Test
+message("Computing statistical significance of net-zero years by bin (Sign Test)...")
+dt_bin[, p_value := NA_real_]
+
+all_zero_years <- apply(ems_mat, 1, function(x) {
+  zz <- which(x <= 0)
+  if (length(zz) > 0) years[min(zz)] else NA_integer_
+})
+
+sign_test <- function(x, mu) {
+  # Remove NAs
+  x <- x[!is.na(x)]
+  # Count how many are above and below the hypothesized median
+  n_pos <- sum(x > mu)
+  n_neg <- sum(x < mu)
+  n <- n_pos + n_neg
+  # If all values equal to mu, p = 1
+  if (n == 0) return(1)
+  # Two-sided binomial test
+  pval <- 2 * pbinom(min(n_pos, n_neg), n, 0.5)
+  pval <- min(pval, 1) # p-value cannot exceed 1
+  return(pval)
+}
+
+for (i in seq_len(nrow(dt_bin))) {
+  message(sprintf("Processing bin %d of %d", i, nrow(dt_bin)))
+  dur <- dt_bin$duration[i]
+  mag <- dt_bin$magnitude[i]
+  end_year <- start_year + dur - 1
+  idx_range <- which(years >= start_year & years <= end_year)
+  std_nat <- apply(natvar_mat[, idx_range, drop=FALSE], 1, sd, na.rm=TRUE)
+  lo <- mag - half_width
+  hi <- mag + half_width
+  idx <- which(std_nat >= lo & std_nat < hi)
+  if (length(idx) > 0) {
+    # Net-zero years for this bin
+    bin_zero_years <- apply(ems_mat[idx, , drop=FALSE], 1, function(x) {
+      zz <- which(x <= 0)
+      if (length(zz) > 0) years[min(zz)] else NA_integer_
+    })
+    bin_zero_years <- bin_zero_years[!is.na(bin_zero_years)]
+    # Sign Test: is the bin median different from the population median?
+    if (length(bin_zero_years) > 1 && !is.na(zero_year_all)) {
+      dt_bin$p_value[i] <- sign_test(bin_zero_years, zero_year_all)
+    }
+  }
+}
+
+
 # ---- Plot heatmap of zero‐year by bin & duration ----
+message("Plotting heatmap of net-zero year by bin and duration...")
 p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
   geom_tile() +
   scale_fill_stepsn(
@@ -108,7 +159,12 @@ p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
   theme(
     panel.grid     = element_blank(),
     legend.position = "bottom"
-  ) 
+  ) +  # Add points for statistical significance
+  geom_point(
+    data = dt_bin[p_value > 0.05],
+    aes(x = magnitude, y = duration),
+    shape = 8, color = "black", size = 1.5, alpha = 0.7, inherit.aes = FALSE
+  )
 
 # ---- Save figure ----
 out_dir <- "../results/heatmaps"
