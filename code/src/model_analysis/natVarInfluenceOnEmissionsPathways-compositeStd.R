@@ -9,7 +9,7 @@ data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
 # fig_suffix <- ""
 fig_suffix = '_initClimSupportNormalDistribution'
 # fig_suffix = 'volcanicCooling_2030_-1_seed2090'  # Change the seed!
-# fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+fig_suffix = '_CESM_HR_local_natVar_multiplier1'
 # fig_suffix = '_CESM_HR_local_natVar_multiplier05'
 # fig_suffix = '_ERA5natVar'
 # fig_suffix = '_ERA5natVar0.5'
@@ -40,13 +40,14 @@ ems_mat    <- as.matrix(ems)
 clim_mat   <- as.matrix(clim)
 natvar_mat <- as.matrix(natvar)
 
-# ---- Identify bottom/top 10% runs by avg natvar in 2030–2039 ----
+# ---- Identify bottom/top 10% runs by std dev of natvar in 2030–2039 ----
 idx_range <- which(years >= analysis_years[1] & years <= analysis_years[2])
-avg_nat   <- rowMeans(natvar_mat[, idx_range], na.rm=TRUE)
-q_vals    <- c(pct_threshold, 1 - pct_threshold)
-q_thresh  <- quantile(avg_nat, q_vals, na.rm=TRUE)
-bottom_idx <- which(avg_nat <= q_thresh[1])
-top_idx    <- which(avg_nat >= q_thresh[2])
+# Compute standard deviation for each run over the analysis window
+sd_nat <- apply(natvar_mat[, idx_range, drop=FALSE], 1, sd, na.rm=TRUE)
+q_vals <- c(pct_threshold, 1 - pct_threshold)
+q_thresh <- quantile(sd_nat, q_vals, na.rm=TRUE)
+bottom_idx <- which(sd_nat <= q_thresh[1])
+top_idx    <- which(sd_nat >= q_thresh[2])
 
 # ---- Subsets ----
 subs <- list(
@@ -135,6 +136,6 @@ fig_combined <- p_all_ems / p_all_temp / p_all_sup +
   guides(color=guide_legend(ncol=2), fill=guide_legend(ncol=2))
 
 ggsave(
-  paste0("../results/natvar_extremes_3panel", fig_suffix, "_", analysis_label, "_", pct_label, ".png"),
+  paste0("../results/natvar_std_extremes_3panel", fig_suffix, "_", analysis_label, "_", pct_label, ".png"),
   fig_combined, width=8, height=15
 )
