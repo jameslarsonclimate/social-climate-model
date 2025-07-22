@@ -2,4 +2,5 @@
 
 results/figure2c.pdf
 results/natural_variability_assimilation_weight_heatmap.pdf
+data/ERA5.annual.t2m.detrended.landOnly.1940-2024.nc
 data/ERA5.annual.t2m.detrended.landOnly.1940-2024.csv
