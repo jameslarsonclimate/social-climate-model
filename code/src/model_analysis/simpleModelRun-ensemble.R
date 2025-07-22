@@ -58,6 +58,13 @@ for (cycle in 1:4) {
   # Apply the pattern
   ts[start_idx:end_idx] <- cooling_pattern
 }
+
+# Create a timeseries of 81 zeros (2020:2100), with anomalies in 2030, 2031, and 2032
+ts <- numeric(81)
+ts[11] <- -1    # 2030 is index 11
+ts[12] <- -0.4  # 2031 is index 12
+ts[13] <- -0.2  # 2032 is index 13
+
   
 # Number of runs in ensemble
 num_runs <- 100

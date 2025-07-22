@@ -1,116 +1,84 @@
-# # Install the ‘sn’ package if it’s not already installed
-# if (!require(sn)) {
-#   install.packages("sn")
-#   library(sn)
-# } else {
-#   library(sn)
-# }
-
-# set.seed(123)  # for reproducibility
-
-# # Parameters for the skew-normal
-# # xi: location (center of the distribution)
-# # omega: scale (controls spread)
-# # alpha: shape (positive → right skew, negative → left skew)
-# xi    <- 0.37
-# omega <- 0.2
-# alpha <- 2.8
-
-# N <- 100000
-# frac_supp_0 <- numeric(N)
-
-# # Draw frac_supp_0 from a skew-normal until they lie between 0.3 and 0.8
-# i <- 1
-# while (i <= N) {
-#   x <- rsn(1, xi = xi, omega = omega, alpha = alpha)
-#   if (x >= 0.30 && x <= 0.80) {
-#     frac_supp_0[i] <- x    
-#     i <- i + 1
-#   }
-# }
-
-# frac_opp_0 <- numeric(N)
-# for (i in seq_len(N)) {
-#   attempts <- 0
-#   repeat {
-#     attempts <- attempts + 1
-#     x <- rsn(1, xi = 0.3, omega = 0.2, alpha = 1)
-#     # print x every time i is a multiple of 100
-#     if (i %% 100 == 0) {
-#       print(paste0("i = ", i, " | x = ", signif(x, 4)))
-#     }
-#     # print x every 100 iterations of the repeat loop
-#     if (attempts %% 100 == 0) {
-#       print(paste0("i = ", i, " | attempts = ", attempts, " | x = ", signif(x, 4)))
-#     }
-#     upper <- 1 - frac_supp_0[i]
-#     if (x >= 0.1 && x <= upper) {
-#       frac_opp_0[i] <- x
-#       break
-#     }
-#   }
-# }
-
-# # # remainder goes to neutral
-# frac_neut_0 <- 1 - (frac_supp_0 + frac_opp_0)
+# Demonstration of the Sign Test with Real Data: mag = 0.6, dur = 5
 
 library(data.table)
 library(ggplot2)
 
+# --- Parameters for bin selection ---
+mag <- 0.8
+dur <- 5
+half_width <- 0.05
+start_year <- 2025
+years <- 2020:2100
 
-data_dir           <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix = '_initClimSupportNormalDistribution'
-title_suffix       <- fig_suffix
-params_file        <- paste0(data_dir, "params",   fig_suffix, ".csv")
-params_dt <- fread(params_file)            # 100000 × 22
+# --- Load emissions and natvar data ---
+data_dir <- "../results/MC Runs/MC Runs_TunedParams/"
+fig_suffix <- "_initClimSupportNormalDistribution" # adjust if needed
 
-frac_neut_0 <- params_dt$frac_neut_01
-frac_opp_0 <- params_dt$frac_opp_0
-frac_supp_0 <- 1- (frac_neut_01 + frac_opp_0)
+ems_mat <- as.matrix(fread(paste0(data_dir, "emissions", fig_suffix, ".csv")))
+natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar", fig_suffix, ".csv")))
 
+# --- Select runs in the bin ---
+end_year <- start_year + dur - 1
+idx_range <- which(years >= start_year & years <= end_year)
+avg_nat   <- rowMeans(natvar_mat[, idx_range, drop=FALSE], na.rm=TRUE)
+lo <- mag - half_width
+hi <- mag + half_width
+idx <- which(avg_nat >= lo & avg_nat < hi)
 
-# ---- Plot and save skew‐normal fractions to file (density only, no histogram) ----
-out_file <- "../results/verification/opinion_fraction_distributions.png"
-dir.create(dirname(out_file), showWarnings = FALSE, recursive = TRUE)
+# --- Get net-zero years for runs in this bin ---
+bin_zero_years <- apply(ems_mat[idx, , drop=FALSE], 1, function(x) {
+  zz <- which(x <= 0)
+  if (length(zz) > 0) years[min(zz)] else NA_integer_
+})
+bin_zero_years <- bin_zero_years[!is.na(bin_zero_years)]
 
-png(filename = out_file, width = 800, height = 600, res = 100)
-# compute densities once
-d_sup  <- density(frac_supp_0)
-d_opp  <- density(frac_opp_0)
-d_neut <- density(frac_neut_0)
+# --- Get overall median net-zero year ---
+med_all <- apply(ems_mat, 2, median, na.rm=TRUE)
+zz_all <- which(med_all <= 0)
+zero_year_all <- if (length(zz_all) > 0) years[min(zz_all)] else NA_integer_
 
-# plot support density
-plot(d_sup,
-     xlim = c(0, 0.80),
-     ylim = c(0, max(d_sup$y, d_opp$y, d_neut$y)),
-     col   = "darkblue", lwd = 2,
-     main  = "Density of Initial Opinion Fractions",
-     xlab  = "Fraction", ylab = "Density")
+# --- Sign test calculation ---
+above <- bin_zero_years[bin_zero_years > zero_year_all]
+below <- bin_zero_years[bin_zero_years < zero_year_all]
+equal <- bin_zero_years[bin_zero_years == zero_year_all]
+n_pos <- length(above)
+n_neg <- length(below)
+n <- n_pos + n_neg
+pval <- if (n == 0) 1 else 2 * pbinom(min(n_pos, n_neg), n, 0.5)
+pval <- min(pval, 1)
 
-# add opposition and neutral densities
-lines(d_opp,  col = "forestgreen", lwd = 2)
-lines(d_neut, col = "purple",      lwd = 2)
+# --- Plot ---
+df <- data.frame(
+  NetZeroYear = bin_zero_years,
+  Category = factor(
+    ifelse(bin_zero_years < zero_year_all, "Below Reference",
+    ifelse(bin_zero_years > zero_year_all, "Above Reference", "Equal to Reference")),
+    levels = c("Below Reference", "Equal to Reference", "Above Reference")
+  )
+)
 
-# add vertical median lines for each group
-m_sup  <- median(frac_supp_0)
-m_opp  <- median(frac_opp_0)
-m_neut <- median(frac_neut_0)
-abline(v = m_sup,  col = "darkblue",    lwd = 2, lty = 3)
-abline(v = m_opp,  col = "forestgreen", lwd = 2, lty = 3)
-abline(v = m_neut, col = "purple",      lwd = 2, lty = 3)
+p <- ggplot(df, aes(x = NetZeroYear, fill = Category)) +
+  geom_histogram(binwidth = 1, color = "black", boundary = 0, closed = "left") +
+  geom_vline(xintercept = zero_year_all, linetype = "dashed", color = "red", size = 1.2) +
+  scale_fill_manual(values = c("#1b9e77", "#d3d3d3", "#d95f02")) +
+  labs(
+    title = paste0(
+      "Sign Test: Net-Zero Years (mag = ", mag, ", dur = ", dur, ")\n",
+      "p-value = ", signif(pval, 2),
+      ifelse(pval < 0.01, " (Significant)", " (Not Significant)")
+    ),
+    x = "Net-Zero Year",
+    y = "Count",
+    fill = "Category"
+  ) +
+  annotate("text", x = zero_year_all, y = max(table(bin_zero_years)) + 1,
+           label = paste("Reference Median\n", zero_year_all), color = "red", vjust = 0) +
+  theme_minimal(base_size = 14)
 
-# label median values
-y_pos <- max(d_sup$y, d_opp$y, d_neut$y) * 0.85
-text(m_sup,  y_pos, labels = sprintf("M=%.2f", m_sup),  col = "darkblue",    pos = 3)
-text(m_opp,  y_pos, labels = sprintf("M=%.2f", m_opp),  col = "forestgreen", pos = 3)
-text(m_neut, y_pos, labels = sprintf("M=%.2f", m_neut), col = "purple",      pos = 3)
-
-# legend
-legend("topright",
-       legend = c("Support", "Opposition", "Neutral"),
-       col    = c("darkblue", "forestgreen", "purple"),
-       lwd    = c(2,           2,            2),
-       lty    = c(1,           1,            1),
-       bty    = "n")
-
-dev.off()
+ggsave(
+  filename = "../results/heatmaps/sign_test_net_zero_years_histogram_realdata.png",
+  plot = p,
+  width = 8,
+  height = 5,
+  dpi = 300
+)

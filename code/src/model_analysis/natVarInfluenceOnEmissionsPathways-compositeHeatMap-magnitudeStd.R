@@ -161,7 +161,7 @@ p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
     legend.position = "bottom"
   ) +  # Add points for statistical significance
   geom_point(
-    data = dt_bin[p_value > 0.05],
+    data = dt_bin[is.na(p_value) | p_value > 0.01],
     aes(x = magnitude, y = duration),
     shape = 8, color = "black", size = 1.5, alpha = 0.7, inherit.aes = FALSE
   )

@@ -18,7 +18,8 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = "_varyInitialDistribution"
 # fig_suffix = "_initClimSupport40percent"
 # fig_suffix = '_initClimSupportNormalDistribution'
-fig_suffix = '_ERA5natVar'
+# fig_suffix = '_ERA5natVar'
+fig_suffix = 'volcanicCooling_2030_-1_seed2090'  # Change the seed!
 
 
 

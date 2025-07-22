@@ -1,16 +1,31 @@
 # ---- Plot distribution of net-zero years for all runs and selected bins ----
 
+library(data.table)
 library(ggplot2)
 
-# Compute all net-zero years (already done above)
-# all_zero_years <- apply(ems_mat, 1, function(x) { ... })
+# ---- Parameters ----
+mag_half_width <- 0.05
+start_year <- 2025
+years <- 2020:2100
+
+# ---- Load data ----
+data_dir <- "../results/MC Runs/MC Runs_TunedParams/"
+fig_suffix <- "_initClimSupportNormalDistribution" # adjust if needed
+
+ems_mat <- as.matrix(fread(paste0(data_dir, "emissions", fig_suffix, ".csv")))
+natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar", fig_suffix, ".csv")))
+
+# ---- Compute all net-zero years ----
+all_zero_years <- apply(ems_mat, 1, function(x) {
+  zz <- which(x <= 0)
+  if (length(zz) > 0) years[min(zz)] else NA_integer_
+})
 
 # Remove NAs for plotting
 all_zero_years_nonNA <- all_zero_years[!is.na(all_zero_years)]
 
 # ---- User selection: choose bins to overlay ----
 # Example: select bins by (duration, magnitude) pairs
-# User can edit this list to pick which bins to plot
 selected_bins <- list(
   list(duration = 5,  magnitude = 0.2),
   list(duration = 10, magnitude = 0.4),
@@ -43,14 +58,12 @@ for (bin in selected_bins) {
   message(sprintf("Processing bin: Duration = %d, Magnitude = %.2f", bin$duration, bin$magnitude))
   dur <- bin$duration
   mag <- bin$magnitude
-  bin_row <- dt_bin[duration == dur & abs(magnitude - mag) < 1e-6]
-  if (nrow(bin_row) == 0) next
   end_year <- start_year + dur - 1
   idx_range <- which(years >= start_year & years <= end_year)
-  std_nat   <- apply(natvar_mat[, idx_range, drop=FALSE], 1, sd, na.rm=TRUE)
-  lo <- mag - half_width
-  hi <- mag + half_width
-  idx <- which(std_nat >= lo & std_nat < hi)
+  avg_nat   <- rowMeans(natvar_mat[, idx_range, drop=FALSE], na.rm=TRUE)
+  lo <- mag - mag_half_width
+  hi <- mag + mag_half_width
+  idx <- which(avg_nat >= lo & avg_nat < hi)
   if (length(idx) > 0) {
     bin_zero_years <- apply(ems_mat[idx, , drop=FALSE], 1, function(x) {
       zz <- which(x <= 0)
@@ -61,7 +74,7 @@ for (bin in selected_bins) {
       plot_data,
       data.frame(
         year = bin_zero_years,
-        group = paste0("Duration=", dur, ", SD=", mag)
+        group = paste0("Duration=", dur, ", Mag=", mag)
       )
     )
     # Median emissions timeseries and zero year for this bin
@@ -70,7 +83,7 @@ for (bin in selected_bins) {
     zero_year_bin_median_emis <- if (length(zz_bin) > 0) years[min(zz_bin)] else NA_integer_
     median_emissions_zero_years <- rbind(
       median_emissions_zero_years,
-      data.frame(group = paste0("Duration=", dur, ", SD=", mag), zero_year = zero_year_bin_median_emis)
+      data.frame(group = paste0("Duration=", dur, ", Mag=", mag), zero_year = zero_year_bin_median_emis)
     )
   }
 }
@@ -108,3 +121,4 @@ output_dir <- "../results/heatmaps/"
 if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 output_file <- file.path(output_dir, "netzero_year_distribution_composite_heatmap_medianEmis.png")
 ggsave(output_file, plot = p, width = 8, height = 5, dpi = 300)
+
