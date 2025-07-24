@@ -10,6 +10,7 @@ data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
 # fig_suffix = '_initClimSupportNormalDistribution'
 # fig_suffix = 'volcanicCooling_2030_-1_seed2090'  # Change the seed!
 fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+# fig_suffix = '_CESM_HR_local_natVar_500000runs'
 # fig_suffix = '_CESM_HR_local_natVar_multiplier05'
 # fig_suffix = '_ERA5natVar'
 # fig_suffix = '_ERA5natVar0.5'

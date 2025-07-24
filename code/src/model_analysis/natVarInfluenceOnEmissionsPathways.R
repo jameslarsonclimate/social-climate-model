@@ -25,11 +25,11 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_initClimSupport40percent'
 # fig_suffix = '_initClimSupportNormalDistribution-'
 # fig_suffix = '_initClimSupportNormalDistribution-resample3'  # Change the seed!
-fig_suffix = '_initClimSupportNormalDistribution-natVarMultiplier4'
+# fig_suffix = '_initClimSupportNormalDistribution-natVarMultiplier4'
 # fig_suffix = '_ERA5natVar'
 # fig_suffix = '_ERA5natVar_locations'
 # fig_suffix = '_ERA5natVar0.5'
-# fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+fig_suffix = '_CESM_HR_local_natVar_500000runs'
 # fig_suffix = '_CESM_HR_local_natVar_multiplier05'
 # fig_suffix = '_CESM_HR_local_natVar_scale_sd'
 # fig_suffix = 'volcanicCooling_2030_-1_seed2090  '  # Change the seed!
@@ -50,10 +50,10 @@ mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
 # nc_close(natvarCESM_HR)
 
 
-# natvarCESM_HR <- nc_open("../../CESM-HR-PIctrl/CESM.HR.PIcntl.TREFHT.land_samples_81timesteps.nc")
-# natvar_array <- ncvar_get(natvarCESM_HR, "TREFHT_land_samples") # shape: 81 x 500001
-# natvar_mat <- t(natvar_array)
-# nc_close(natvarCESM_HR)
+natvarCESM_HR <- nc_open("../../CESM-HR-PIctrl/CESM.HR.PIcntl.TREFHT.land_samples_81timesteps.nc")
+natvar_array <- ncvar_get(natvarCESM_HR, "TREFHT_land_samples") # shape: 81 x 500001
+natvar_mat <- t(natvar_array)
+nc_close(natvarCESM_HR)
 
 
 #initial opinion distribution - not varied, but fixed at particular values from Pew Opinion Data
@@ -71,7 +71,7 @@ weather=matrix(nrow=mc,ncol=81)
 frac_neut_mat=matrix(nrow=mc,ncol=81)
 frac_opp_mat=matrix(nrow=mc,ncol=81)
 
-set.seed(2090)
+# set.seed(2090)
 i=0
 
 print('starting while loop')
@@ -152,7 +152,7 @@ while(i<=mc){
   # }
 
   # If updating the model parameters, make sure to update fig_suffix as well!
-  m=tryCatch(model(natvar_multiplier = 4), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier =  0
+  m=tryCatch(model(natvar=natvar_mat[i+1,], natvar_multiplier = 1), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier =  0
       skip_to_next <<- TRUE
       print(paste("Error occurred, skipping iteration", i, ":", e$message))
   })

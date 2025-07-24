@@ -102,22 +102,7 @@ model=function(time=1:81,
   bau_mass[1,]=mass_0
   
   if(is.null(natvar)) naturalvariability=Re(randomts(gtemp))[1:length(time)]*natvar_multiplier
-  if(!is.null(natvar)) {
-    # vector form
-    provided = as.numeric(natvar)
-    if (scale_natvar_sd) {
-      sd_default  = 0.34  # default standard deviation of natural variability
-      sd_provided = sd(provided)
-      scale_fac   = if (sd_provided > 0) sd_default / sd_provided else 1
-      scaled_natvar = provided * scale_fac
-    } else {
-      scaled_natvar = provided
-    }
-    # print(paste("sd_provided:", sd_provided, " sd_default:", sd_default, " scale_fac:", scale_fac))
-    naturalvariability = scaled_natvar * natvar_multiplier
-  }
-
-
+  if(!is.null(natvar)) naturalvariability=natvar*natvar_multiplier
   
   weather=numeric(length=length(time))
   weather[1]=temperature[1,1]+naturalvariability[1]
