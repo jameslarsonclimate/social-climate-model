@@ -15,9 +15,9 @@ half_width <- 0.05
 # Datasets to compare
 datasets <- list(
   list(label = "Model", suffix = "_initClimSupportNormalDistribution"),
-  list(label = "CESMx1", suffix = "_CESM_HR_local_natVar_multiplier1"),
+  list(label = "CESMx1", suffix = "_CESM_HR_local_natVar_multiplier1")
   # list(label = "CESMx0.5", suffix = "_CESM_HR_local_natVar_multiplier05"),
-  list(label = "ERA5", suffix = "_ERA5natVar")
+  # list(label = "ERA5", suffix = "_ERA5natVar")
 )
 
 median_natvar_list <- list()
@@ -78,7 +78,7 @@ p <- ggplot(df_plot, aes(x = year, y = median_natvar, color = dataset_n)) +
   theme_minimal(base_size = 14)
 
 # Save plot
-out_dir <- "../results/heatmaps"
+out_dir <- "../results/"
 dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)
 out_file <- file.path(out_dir, paste0("median_natvar_timeseries_dur", plot_dur, "_mag", plot_mag, ".png"))
 ggsave(out_file, p, width=8, height=5)
