@@ -60,7 +60,7 @@ nc_close(natvarCESM_HR)
 # frac_opp_01=0.07 
 # frac_neut_01=0.22 
 
-mc=100000
+mc=500000
 params=matrix(nrow=mc,ncol=24)
 pol=matrix(nrow=mc,ncol=81)
 ems=matrix(nrow=mc,ncol=81)
