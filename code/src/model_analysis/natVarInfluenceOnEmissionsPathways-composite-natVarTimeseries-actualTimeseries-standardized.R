@@ -10,7 +10,7 @@ start_year <- 2025
 
 # ---- User input: choose duration and magnitude ----
 plot_dur <- 5      # duration (years)
-plot_mag <- -1.0   # bin center for magnitude
+plot_mag <- -2   # bin center for magnitude
 half_width <- 0.05
 n_samples <- 10    # Number of random samples to plot
 
@@ -31,10 +31,14 @@ for (ds in datasets) {
   message("Loading: ", data_dir, "natvar", suffix, ".csv")
   natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar", suffix, ".csv")))
 
-  # Find runs in the selected bin
+  # ---- Standardize each row (run) by its own SD ----
+  row_sd <- apply(natvar_mat, 1, sd, na.rm=TRUE)
+  natvar_mat_sigma <- natvar_mat / row_sd
+
+  # Find runs in the selected bin (now using standardized units)
   end_year <- start_year + plot_dur - 1
   idx_range <- which(years >= start_year & years <= end_year)
-  avg_nat <- rowMeans(natvar_mat[, idx_range, drop=FALSE], na.rm=TRUE)
+  avg_nat <- rowMeans(natvar_mat_sigma[, idx_range, drop=FALSE], na.rm=TRUE)
   lo <- plot_mag - half_width
   hi <- plot_mag + half_width
   idx <- which(avg_nat >= lo & avg_nat < hi)

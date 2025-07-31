@@ -10,6 +10,8 @@ data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
 # fig_suffix = '_initClimSupportNormalDistribution'
 # fig_suffix = 'volcanicCooling_2030_-1_seed2090'  # Change the seed!
 fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+# fig_suffix = '_CESM_LM_local_Tambora_2030'
+# fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
 # fig_suffix = '_CESM_HR_local_natVar_500000runs'
 # fig_suffix = '_CESM_HR_local_natVar_multiplier05'
 # fig_suffix = '_ERA5natVar'
@@ -53,10 +55,10 @@ top_idx    <- which(avg_nat >= q_thresh[2])
 subs <- list(
   "Coldest 10%" = list(ems=ems_mat[bottom_idx, ], temp=clim_mat[bottom_idx, ]),
   "Hottest 10%"    = list(ems=ems_mat[top_idx, ],    temp=clim_mat[top_idx, ]),
-  "Default"    = list(ems=ems_mat,               temp=clim_mat)
+  "Median of All Runs"    = list(ems=ems_mat,               temp=clim_mat)
 )
 
-colors   <- c("Coldest 10%"="#0072B2", "Hottest 10%"="#D55E00","Default"="#009E73")
+colors   <- c("Coldest 10%"="#0072B2", "Hottest 10%"="#D55E00","Median of All Runs"="#009E73")
 
 # ---- Emissions plot ----
 dt_long_ems <- rbindlist(lapply(names(subs), function(name) {
@@ -64,9 +66,9 @@ dt_long_ems <- rbindlist(lapply(names(subs), function(name) {
   data.table(
     Experiment = name,
     year       = years,
-    median     = apply(mat, 2, median,   na.rm=TRUE),
-    q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
-    q95        = apply(mat, 2, quantile, probs=0.95, na.rm=TRUE)
+    median     = apply(mat, 2, median,   na.rm=TRUE)
+    # q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
+    # q95        = apply(mat, 2, quantile, probs=0.95, na.rm=TRUE)
   )
 }))
 
@@ -84,9 +86,9 @@ dt_long_temp <- rbindlist(lapply(names(subs), function(name) {
   data.table(
     Experiment = name,
     year       = years,
-    median     = apply(mat, 2, median,   na.rm=TRUE),
-    q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
-    q95        = apply(mat, 2, quantile, probs=0.95, na.rm=TRUE)
+    median     = apply(mat, 2, median,   na.rm=TRUE)
+    # q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
+    # q95        = apply(mat, 2, quantile, probs=0.95, na.rm=TRUE)
   )
 }))
 
@@ -106,7 +108,7 @@ supporters_mat <- dist[,,3]
 subs_sup <- list(
   "Coldest 10%" = list(sup = supporters_mat[bottom_idx, ]),
   "Hottest 10%"    = list(sup = supporters_mat[top_idx, ]),
-  "Default"    = list(sup = supporters_mat)
+  "Median of All Runs"    = list(sup = supporters_mat)
 )
 
 dt_long_sup <- rbindlist(lapply(names(subs_sup), function(name) {
@@ -114,9 +116,9 @@ dt_long_sup <- rbindlist(lapply(names(subs_sup), function(name) {
   data.table(
     Experiment = name,
     year       = years,
-    median     = apply(mat, 2, median,   na.rm=TRUE),
-    q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
-    q95        = apply(mat, 2, quantile, probs=0.95, na.rm=TRUE)
+    median     = apply(mat, 2, median,   na.rm=TRUE)
+    # q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
+    # q95        = apply(mat, 2, quantile, probs=0.95, na.rm=TRUE)
   )
 }))
 

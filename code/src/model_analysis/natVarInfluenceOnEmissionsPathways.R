@@ -29,8 +29,9 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_ERA5natVar'
 # fig_suffix = '_ERA5natVar_locations'
 # fig_suffix = '_ERA5natVar0.5'
-fig_suffix = '_CESM_HR_local_natVar_500000runs'
+fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
 # fig_suffix = '_CESM_HR_local_natVar_multiplier05'
+# fig_suffix = '_CESM_HR_local_natVar_defaultSupporterInitialDistribution'  # Change the seed!
 # fig_suffix = '_CESM_HR_local_natVar_scale_sd'
 # fig_suffix = 'volcanicCooling_2030_-1_seed2090  '  # Change the seed!
 
@@ -49,18 +50,21 @@ mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
 # natvar_mat <- t(natvar_array)
 # nc_close(natvarCESM_HR)
 
+# natvarCESM_HR <- nc_open("../../CESM-HR-PIctrl/CESM.HR.PIcntl.TREFHT.land_samples_81timesteps.nc")
+# natvar_array <- ncvar_get(natvarCESM_HR, "TREFHT_land_samples") # shape: 81 x 500001
+# natvar_mat <- t(natvar_array)
+# nc_close(natvarCESM_HR)
 
-natvarCESM_HR <- nc_open("../../CESM-HR-PIctrl/CESM.HR.PIcntl.TREFHT.land_samples_81timesteps.nc")
-natvar_array <- ncvar_get(natvarCESM_HR, "TREFHT_land_samples") # shape: 81 x 500001
+natvarCESM <- nc_open("../../CESM-LastMillenium/TREFHT/CESM-LastMillenium-TREFHT_land_samples_81timesteps.nc")
+natvar_array <- ncvar_get(natvarCESM, "TREFHT_land_samples") # shape: 81 x 500001
 natvar_mat <- t(natvar_array)
-nc_close(natvarCESM_HR)
-
+nc_close(natvarCESM)
 
 #initial opinion distribution - not varied, but fixed at particular values from Pew Opinion Data
 # frac_opp_01=0.07 
 # frac_neut_01=0.22 
 
-mc=500000
+mc=100000
 params=matrix(nrow=mc,ncol=24)
 pol=matrix(nrow=mc,ncol=81)
 ems=matrix(nrow=mc,ncol=81)

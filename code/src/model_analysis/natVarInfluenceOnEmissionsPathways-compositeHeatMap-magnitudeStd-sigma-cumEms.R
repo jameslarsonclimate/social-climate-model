@@ -6,7 +6,8 @@ library(RColorBrewer)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir      <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix    <- '_CESM_HR_local_natVar_multiplier1'
+fig_suffix    <- "_initClimSupportNormalDistribution" #-natVarMultiplier10"
+# fig_suffix    <- '_CESM_HR_local_natVar_multiplier1'
 years         <- 2020:2100
 start_year    <- 2025
 max_dur       <- 20
@@ -97,9 +98,11 @@ p_bin <- ggplot(dt_bin, aes(x = avg_std, y = duration, fill = median_cum_ems)) +
   )
 
 # ---- Save figure ----
-out_dir <- "../results/heatmaps/"
+out_dir <- "../results/heatmaps"
 dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)
 out_file <- file.path(
   out_dir,
   paste0("medianCumEms_heatmap_windowStd_sigma", fig_suffix, ".png")
 )
+message("Saving: ", out_file)
+ggsave(out_file, p_bin, width=8, height=6)
