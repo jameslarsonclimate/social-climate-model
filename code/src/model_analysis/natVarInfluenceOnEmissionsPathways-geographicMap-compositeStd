@@ -1,0 +1,106 @@
+library(data.table)
+library(ggplot2)
+library(viridis)
+library(ncdf4)
+library(patchwork)
+
+# Clear all objects from memory and run garbage collection
+rm(list = ls())
+gc()
+
+# ---- Setup ----
+setwd('~/Documents/Research/social-climate-model/code')
+data_dir <- "../results/MC Runs/MC Runs_TunedParams/"
+fig_suffix <- "_CESM_HR_local_natVar_multiplier1"
+years <- 2020:2100
+
+# ---- Load MC emissions and natvar data ----
+message("Loading: ", data_dir, "emissions", fig_suffix, ".csv")
+ems_mat <- as.matrix(fread(paste0(data_dir, "emissions", fig_suffix, ".csv")))
+
+# ---- Load CESM-HR NetCDF natural variability data ---- 
+nc_path <- "../../CESM-HR-PIctrl/CESM.HR.PIcntl.TREFHT.land_samples_81timesteps.nc"
+natvarCESM_HR <- nc_open(nc_path)
+natvar_array <- ncvar_get(natvarCESM_HR, "TREFHT_land_samples")[, 2:100001] # shape: 81 x N
+lat <- ncvar_get(natvarCESM_HR, "lat")[2:100001]
+lon <- ncvar_get(natvarCESM_HR, "lon")[2:100001]
+nc_close(natvarCESM_HR)
+
+# ---- Transpose to shape: N_runs x years ----
+print("Transposing natvar_array to shape: N_runs x years")
+natvar_array <- t(natvar_array) # Now: N_runs x years
+
+# ---- Calculate SD and cumulative emissions for each run ----
+sd_natvar <- apply(natvar_array, 1, sd, na.rm=TRUE) # SD across years for each run
+cum_ems <- rowSums(ems_mat, na.rm=TRUE)
+
+dt <- data.table(
+  lat = lat,
+  lon = lon,
+  sd_natvar = sd_natvar,
+  cum_ems = cum_ems
+)
+
+# ---- Top plot: SD of natvar by location ----
+print("Plotting SD of natural variability by location...")
+p_sd <- ggplot(dt, aes(x = lon, y = lat, color = sd_natvar)) +
+  geom_point(size = 1.2, alpha = 1) +
+  scale_color_viridis_c(name = "SD (degC)", option = "C") +
+  labs(
+    title = "Standard Deviation of Natural Variability\n(CESM-HR, 2020-2100)",
+    x = "Longitude", y = "Latitude"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid = element_blank())
+
+# ---- Bottom plot: Cumulative emissions by location ----
+p_cumems <- ggplot(dt, aes(x = lon, y = lat, color = cum_ems)) +
+  geom_point(size = 1.2, alpha = 1) +
+  scale_color_viridis_c(name = "Cumulative Emissions", option = "C") +
+  labs(
+    title = "Cumulative Emissions by Location\n(MC Runs, 2020-2100)",
+    x = "Longitude", y = "Latitude"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(panel.grid = element_blank())
+  
+# ---- Combine and save ----
+p_combined <- p_sd / p_cumems + plot_layout(ncol = 1, heights = c(1, 1))
+
+out_dir <- "../results/heatmaps"
+dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)
+out_file <- file.path(out_dir, paste0("sd_and_cumems_by_location_", fig_suffix, ".png"))
+message("Saving: ", out_file)
+ggsave(out_file, p_combined, width=10, height=10)
+
+
+# Compare SD histograms: CESM local natvar vs Moore scaled global natvar
+
+# CESM local natvar SDs
+sd_natvar_CESM <- apply(natvar_array, 1, sd, na.rm=TRUE)
+
+# Moore scaled global natvar SDs
+fig_suffix2 <- "_initClimSupportNormalDistribution"
+natvar <- fread(paste0(data_dir, "natvar", fig_suffix2, ".csv"))
+natvar_mat <- as.matrix(natvar)
+sd_natvar_Moore <- apply(natvar_mat, 1, sd, na.rm=TRUE)
+
+# Combine into one data.table for plotting
+dt_hist <- rbind(
+  data.table(sd_natvar = sd_natvar_CESM, Source = "CESM Local Natvar"),
+  data.table(sd_natvar = sd_natvar_Moore, Source = "Moore Scaled Global Natvar")
+)
+
+# Plot combined histogram
+hist_plot <- ggplot(dt_hist, aes(x = sd_natvar, fill = Source)) +
+  geom_histogram(position = "identity", alpha = 0.6, bins = 50, color = "black") +
+  labs(
+    title = "SD of Natural Variability: CESM Local vs Moore Scaled Global",
+    x = "Standard Deviation",
+    y = "Count",
+    fill = "Source"
+  ) +
+  theme_minimal(base_size = 14) +
+  xlim(0.15, 1.6)
+
+ggsave("../results/hist_plot_combined.png", hist_plot, width=8, height=6)
