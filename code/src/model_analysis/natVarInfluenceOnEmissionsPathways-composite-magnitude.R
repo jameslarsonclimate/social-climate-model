@@ -5,10 +5,11 @@ library(viridis)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir      <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix    <- "_initClimSupportNormalDistribution"
-fig_suffix = '_CESM_HR_local_natVar_multiplier1'
-fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
-fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+# fig_suffix    <- "_initClimSupportNormalDistribution"
+# fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+# fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
+# fig_suffix    <- "_initClimSupportNormalDistribution" 
+fig_suffix = '_CESM_HR_local_natVar_500000runs'
 years         <- 2020:2100
 
 # ---- Load data ----
@@ -49,11 +50,27 @@ for (mag_center in mag_centers) {
 }
 
 dt_plot <- rbindlist(res)
-
 # ---- Plot: median emissions trajectory for each mean natvar bin ----
 message("Plotting median emissions trajectories by mean natvar bin...")
+
+# Compute overall median emissions trajectory for all runs
+overall_median_ems <- apply(ems_mat, 2, median, na.rm=TRUE)
+dt_overall <- data.table(
+  year = years,
+  median_ems = overall_median_ems
+)
+
 p <- ggplot(dt_plot, aes(x = year, y = median_ems, group = mag_bin, color = mag_bin)) +
   geom_line(size = 1.1) +
+  # Add bold line for overall median emissions trajectory (all runs)
+  geom_line(
+    data = dt_overall,
+    aes(x = year, y = median_ems),
+    color = "#0a7800", # Distinct red, complementary to viridis
+    size = 2.2,
+    inherit.aes = FALSE,
+    alpha=0.5
+  ) +
   scale_color_viridis_c(
     name = "Mean NatVar (degC)",
     option = "C",

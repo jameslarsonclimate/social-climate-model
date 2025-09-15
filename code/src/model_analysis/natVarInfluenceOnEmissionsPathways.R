@@ -29,8 +29,14 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_ERA5natVar'
 # fig_suffix = '_ERA5natVar_locations'
 # fig_suffix = '_ERA5natVar0.5'
-fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
+# fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
+# fig_suffix = '_CESM_LM_local_1850PIcntl_normalDistribution'  
+# fig_suffix = '_CESM_LM_local_Tambora_2030_defaultDistribution'  
+# fig_suffix = '_CESM_LM_local_Tambora_2030_defaultSupporterInitialDistribution'  # Change the seed!
+# fig_suffix = '_CESM_LM_global_member10_Tambora_2030_normalDistribution_multiplier1'  
 # fig_suffix = '_CESM_HR_local_natVar_multiplier05'
+# fig_suffix = '_CESM_HR_local_natVar-totalGDPweighted'
+fig_suffix = '_CESM_HR_local_natVar-popWeighted'
 # fig_suffix = '_CESM_HR_local_natVar_defaultSupporterInitialDistribution'  # Change the seed!
 # fig_suffix = '_CESM_HR_local_natVar_scale_sd'
 # fig_suffix = 'volcanicCooling_2030_-1_seed2090  '  # Change the seed!
@@ -55,14 +61,34 @@ mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
 # natvar_mat <- t(natvar_array)
 # nc_close(natvarCESM_HR)
 
-natvarCESM <- nc_open("../../CESM-LastMillenium/TREFHT/CESM-LastMillenium-TREFHT_land_samples_81timesteps.nc")
-natvar_array <- ncvar_get(natvarCESM, "TREFHT_land_samples") # shape: 81 x 500001
+# natvarCESM_HR <- nc_open("../../CESM-HR-PIctrl/TREFHT_land_samples_by_gdp.nc")
+# natvar_array <- ncvar_get(natvarCESM_HR, "TREFHT_land_samples_weighted_by_gdp") # shape: 81 x 500001
+# natvar_mat <- t(natvar_array)
+# nc_close(natvarCESM_HR)
+
+natvarCESM_HR <- nc_open("../../CESM-HR-PIctrl/TREFHT_land_samples_by_pop.nc")
+natvar_array <- ncvar_get(natvarCESM_HR, "TREFHT_land_samples_weighted_by_gdp") # shape: 81 x 500001
 natvar_mat <- t(natvar_array)
-nc_close(natvarCESM)
+nc_close(natvarCESM_HR)
+
+# natvarCESM <- nc_open("../../CESM-LastMillenium/TREFHT/CESM-LastMillenium-TREFHT_land_samples_81timesteps.nc")
+# natvar_array <- ncvar_get(natvarCESM, "TREFHT_land_samples") 
+# natvar_mat <- t(natvar_array)
+# nc_close(natvarCESM)
+
+# natvarCESM_LM_PIcntl <- nc_open("../../CESM-LastMillenium/TREFHT/CESM-LastMillenium-PIcntl-TREFHT_land_samples_81timesteps.nc")
+# natvar_array <- ncvar_get(natvarCESM_LM_PIcntl, "TREFHT_land_samples") 
+# natvar_mat <- t(natvar_array)
+# nc_close(natvarCESM_LM_PIcntl)
+
 
 #initial opinion distribution - not varied, but fixed at particular values from Pew Opinion Data
 # frac_opp_01=0.07 
 # frac_neut_01=0.22 
+
+# CESM-LM *global* Tambora 2030, member 10
+# natvarCESM = c(0.229, -0.282, 0.102, 0.229, -0.472, -0.471, -0.312, -0.137, -0.103, 0.035, -0.744, -1.131, -1.067, -0.685, -0.365, -0.133, -0.275, -0.444, -0.431, -0.388, 0.004, 0.070, 0.006, -0.123, 0.042, -0.187, -0.818, -0.371, -0.012, -0.240, -1.001, -0.768, -0.379, -0.099, -0.260, -0.163, 0.242, 0.214, 0.119, -0.306, -0.189, 0.322, 0.165, 0.019, 0.054, -0.119, 0.050, -0.150, 0.356, 0.061, -0.302, 0.068, -0.083, 0.059, 0.060, -0.098, -0.022, 0.177, -0.017, 0.141, 0.136, 0.310, -0.000, 0.009, -0.113, -0.414, -0.047, 0.041, -0.066, -0.112, 0.211, -0.051, -0.052, 0.375, -0.125, 0.326, 0.150, 0.274, -0.052, -0.453, -0.528
+# )
 
 mc=100000
 params=matrix(nrow=mc,ncol=24)
@@ -111,14 +137,14 @@ while(i<=mc){
   lbd_param01=runif(1,0,0.3)
   lag_param01=round(runif(1,0,30))
   
-  # # uniform sampling of initial opinion fractions with individual bounds and sum constraint
-  # repeat {
-  #   frac_opp_01  <- runif(1, 0.1, 0.8)
-  #   frac_neut_01 <- runif(1, 0.1, 0.8)
-  #   s <- frac_opp_01 + frac_neut_01
-  #   # enforce sum between 0.2 and 0.8 and each frac between 0.2 and 0.8
-  #   if (s >= 0.2 && s <= 0.8) break
-  # }
+  # uniform sampling of initial opinion fractions with individual bounds and sum constraint
+  repeat {
+    frac_opp_01  <- runif(1, 0.1, 0.8)
+    frac_neut_01 <- runif(1, 0.1, 0.8)
+    s <- frac_opp_01 + frac_neut_01
+    # enforce sum between 0.2 and 0.8 and each frac between 0.2 and 0.8
+    if (s >= 0.2 && s <= 0.8) break
+  }
 
   # ---- Sample initial opinion fractions via skew-normal ----
   # Support: skew-normal truncated to [0.3,0.8]
@@ -142,10 +168,6 @@ while(i<=mc){
   frac_neut_01 <- 1 - (frac_supp_01 + frac_opp_01)
 
 
-  # # Set the initial opinion distribution
-  # frac_opp_01 = 0.3
-  # frac_neut_01 = 0.3
-
   #also add feedback from temperature to bau emissions
   temp_emissionsparam01=rtri(1,min=-0.102,max=0.001,mode=-0.031) #distribution based on Woodard et al., 2019 PNAS estimates
 
@@ -156,9 +178,18 @@ while(i<=mc){
   # }
 
   # If updating the model parameters, make sure to update fig_suffix as well!
-  m=tryCatch(model(natvar=natvar_mat[i+1,], natvar_multiplier = 1), error = function(e) {  # model(temperature_anomaly = ts), natvar_multiplier =  0
+  m=tryCatch(model(natvar=natvar_mat[i+1,], natvar_multiplier = 1), error = function(e) {  # natvar=natvar_mat[i+1,], natvar_multiplier = 1# model(temperature_anomaly = ts), natvar_multiplier =  0
       skip_to_next <<- TRUE
       print(paste("Error occurred, skipping iteration", i, ":", e$message))
+      # Store diagnostic values if available
+      if (exists("m") && is.list(m)) {
+        if (!exists("error_natvar")) error_natvar <<- list()
+        if (!exists("error_weather")) error_weather <<- list()
+        if (!exists("error_temp")) error_temp <<- list()
+        error_natvar[[length(error_natvar)+1]] <<- tryCatch(m$naturalvariability, error=function(e) rep(NA,81))
+        error_weather[[length(error_weather)+1]] <<- tryCatch(m$weather, error=function(e) rep(NA,81))
+        error_temp[[length(error_temp)+1]] <<- tryCatch(m$temp[,1], error=function(e) rep(NA,81))
+      }
   })
 
   if(skip_to_next) { 

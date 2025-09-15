@@ -19,8 +19,9 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = "_initClimSupport40percent"
 # fig_suffix = '_initClimSupportNormalDistribution'
 # fig_suffix = '_ERA5natVar'
-fig_suffix = 'volcanicCooling_2030_-1_seed2090'  # Change the seed!
-
+# fig_suffix = 'volcanicCooling_2030_-1_seed2090'  # Change the seed!
+# fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution' 
+fig_suffix = '_CESM_HR_local_natVar_multiplier1'
 
 
 

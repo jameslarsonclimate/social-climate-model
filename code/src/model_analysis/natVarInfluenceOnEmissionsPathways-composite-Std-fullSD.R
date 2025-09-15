@@ -6,7 +6,12 @@ library(viridis)
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir      <- "../results/MC Runs/MC Runs_TunedParams/"
 fig_suffix    <- "_initClimSupportNormalDistribution"
-fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+# fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+# fig_suffix = '_CESM_HR_local_natVar_500000runs'
+# fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+# fig_suffix = '_CESM_HR_local_natVar-totalGDPweighted'
+# fig_suffix = '_CESM_HR_local_natVar-popWeighted'
+
 years         <- 2020:2100
  
 # ---- Load data ----
@@ -35,7 +40,7 @@ for (sd_full_center in sd_full_centers) {
   n_runs <- length(idx_bin)
   # Store bin counts for scatterplot
   bin_counts <- rbind(bin_counts, data.table(sd_bin = sd_full_center, n_runs = n_runs))
-  if (n_runs > 100) {
+  if (n_runs > 500) {
     med_ems <- apply(ems_mat[idx_bin, , drop=FALSE], 2, median, na.rm=TRUE)
     res[[k]] <- data.table(
       year = years,
@@ -64,7 +69,7 @@ p <- ggplot(dt_plot, aes(x = year, y = median_ems, group = sd_bin, color = sd_bi
     ),
     breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4),
     labels = c("0", "0.2", "0.4", "0.6", "0.8", "1.0", "1.2", "1.4"),
-    limits = range(sd_full_centers)
+    limits = c(0.1, 1.5)
   ) +
   labs(
     title = paste0("Median Emissions Trajectory by Full-Series SD Bin\n", fig_suffix),
@@ -87,9 +92,9 @@ p_counts <- ggplot(bin_counts, aes(x = sd_bin, y = n_runs, color = sd_bin)) +
     limits = range(sd_full_centers)
   ) +
   scale_y_log10(
-    breaks = c(10, 100, 1000, 10000),
+    breaks = c(100, 1000, 10000, 100000),
     labels = scales::comma,
-    limits = c(10, 12000)
+    limits = c(100, 120000)
   ) +
   labs(
     title = paste0("Sample Count per Full-Series SD Bin (Log Scale)\n", fig_suffix),
@@ -100,6 +105,7 @@ p_counts <- ggplot(bin_counts, aes(x = sd_bin, y = n_runs, color = sd_bin)) +
   theme(
     legend.position = "right"
   )
+  
   # ---- Save figures ----
   out_dir <- "../results"
   dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)

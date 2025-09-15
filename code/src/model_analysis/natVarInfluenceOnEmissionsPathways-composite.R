@@ -6,10 +6,11 @@ library(RColorBrewer)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
-# fig_suffix <- ""
-# fig_suffix = '_initClimSupportNormalDistribution'
+fig_suffix <- ""
+# fig_suffix = '_CESM_HR_local_natVar_defaultSupporterInitialDistribution'  # Change the seed!
+fig_suffix = '_initClimSupportNormalDistribution'
 # fig_suffix = 'volcanicCooling_2030_-1_seed2090'  # Change the seed!
-fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+# fig_suffix = '_CESM_HR_local_natVar_multiplier1'
 # fig_suffix = '_CESM_LM_local_Tambora_2030'
 # fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
 # fig_suffix = '_CESM_HR_local_natVar_500000runs'
@@ -58,7 +59,9 @@ subs <- list(
   "Median of All Runs"    = list(ems=ems_mat,               temp=clim_mat)
 )
 
-colors   <- c("Coldest 10%"="#0072B2", "Hottest 10%"="#D55E00","Median of All Runs"="#009E73")
+colors   <- c("Coldest 10%"="#005AB5", "Hottest 10%"="#DC3220","Median of All Runs"="#000000")
+# colors <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
 
 # ---- Emissions plot ----
 dt_long_ems <- rbindlist(lapply(names(subs), function(name) {
@@ -131,7 +134,7 @@ p_all_sup <- ggplot(dt_long_sup, aes(year, median, color=Experiment, fill=Experi
   theme(legend.position="bottom", legend.box="horizontal")
 
 # ---- Combine plots as a 3-panel figure ----
-fig_combined <- p_all_ems / p_all_temp / p_all_sup +
+fig_combined <- p_all_ems / p_all_sup / p_all_temp +
   plot_layout(guides="collect") &
   plot_annotation(title=fig_title) &
   theme(legend.position="bottom", legend.box="horizontal") &
