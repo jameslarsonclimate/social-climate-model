@@ -28,10 +28,10 @@ half_width    <- 0.05
 # print reading messages and the suffixes being loaded
 
 fig_suffixes  <- c(
-  "_initClimSupportNormalDistribution"
-  # "_initClimSupportNormalDistribution-resample1",
-  # "_initClimSupportNormalDistribution-resample2",
-  # "_initClimSupportNormalDistribution-resample3"
+  "_initClimSupportNormalDistribution",
+  "_initClimSupportNormalDistribution-resample1",
+  "_initClimSupportNormalDistribution-resample2",
+  "_initClimSupportNormalDistribution-resample3"
 )
 
 message("Loading data for suffixes: \n", paste(fig_suffixes, collapse=",\n"))

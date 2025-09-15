@@ -163,7 +163,8 @@ print('Reading in new data')
 # fig_suffix = '_ERA5natVar'
 # fig_suffix = '_ERA5natVar0.5'
 # fig_suffix = 'volcanicCooling_2030_-1_seed2090'  # Change the seed!
-fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+# fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
 
 
 

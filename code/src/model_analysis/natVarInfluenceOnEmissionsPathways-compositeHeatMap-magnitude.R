@@ -6,8 +6,8 @@ library(RColorBrewer)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir      <- "../results/MC Runs/MC Runs_TunedParams/"
-# fig_suffix    <- "_initClimSupportNormalDistribution" #-natVarMultiplier10"
-fig_suffix = '_CESM_HR_local_natVar_multiplier1'
+fig_suffix    <- "_initClimSupportNormalDistribution" #-natVarMultiplier10"
+# fig_suffix = '_CESM_HR_local_natVar_multiplier1'
 # fig_suffix = '_CESM_HR_local_natVar_multiplier05'
 
 
@@ -30,28 +30,28 @@ natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar",    fig_suffix, ".csv"))
 
 # print reading messages and the suffixes being loaded
 
-# fig_suffixes  <- c(
-#   "_initClimSupportNormalDistribution",
-#   "_initClimSupportNormalDistribution-resample",
-#   "_initClimSupportNormalDistribution-resample2",
-#   "_initClimSupportNormalDistribution-resample3"
-# )
+fig_suffixes  <- c(
+  "_initClimSupportNormalDistribution",
+  "_initClimSupportNormalDistribution-resample",
+  "_initClimSupportNormalDistribution-resample2",
+  "_initClimSupportNormalDistribution-resample3"
+)
 
-# message("Loading data for suffixes: \n", paste(fig_suffixes, collapse=",\n"))
+message("Loading data for suffixes: \n", paste(fig_suffixes, collapse=",\n"))
 
-# ems_list    <- list()
-# natvar_list <- list()
-# for (suffix in fig_suffixes) {
-#   message("Loading: ", data_dir, "emissions", suffix, ".csv")
-#   ems_list[[suffix]]    <- as.matrix(fread(paste0(data_dir, "emissions", suffix, ".csv")))
-#   message("Loading: ", data_dir, "natvar", suffix, ".csv")
-#   natvar_list[[suffix]] <- as.matrix(fread(paste0(data_dir, "natvar", suffix, ".csv")))
-# }
-# ems_mat    <- do.call(rbind, ems_list)
-# natvar_mat <- do.call(rbind, natvar_list)
+ems_list    <- list()
+natvar_list <- list()
+for (suffix in fig_suffixes) {
+  message("Loading: ", data_dir, "emissions", suffix, ".csv")
+  ems_list[[suffix]]    <- as.matrix(fread(paste0(data_dir, "emissions", suffix, ".csv")))
+  message("Loading: ", data_dir, "natvar", suffix, ".csv")
+  natvar_list[[suffix]] <- as.matrix(fread(paste0(data_dir, "natvar", suffix, ".csv")))
+}
+ems_mat    <- do.call(rbind, ems_list)
+natvar_mat <- do.call(rbind, natvar_list)
 
-# message("Data loaded successfully.")
-# fig_suffix    <- "_initClimSupportNormalDistribution-resampleAppended" # Update suffix for output
+message("Data loaded successfully.")
+fig_suffix    <- "_initClimSupportNormalDistribution-resampleAppended" # Update suffix for output
 
 
 res <- list()
@@ -89,8 +89,9 @@ for (dur in 1:max_dur) {
     idx <- which(avg_nat >= lo & avg_nat < hi)
     zero_year <- NA_integer_
     p_value <- NA_real_
+    n_runs  <- length(idx)
 
-    if (length(idx) > 0) {
+    if (n_runs > 0) {
       med_traj  <- apply(ems_mat[idx, , drop=FALSE], 2, median, na.rm=TRUE)
       zz        <- which(med_traj <= 0)
       zero_year <- if (length(zz)>0) years[min(zz)] else NA_integer_
@@ -110,7 +111,8 @@ for (dur in 1:max_dur) {
       duration   = dur,
       magnitude  = mag,
       zero_year  = zero_year,
-      p_value    = p_value
+      p_value    = p_value,
+      n_runs     = n_runs
     )
     k <- k + 1L
   }
@@ -132,7 +134,7 @@ fill_limits <- c(min(fill_breaks), max(fill_breaks))
 p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
   geom_tile() +
   scale_fill_stepsn(
-    colors = brewer.pal(length(fill_breaks) - 1, "PRGn"),
+    colors = rev(brewer.pal(length(fill_breaks) - 1, "PRGn")),
     name   = "Year Net-Zero",
     # na.value = "grey80",
     limits = fill_limits,
@@ -159,7 +161,7 @@ p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
   ) +
   # Add stippling for non-significant bins
   geom_point(
-    data = dt_bin[is.na(p_value) | p_value > 0.05],
+    data = dt_bin[(is.na(p_value) | p_value > 0.05)],# | n_runs < 1000],
     aes(x = magnitude, y = duration),
     shape = 8, color = "black", size = 1.5, alpha = 0.7, inherit.aes = FALSE
   )
@@ -174,95 +176,39 @@ out_file <- file.path(
 message("Saving: ", out_file)
 ggsave(out_file, p_bin, width=8, height=6)
 
+dt_allbins <- rbindlist(res)
+dt_bin     <- dt_allbins[!is.na(zero_year)]
 
-# # ---- Build difference table: per‐bin minus overall ----
-# dt_diff <- copy(dt_bin)[
-#   , diff := zero_year - zero_year_all
-# ]
+# ---- Heatmap: number of runs per bin ----
+max_count <- max(dt_allbins$n_runs, na.rm=TRUE)
+p_count <- ggplot(dt_allbins, aes(x = magnitude, y = duration, fill = n_runs)) +
+  geom_tile() +
+  scale_fill_viridis_c(
+    option = "viridis",
+    name = "Number of runs",
+    limits = c(0, 1000),
+    oob = scales::oob_squish
+  ) +
+  guides(fill = guide_colorbar(
+    barwidth  = unit(12, "cm"),
+    barheight = unit(0.5, "cm"),
+    title.position = "top",
+    show.limits    = TRUE
+  )) +
+  labs(
+    title = paste0("Number of Runs per Bin\n", fig_suffix),
+    x = "Average Natural Variability Magnitude (°C)",
+    y = "Duration (yrs)"
+  ) +
+  theme_minimal(base_size=14) +
+  theme(panel.grid = element_blank(), legend.position = "bottom")
 
-# # symmetric color‐scale limits
-# lim <- max(abs(dt_diff$diff), na.rm=TRUE)
+# ---- Save figures ----
+out_dir <- "../results/heatmaps"
+dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)
 
-# # ---- Plot difference heatmap ----
-# p_diff <- ggplot(dt_diff, aes(x = magnitude, y = duration, fill = diff)) +
-#   geom_tile() +
-#   scale_fill_stepsn(
-#     colors = brewer.pal(9, "RdBu"),
-#     limits = c(-5, 5),
-#     breaks = c(-5, -4 ,-3 ,-2 ,-1, 1, 2, 3, 4, 5),
-#     name   = "Subset - All Runs\n(Net-Zero Years)"
-#   ) +
-#   guides(fill = guide_colorbar(
-#     barwidth  = unit(6, "cm"),
-#     barheight = unit(0.5, "cm")
-#   )) +
-#   labs(
-#     title = paste0(
-#       "Difference in Net-Zero Year by NatVar Bin vs All Runs\n",
-#       fig_suffix
-#     ),
-#     x = "Average Natural Variability Magnitude (degC)",
-#     y = "Duration (yrs)"
-#   ) +
-#   theme_minimal(base_size=14) +
-#   theme(
-#     panel.grid     = element_blank(),
-#     legend.position= "bottom"
-#   ) 
+out_file_count   <- file.path(out_dir, paste0("netzero_heatmap_counts_bin", fig_suffix, ".png"))
 
-# # ---- Save difference figure ----
-# out_file_diff <- file.path(
-#   out_dir,
-#   paste0("netzero_heatmap_bin_diff", fig_suffix, ".png")
-# )
-# message("Saving difference heatmap to: ", out_file_diff)
-# ggsave(out_file_diff, p_diff, width=8, height=6)
+message("Saving: ", out_file_count)
+ggsave(out_file_count, p_count, width=8, height=6)
 
-
-
-
-# # ---- Plot heatmap of p-values by bin & duration (log scale, discrete colors) ----
-# library(scales) # for trans_breaks and trans_format
-
-# # Define log breaks for p-values (avoid zero)
-# log_breaks <- c(1e-4, 1e-3, 1e-2, 0.05, 0.1, 0.5, 1)
-# log_labels <- c("0.0001", "0.001", "0.01", "0.05", "0.1", "0.5", "1")
-
-# p_pval <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = p_value)) +
-#   geom_tile() +
-#   scale_fill_stepsn(
-#     colors = viridis::viridis(length(log_breaks)-1, option = "C", direction = -1),
-#     name = "p-value",
-#     trans = "log10",
-#     breaks = log_breaks,
-#     labels = log_labels,
-#     limits = c(min(log_breaks), 1),
-#     oob = scales::oob_squish,
-#     na.value = "grey80"
-#   ) +
-#   guides(fill = guide_colorbar(
-#     barwidth  = unit(14, "cm"),
-#     barheight = unit(0.5, "cm"),
-#     title.position = "top"
-#   )) +
-#   labs(
-#     title = paste0(
-#       "Significance (p-value, log scale) of Net-Zero Year by NatVar Bin\n",
-#       fig_suffix
-#     ),
-#     x = "Average Natural Variability Magnitude (degC)",
-#     y = "Duration (yrs)"
-#   ) +
-#   theme_minimal(base_size=14) +
-#   theme(
-#     panel.grid     = element_blank(),
-#     legend.position= "bottom"
-#   )
-
-# # ---- Save p-value heatmap ----
-# out_file_pval <- file.path(
-#   out_dir,
-#   paste0("netzero_heatmap_bin_pval", fig_suffix, ".png")
-# )
-# message("Saving p-value heatmap to: ", out_file_pval)
-# ggsave(out_file_pval, p_pval, width=8, height=6)
