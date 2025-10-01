@@ -7,17 +7,7 @@ library(RColorBrewer)
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
 fig_suffix <- ""
-# fig_suffix = '_CESM_HR_local_natVar_defaultSupporterInitialDistribution'  # Change the seed!
-# fig_suffix = '_initClimSupportNormalDistribution'
-# fig_suffix = 'volcanicCooling_2030_-1_seed2090'  # Change the seed!
-# fig_suffix = '_CESM_HR_local_natVar_multiplier1'
-# fig_suffix = '_CESM_LM_local_Tambora_2030'
-# fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
-# fig_suffix = '_CESM_HR_local_natVar_500000runs'
-# fig_suffix = '_CESM_HR_local_natVar_multiplier05'
-# fig_suffix = '_ERA5natVar'
-# fig_suffix = '_ERA5natVar0.5'
-# fig_suffix = '_CESM_HR_local_natVar_scale_sd'
+fig_suffix = '_initClimSupportNormalDistribution-500Kruns'
 
 
 years     <- 2020:2100
@@ -45,7 +35,7 @@ clim_mat   <- as.matrix(clim)
 natvar_mat <- as.matrix(natvar)
 
 # ---- Identify bottom/top 10% runs by avg natvar in 2030–2039 ----
-idx_range <- which(years >= analysis_years[1] & years <= analysis_years[2])
+ <- which(years >= analysis_years[1] & years <= analysis_years[2])
 avg_nat   <- rowMeans(natvar_mat[, idx_range], na.rm=TRUE)
 q_vals    <- c(pct_threshold, 1 - pct_threshold)
 q_thresh  <- quantile(avg_nat, q_vals, na.rm=TRUE)

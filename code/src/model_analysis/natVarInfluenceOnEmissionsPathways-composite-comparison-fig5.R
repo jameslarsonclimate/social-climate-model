@@ -7,48 +7,29 @@ setwd('~/Documents/Research/social-climate-model/code/')
 data_dir <- "/Users/jglarson/Documents/Research/social-climate-model/results/MC Runs/MC Runs_TunedParams/"
 years    <- 2020:2100
 
-# fig_suffixes <- c(
-#   '_originalMooreData',
-#   '_CESM_HR_local_natVar_multiplier1',
-#   '_CESM_LM_local_Tambora_2030_defaultSupporterInitialDistribution',
-#   '_initClimSupportNormalDistribution',
-#   '_CESM_HR_local_natVar_defaultSupporterInitialDistribution',
-#   # '_CESM_LM_local_1850PIcntl_normalDistribution',
-#   # '_CESM_LM_global_member10_Tambora_2030_normalDistribution_multiplier1',
-#   '_CESM_LM_local_Tambora_2030_normalDistribution'
-# )
 fig_suffixes <- c(
-  '_originalMooreData',
-  '_CESM_HR_local_natVar_defaultSupporterInitialDistribution',
-  '_CESM_LM_local_Tambora_2030_defaultSupporterInitialDistribution',
+  # '_originalMooreData',
   '_initClimSupportNormalDistribution',
   '_CESM_HR_local_natVar_multiplier1',
-  '_CESM_HR_local_natVar-totalGDPweighted', 
-  '_CESM_HR_local_natVar-popWeighted'
-  # '_CESM_LM_local_Tambora_2030_normalDistribution'
+  # '_CESM_LM_local_Tambora_2030_defaultSupporterInitialDistribution',
+  # '_initClimSupportNormalDistribution',
+  # '_CESM_HR_local_natVar_defaultSupporterInitialDistribution',
+  # '_CESM_LM_local_1850PIcntl_normalDistribution',
+  # '_CESM_LM_global_member10_Tambora_2030_normalDistribution_multiplier1',
+  '_CESM_LM_local_Tambora_2030_normalDistribution'
 )
-
-# labels <- c(
-#   "Original Moore Data",
-#   "CESM HR Local NatVar Normal Distribution",
-#   "CESM LM Local Tambora 2030 Default Supporter",
-#   "Init Climate Support Normal Distribution",
-#   "CESM HR Local NatVar Default Supporter",
-#   # "CESM LM Local 1850 PI Control Normal Distribution",
-#   # "CESM LM Global Member10 Tambora 2030 Normal Distribution",
-#   "CESM LM Local Tambora 2030 Normal Distribution"
-# )
 
 labels <- c(
-  "Original Moore Data",
-  "CESM HR Local NatVar Default Supporter",
-  "CESM LM Local Tambora 2030 Default Supporter",
-  "Init Climate Support Normal Distribution",
-  "CESM HR Local NatVar Normal Distribution",
-  "CESM HR Local NatVar Total GDP Weighted",
-  "CESM HR Local NatVar Population Weighted"
-  # "CESM LM Local Tambora 2030 Normal Distribution"
+  # "Original Moore Data",
+  # "CESM LM Local Tambora 2030 Default Supporter",
+  "Global Temperature Variability",
+  "Pre-Industrial Local Temperature Variability",
+  # "CESM HR Local NatVar Default Supporter",
+  # "CESM LM Local 1850 PI Control Normal Distribution",
+  # "CESM LM Global Member10 Tambora 2030 Normal Distribution",
+  "CESM LM Tambora Eruption Local Variability"
 )
+
 
 colors <- brewer.pal(length(fig_suffixes), "Dark2")
 # colors <- c("#1a936f", "#7570b3", "#5da70a", "#d95f02", "#dd0977", "#e6ab02", "#fff424")
@@ -99,7 +80,7 @@ p_ems <- ggplot(dt_long_ems, aes(year, median, color=Experiment, fill=Experiment
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="", y="Emissions (GtC/yr)", title="Median Emissions (GtC/yr)") +
+  labs(x="Year", y="Emissions (GtC/yr)", title="Median Emissions (GtC/yr)") +
   theme_minimal(base_size=14) +
   theme(legend.position="bottom", legend.box="horizontal")
 
@@ -107,17 +88,17 @@ p_sup <- ggplot(dt_long_sup, aes(year, median, color=Experiment, fill=Experiment
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="Year", y="Fraction of Climate Supporters", title="Median Fraction of Climate Supporters") +
+  labs(x="", y="Fraction of Climate Supporters", title="Median Fraction of Climate Supporters") +
   theme_minimal(base_size=14) +
   theme(legend.position="bottom", legend.box="horizontal")
 
 # Combine and collect guides (legend)
-fig_combined <- p_ems / p_sup +
+fig_combined <- p_sup / p_ems +
   plot_layout(guides="collect") &
   theme(legend.position="bottom", legend.box="horizontal") &
   guides(color=guide_legend(ncol=1), fill=guide_legend(ncol=1))
 
 ggsave(
   "../results/natvar_multidataset_2panel.png",
-  fig_combined, width=8, height=12
+  fig_combined, width=7, height=10, dpi=300
 )

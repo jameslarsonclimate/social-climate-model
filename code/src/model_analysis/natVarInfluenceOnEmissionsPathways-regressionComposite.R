@@ -4,7 +4,8 @@ library(ggplot2)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir         <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix = '_initClimSupportNormalDistribution'
+fig_suffix = '_initClimSupportNormalDistribution-500Kruns'
+# fig_suffix = '_CESM_HR_local_natVar_500000runs'
 years            <- 2020:2100
 
 # Optional standardization flags

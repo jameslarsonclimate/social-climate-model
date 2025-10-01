@@ -24,6 +24,7 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_varyInitialDistribution'
 # fig_suffix = '_initClimSupport40percent'
 # fig_suffix = '_initClimSupportNormalDistribution-'
+fig_suffix = '_initClimSupportNormalDistribution-500Kruns'
 # fig_suffix = '_initClimSupportNormalDistribution-resample3'  # Change the seed!
 # fig_suffix = '_initClimSupportNormalDistribution-natVarMultiplier4'
 # fig_suffix = '_ERA5natVar'
@@ -36,11 +37,11 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_CESM_LM_global_member10_Tambora_2030_normalDistribution_multiplier1'  
 # fig_suffix = '_CESM_HR_local_natVar_multiplier05'
 # fig_suffix = '_CESM_HR_local_natVar-totalGDPweighted'
-fig_suffix = '_CESM_HR_local_natVar-popWeighted'
+# fig_suffix = '_CESM_HR_local_natVar-popWeighted'
 # fig_suffix = '_CESM_HR_local_natVar_defaultSupporterInitialDistribution'  # Change the seed!
 # fig_suffix = '_CESM_HR_local_natVar_scale_sd'
 # fig_suffix = 'volcanicCooling_2030_-1_seed2090  '  # Change the seed!
-
+# fig_suffix = '_CESM_HR_local_natVar_500000runs'
 
 # #-------------Monte Carlo of full model, with mitigation, policy, and option parameters weighted by tuning-derived probability----------
 source("src/model.R")
@@ -91,6 +92,7 @@ nc_close(natvarCESM_HR)
 # )
 
 mc=100000
+mc=500000
 params=matrix(nrow=mc,ncol=24)
 pol=matrix(nrow=mc,ncol=81)
 ems=matrix(nrow=mc,ncol=81)
@@ -138,13 +140,13 @@ while(i<=mc){
   lag_param01=round(runif(1,0,30))
   
   # uniform sampling of initial opinion fractions with individual bounds and sum constraint
-  repeat {
-    frac_opp_01  <- runif(1, 0.1, 0.8)
-    frac_neut_01 <- runif(1, 0.1, 0.8)
-    s <- frac_opp_01 + frac_neut_01
-    # enforce sum between 0.2 and 0.8 and each frac between 0.2 and 0.8
-    if (s >= 0.2 && s <= 0.8) break
-  }
+  # repeat {
+  #   frac_opp_01  <- runif(1, 0.1, 0.8)
+  #   frac_neut_01 <- runif(1, 0.1, 0.8)
+  #   s <- frac_opp_01 + frac_neut_01
+  #   # enforce sum between 0.2 and 0.8 and each frac between 0.2 and 0.8
+  #   if (s >= 0.2 && s <= 0.8) break
+  # }
 
   # ---- Sample initial opinion fractions via skew-normal ----
   # Support: skew-normal truncated to [0.3,0.8]
@@ -178,7 +180,7 @@ while(i<=mc){
   # }
 
   # If updating the model parameters, make sure to update fig_suffix as well!
-  m=tryCatch(model(natvar=natvar_mat[i+1,], natvar_multiplier = 1), error = function(e) {  # natvar=natvar_mat[i+1,], natvar_multiplier = 1# model(temperature_anomaly = ts), natvar_multiplier =  0
+  m=tryCatch(model(), error = function(e) {  # natvar=natvar_mat[i+1,], natvar_multiplier = 1# model(temperature_anomaly = ts), natvar_multiplier =  0
       skip_to_next <<- TRUE
       print(paste("Error occurred, skipping iteration", i, ":", e$message))
       # Store diagnostic values if available

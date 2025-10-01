@@ -9,7 +9,8 @@ data_dir      <- "../results/MC Runs/MC Runs_TunedParams/"
 # fig_suffix = '_CESM_HR_local_natVar_multiplier1'
 # fig_suffix = '_CESM_LM_local_Tambora_2030_normalDistribution'  
 # fig_suffix    <- "_initClimSupportNormalDistribution" 
-fig_suffix = '_CESM_HR_local_natVar_500000runs'
+# fig_suffix = '_CESM_HR_local_natVar_500000runs'
+fig_suffix = ''
 years         <- 2020:2100
 
 # ---- Load data ----
