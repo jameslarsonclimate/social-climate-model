@@ -51,7 +51,15 @@ natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar",    fig_suffix, ".csv"))
 # fig_suffix    <- "_initClimSupportNormalDistribution-appended" # Update suffix for output
 
 
-# ---- Loop over duration & magnitude bins ----
+# ---- User options for hatching ----
+# If hatch_by_percentile = FALSE, hatching requires p-value criterion AND at least hatch_min_n samples.
+# If hatch_by_percentile = TRUE, hatching applies to the lowest hatch_percentile fraction of grid boxes by sample count
+hatch_min_n       <- 1        # default absolute minimum samples required for hatching when not using percentiles
+hatch_by_percentile <- TRUE     # when TRUE, use the lowest-percentile rule below instead of hatch_min_n
+hatch_percentile  <- 0.20        # lowest 20% of grid boxes by sample count (only used if hatch_by_percentile == TRUE)
+hatch_p_alpha     <- 0.01        # p-value threshold for "non-significant" (keep existing semantics)
+
+# ---- Loop over duration & magnitude bins (store also n_runs) ----
 res <- list()
 k   <- 1L
 for (dur in 1:max_dur) {
@@ -65,7 +73,9 @@ for (dur in 1:max_dur) {
     lo <- mag - half_width
     hi <- mag + half_width
     idx <- which(avg_nat >= lo & avg_nat < hi)
-    if (length(idx)==0) {
+
+    n_runs <- length(idx)
+    if (n_runs==0) {
       zero_year <- NA_integer_
     } else {
       med_traj  <- apply(ems_mat[idx, , drop=FALSE], 2, median, na.rm=TRUE)
@@ -75,15 +85,18 @@ for (dur in 1:max_dur) {
     res[[k]] <- list(
       duration   = dur,
       magnitude  = mag,
-      zero_year  = zero_year
+      zero_year  = zero_year, 
+      n_runs     = n_runs
     )
     k <- k + 1L
   }
 }
 
-dt_bin <- rbindlist(res)[!is.na(zero_year)]
+# build full table (include bins with NA zero_year for percentile calculations)
+dt_allbins <- rbindlist(res)
+dt_bin     <- dt_allbins[!is.na(zero_year)]
 
- # ---- Compute global median net‐zero year ----
+# ---- Compute global median net‐zero year ----
 med_all       <- apply(ems_mat, 2, median, na.rm=TRUE)
 zz_all        <- which(med_all <= 0)
 zero_year_all <- if (length(zz_all)>0) years[min(zz_all)] else NA_integer_
@@ -118,6 +131,27 @@ for (i in seq_len(nrow(dt_bin))) {
     }
   }
 }
+
+# ---- Determine which bins receive hatching ----
+if (hatch_by_percentile) {
+  # compute cutoff using non-zero bin counts only (ignore the many zero-count bins)
+  nonzero_counts <- dt_allbins$n_runs[dt_allbins$n_runs > 0]
+  if (length(nonzero_counts) == 0) {
+    cutoff_n <- 0
+    message("No non-zero bins found; percentile-based hatching disabled.")
+    hatch_mask <- rep(FALSE, nrow(dt_bin))
+  } else {
+    cutoff_n <- as.numeric(quantile(nonzero_counts, probs = hatch_percentile, na.rm = TRUE))
+    message("Hatching lowest ", hatch_percentile * 100, "% of non-zero bins by sample count; cutoff n_runs = ", cutoff_n)
+    hatch_mask <- dt_bin$n_runs <= cutoff_n
+  }
+} else {
+  cutoff_n <- hatch_min_n
+  message("Hatching non-significant bins with at least ", cutoff_n, " samples (p > ", hatch_p_alpha, ")")
+  hatch_mask <- dt_bin$n_runs >= cutoff_n
+}
+# apply both p-value criterion and sample-count mask
+hatch_dt <- dt_bin[is.na(p_value) | p_value > hatch_p_alpha | hatch_mask]
 
 # ---- Plot heatmap of zero‐year by bin & duration ----
 
@@ -156,16 +190,16 @@ p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
     panel.grid     = element_blank(),
     legend.position = "bottom"
   ) +
-  # Add hatching (diagonal lines) for non-significant bins
+  # Add hatching (diagonal lines) for selected bins
   geom_segment(
-    data = dt_bin[is.na(p_value) | p_value > 0.05],
+    data = hatch_dt,
     aes(
       x = magnitude - half_width,
       xend = magnitude + half_width,
       y = duration - 0.5,
       yend = duration + 0.5
     ),
-    color = "black", size = 0.45, alpha = 0.8, inherit.aes = FALSE
+    color = "black", size = 0.35, alpha = 0.8, inherit.aes = FALSE
   )
 
 # ---- Save figure ----

@@ -21,10 +21,12 @@ source("src/model_analysis/model_parametertune.R")
 # fig_suffix = '_fixedNatVar-highClimateSupport'
 # fig_suffix = '_fixedNatVar-moderateClimateSupport'
 # fig_suffix = '_fixedNatVar-lowClimateSupport'
+# fig_suffix = '_fixedNatVar-hotRun'
+fig_suffix = '_fixedNatVar-coldRun'
 # fig_suffix = '_varyInitialDistribution'
 # fig_suffix = '_initClimSupport40percent'
 # fig_suffix = '_initClimSupportNormalDistribution-'
-fig_suffix = '_initClimSupportNormalDistribution-500Kruns'
+# fig_suffix = '_initClimSupportNormalDistribution-500Kruns'
 # fig_suffix = '_initClimSupportNormalDistribution-resample3'  # Change the seed!
 # fig_suffix = '_initClimSupportNormalDistribution-natVarMultiplier4'
 # fig_suffix = '_ERA5natVar'
@@ -67,10 +69,11 @@ mitparams=fread("../results/MC Runs/parameter_tune_mitigation.csv")
 # natvar_mat <- t(natvar_array)
 # nc_close(natvarCESM_HR)
 
-natvarCESM_HR <- nc_open("../../CESM-HR-PIctrl/TREFHT_land_samples_by_pop.nc")
-natvar_array <- ncvar_get(natvarCESM_HR, "TREFHT_land_samples_weighted_by_gdp") # shape: 81 x 500001
-natvar_mat <- t(natvar_array)
-nc_close(natvarCESM_HR)
+# Use this section to open other CESM natvar files as desired
+# natvarCESM_HR <- nc_open("../../CESM-HR-PIctrl/TREFHT_land_samples_by_pop.nc") 
+# natvar_array <- ncvar_get(natvarCESM_HR, "TREFHT_land_samples_weighted_by_gdp") # shape: 81 x 500001
+# natvar_mat <- t(natvar_array)
+# nc_close(natvarCESM_HR)
 
 # natvarCESM <- nc_open("../../CESM-LastMillenium/TREFHT/CESM-LastMillenium-TREFHT_land_samples_81timesteps.nc")
 # natvar_array <- ncvar_get(natvarCESM, "TREFHT_land_samples") 
@@ -91,8 +94,19 @@ nc_close(natvarCESM_HR)
 # natvarCESM = c(0.229, -0.282, 0.102, 0.229, -0.472, -0.471, -0.312, -0.137, -0.103, 0.035, -0.744, -1.131, -1.067, -0.685, -0.365, -0.133, -0.275, -0.444, -0.431, -0.388, 0.004, 0.070, 0.006, -0.123, 0.042, -0.187, -0.818, -0.371, -0.012, -0.240, -1.001, -0.768, -0.379, -0.099, -0.260, -0.163, 0.242, 0.214, 0.119, -0.306, -0.189, 0.322, 0.165, 0.019, 0.054, -0.119, 0.050, -0.150, 0.356, 0.061, -0.302, 0.068, -0.083, 0.059, 0.060, -0.098, -0.022, 0.177, -0.017, 0.141, 0.136, 0.310, -0.000, 0.009, -0.113, -0.414, -0.047, 0.041, -0.066, -0.112, 0.211, -0.051, -0.052, 0.375, -0.125, 0.326, 0.150, 0.274, -0.052, -0.453, -0.528
 # )
 
+### For the fixedNatVar-hotRun case:
+natvarIndex = 283483  # original run index from the 500,000 runs. 
+# Cold = 283483
+# hot = 241
+data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
+fname_nat <- file.path(data_dir, paste0("natvar_initClimSupportNormalDistribution-500Kruns.csv"))
+if (!file.exists(fname_nat)) stop("natvar file not found: ", fname_nat)
+natvar_dt <- fread(fname_nat)
+natvar_mat <- as.matrix(natvar_dt)      # rows = runs, cols = years
+natVarTimeSeries <- natvar_mat[natvarIndex, ]  # fixedNatVar-hotRun
+
 mc=100000
-mc=500000
+# mc=500000
 params=matrix(nrow=mc,ncol=24)
 pol=matrix(nrow=mc,ncol=81)
 ems=matrix(nrow=mc,ncol=81)
@@ -180,7 +194,7 @@ while(i<=mc){
   # }
 
   # If updating the model parameters, make sure to update fig_suffix as well!
-  m=tryCatch(model(), error = function(e) {  # natvar=natvar_mat[i+1,], natvar_multiplier = 1# model(temperature_anomaly = ts), natvar_multiplier =  0
+  m=tryCatch(model(natvar = natVarTimeSeries, natvar_multiplier = 1), error = function(e) {  # natvar=natvar_mat[i+1,], natvar_multiplier = 1# model(temperature_anomaly = ts), natvar_multiplier =  0
       skip_to_next <<- TRUE
       print(paste("Error occurred, skipping iteration", i, ":", e$message))
       # Store diagnostic values if available

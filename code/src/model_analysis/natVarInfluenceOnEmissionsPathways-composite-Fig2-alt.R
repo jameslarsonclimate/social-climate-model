@@ -6,10 +6,8 @@ library(RColorBrewer)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
-# fig_suffix <- ""
-# fig_suffix = '_initClimSupportNormalDistribution-500Kruns'
-fig_suffix <- '_fixedNatVar-hotRun'
-fig_suffix <- '_fixedNatVar-coldRun'
+fig_suffix <- ""
+fig_suffix = '_initClimSupportNormalDistribution-500Kruns'
 
 
 years     <- 2020:2100
@@ -37,7 +35,7 @@ clim_mat   <- as.matrix(clim)
 natvar_mat <- as.matrix(natvar)
 
 # ---- Identify bottom/top 10% runs by avg natvar in 2030–2039 ----
-idx_range <- which(years >= analysis_years[1] & years <= analysis_years[2])
+ <- which(years >= analysis_years[1] & years <= analysis_years[2])
 avg_nat   <- rowMeans(natvar_mat[, idx_range], na.rm=TRUE)
 q_vals    <- c(pct_threshold, 1 - pct_threshold)
 q_thresh  <- quantile(avg_nat, q_vals, na.rm=TRUE)
