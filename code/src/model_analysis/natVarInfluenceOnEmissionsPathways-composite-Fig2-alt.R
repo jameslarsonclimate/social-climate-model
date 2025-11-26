@@ -35,7 +35,7 @@ clim_mat   <- as.matrix(clim)
 natvar_mat <- as.matrix(natvar)
 
 # ---- Identify bottom/top 10% runs by avg natvar in 2030–2039 ----
- <- which(years >= analysis_years[1] & years <= analysis_years[2])
+idx_range <- which(years >= analysis_years[1] & years <= analysis_years[2])
 avg_nat   <- rowMeans(natvar_mat[, idx_range], na.rm=TRUE)
 q_vals    <- c(pct_threshold, 1 - pct_threshold)
 q_thresh  <- quantile(avg_nat, q_vals, na.rm=TRUE)
@@ -50,6 +50,12 @@ subs <- list(
 )
 
 colors   <- c("Coldest 10%"="#005AB5", "Hottest 10%"="#DC3220","Median of All Runs"="#000000")
+colors <- c(
+  "Coldest 10%"        = brewer.pal(11, "RdBu")[10],
+  "Hottest 10%"       = brewer.pal(11, "RdBu")[2],
+  "Median of All Runs" = "#000000"
+)
+
 # colors <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 
@@ -57,7 +63,7 @@ colors   <- c("Coldest 10%"="#005AB5", "Hottest 10%"="#DC3220","Median of All Ru
 dt_long_ems <- rbindlist(lapply(names(subs), function(name) {
   mat <- subs[[name]]$ems
   data.table(
-    Experiment = name,
+    Subset = name,
     year       = years,
     median     = apply(mat, 2, median,   na.rm=TRUE)
     # q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
@@ -65,11 +71,11 @@ dt_long_ems <- rbindlist(lapply(names(subs), function(name) {
   )
 }))
 
-p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Experiment, fill=Experiment)) +
+p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Subset, fill=Subset)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="", y="Emissions (GtC/yr)", title="Median Emissions (GtC/yr)") +
+  labs(x="", y="Emissions (GtC/yr)", title="Emissions") +
   theme_minimal(base_size=14) +
   theme(legend.position="bottom", legend.box="horizontal")
 
@@ -77,7 +83,7 @@ p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Experiment, fill=Experi
 dt_long_temp <- rbindlist(lapply(names(subs), function(name) {
   mat <- subs[[name]]$temp
   data.table(
-    Experiment = name,
+    Subset = name,
     year       = years,
     median     = apply(mat, 2, median,   na.rm=TRUE)
     # q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
@@ -85,11 +91,11 @@ dt_long_temp <- rbindlist(lapply(names(subs), function(name) {
   )
 }))
 
-p_all_temp <- ggplot(dt_long_temp, aes(year, median, color=Experiment, fill=Experiment)) +
+p_all_temp <- ggplot(dt_long_temp, aes(year, median, color=Subset, fill=Subset)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="", y="Temperature (°C)", title="Median Temperature (°C)") +
+  labs(x="Year", y="Temperature (°C)", title="Global temperature") +
   theme_minimal(base_size=14) +
   theme(legend.position="bottom", legend.box="horizontal")
 
@@ -107,7 +113,7 @@ subs_sup <- list(
 dt_long_sup <- rbindlist(lapply(names(subs_sup), function(name) {
   mat <- subs_sup[[name]]$sup
   data.table(
-    Experiment = name,
+    Subset = name,
     year       = years,
     median     = apply(mat, 2, median,   na.rm=TRUE)
     # q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
@@ -115,20 +121,20 @@ dt_long_sup <- rbindlist(lapply(names(subs_sup), function(name) {
   )
 }))
 
-p_all_sup <- ggplot(dt_long_sup, aes(year, median, color=Experiment, fill=Experiment)) +
+p_all_sup <- ggplot(dt_long_sup, aes(year, median, color=Subset, fill=Subset)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="Year", y="Fraction of Climate Supporters", title="Median Fraction of Climate Supporters") +
+  labs(x="", y="Fraction of climate supporters", title="Support for climate policy") +
   theme_minimal(base_size=14) +
   theme(legend.position="bottom", legend.box="horizontal")
 
 # ---- Combine plots as a 3-panel figure ----
-fig_combined <- p_all_ems / p_all_sup / p_all_temp +
+fig_combined <- p_all_sup / p_all_ems  +
   plot_layout(guides="collect") &
   plot_annotation(title=fig_title) &
   theme(legend.position="bottom", legend.box="horizontal") &
-  guides(color=guide_legend(ncol=2), fill=guide_legend(ncol=2))
+  guides(color=guide_legend(ncol=3), fill=guide_legend(ncol=3))
 
 ggsave(
   paste0("../results/natvar_extremes_3panel", fig_suffix, "_", analysis_label, "_", pct_label, ".png"),

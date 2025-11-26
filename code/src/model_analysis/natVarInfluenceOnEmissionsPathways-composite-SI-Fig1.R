@@ -106,7 +106,7 @@ p_sup <- ggplot(dt_long_sup, aes(x = year, y = median, color = Group, linetype =
   geom_line(size = 1.05) +
   scale_color_manual(name = "Temperature Bin", values = group_colors) +
   scale_linetype_manual(values = linestyles) +
-  labs(title = "Median Fraction of Climate Supporters", x = "", y = "Fraction Supporters") +
+  labs(title = "", x = "", y = "Fraction of climate supporters") +
   theme_minimal(base_size = 13) +
   theme(legend.position = "bottom", legend.box = "horizontal")
 
@@ -114,7 +114,7 @@ p_ems <- ggplot(dt_long_ems, aes(x = year, y = median, color = Group, linetype =
   geom_line(size = 1.05) +
   scale_color_manual(name = "Temperature Bin", values = group_colors) +
   scale_linetype_manual(values = linestyles) +
-  labs(title = "Median Emissions (GtC/yr)", x = "Year", y = "Emissions (GtC/yr)") +
+  labs(title = "", x = "Year", y = "Emissions (GtC/yr)") +
   theme_minimal(base_size = 13) +
   theme(legend.position = "bottom", legend.box = "horizontal")
 
@@ -138,6 +138,6 @@ fig_combined <- p_sup / p_ems +
 out_file <- file.path("../results", paste0("multiExp_supporters_top_emissions_bottom",
                                            paste0(fig_suffixes, collapse = "_"), ".png"))
 dir.create(dirname(out_file), showWarnings = FALSE, recursive = TRUE)
-ggsave(out_file, fig_combined, width = 7, height = 10, dpi = 300)
+ggsave(out_file, fig_combined, width = 6, height = 9, dpi = 300)
 
 message("Saved: ", out_file)

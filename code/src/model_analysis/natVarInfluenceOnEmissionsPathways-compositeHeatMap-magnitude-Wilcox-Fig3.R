@@ -55,7 +55,7 @@ natvar_mat <- as.matrix(fread(paste0(data_dir, "natvar",    fig_suffix, ".csv"))
 # If hatch_by_percentile = FALSE, hatching requires p-value criterion AND at least hatch_min_n samples.
 # If hatch_by_percentile = TRUE, hatching applies to the lowest hatch_percentile fraction of grid boxes by sample count
 hatch_min_n       <- 1        # default absolute minimum samples required for hatching when not using percentiles
-hatch_by_percentile <- TRUE     # when TRUE, use the lowest-percentile rule below instead of hatch_min_n
+hatch_by_percentile <- FALSE     # when TRUE, use the lowest-percentile rule below instead of hatch_min_n
 hatch_percentile  <- 0.20        # lowest 20% of grid boxes by sample count (only used if hatch_by_percentile == TRUE)
 hatch_p_alpha     <- 0.01        # p-value threshold for "non-significant" (keep existing semantics)
 
@@ -151,7 +151,7 @@ if (hatch_by_percentile) {
   hatch_mask <- dt_bin$n_runs >= cutoff_n
 }
 # apply both p-value criterion and sample-count mask
-hatch_dt <- dt_bin[is.na(p_value) | p_value > hatch_p_alpha | hatch_mask]
+hatch_dt <- dt_bin[is.na(p_value) | p_value > hatch_p_alpha]# | hatch_mask]
 
 # ---- Plot heatmap of zero‐year by bin & duration ----
 
@@ -163,11 +163,21 @@ range_years <- 10
 fill_breaks <- seq(2076,2098,2)
 fill_limits <- c(min(fill_breaks), max(fill_breaks))
 
+# compute midpoints between break boundaries for tick positions and labels
+fill_mid <- (head(fill_breaks, -1) + tail(fill_breaks, -1)) / 2
+fill_mid_labels <- as.integer(round(fill_mid))  # or format as you prefer
+
 p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
   geom_tile() +
+  scale_x_continuous(
+    breaks = seq(-1, 1, by = 0.5),
+    labels = function(x) {
+      ifelse(abs(x - round(x)) < 1e-8, as.character(as.integer(round(x))), sprintf("%.1f", x))
+    }
+  ) +
   scale_fill_stepsn(
     colors = brewer.pal(length(fill_breaks) - 1, "PRGn"),
-    name   = "Year Net-Zero",
+    name   = "Year of net-zero",
     limits = fill_limits,
     breaks = fill_breaks,
     oob    = scales::oob_squish
@@ -182,13 +192,17 @@ p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
     title = paste0("Net-Zero Year by Natural Variability Bin and Duration\n",
                    fig_suffix, "\n",
                    "Median Year of Net Zero for All Runs is ", zero_year_all),
-    x = "Average Natural Variability Magnitude (degC)",
-    y = "Duration (yrs)"
+    x = "Anomaly magnitude (degC)",
+    y = "Anomaly duration (years)"
   ) +
   theme_minimal(base_size=14) +
   theme(
     panel.grid     = element_blank(),
-    legend.position = "bottom"
+    legend.position = "bottom",
+    panel.background = element_rect(fill = "white", colour = NA),
+    plot.background  = element_rect(fill = "white", colour = NA),
+    legend.background = element_rect(fill = "white", colour = NA),
+    legend.key = element_rect(fill = "white", colour = NA)
   ) +
   # Add hatching (diagonal lines) for selected bins
   geom_segment(

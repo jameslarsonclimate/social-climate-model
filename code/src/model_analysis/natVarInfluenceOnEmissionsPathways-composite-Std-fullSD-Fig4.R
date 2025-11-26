@@ -5,9 +5,9 @@ library(viridis)
 # ---- Setup ----
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir      <- "../results/MC Runs/MC Runs_TunedParams/"
-fig_suffix    <- "_initClimSupportNormalDistribution"
+# fig_suffix    <- "_initClimSupportNormalDistribution"
 # fig_suffix = '_CESM_HR_local_natVar_multiplier1'
-# fig_suffix = '_CESM_HR_local_natVar_500000runs'
+fig_suffix = '_CESM_HR_local_natVar_500000runs'
 # fig_suffix = '_CESM_HR_local_natVar_multiplier1'
 # fig_suffix = '_CESM_HR_local_natVar-totalGDPweighted'
 # fig_suffix = '_CESM_HR_local_natVar-popWeighted'
@@ -59,7 +59,7 @@ message("Plotting median emissions trajectories by SD bin...")
 p <- ggplot(dt_plot, aes(x = year, y = median_ems, group = sd_bin, color = sd_bin)) +
   geom_line(size = 1.1) +
   scale_color_viridis_c(
-    name = "SD of Full Series (degC)",
+    name = "Standard deviation (degC)",
     option = "C",
     guide = guide_colorbar(
       barwidth = unit(15, "lines"),
@@ -69,12 +69,13 @@ p <- ggplot(dt_plot, aes(x = year, y = median_ems, group = sd_bin, color = sd_bi
     ),
     breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4),
     labels = c("0", "0.2", "0.4", "0.6", "0.8", "1.0", "1.2", "1.4"),
-    limits = c(0.1, 1.5)
+    limits = c(0.1, 1.5),
+    oob = scales::squish  # map values outside limits to the nearest limit so lines still plot
   ) +
   labs(
     title = paste0("Median Emissions Trajectory by Full-Series SD Bin\n", fig_suffix),
     x = "Year",
-    y = "Median Emissions (GtC/yr)"
+    y = "Emissions (GtC/yr)"
   ) +
   theme_minimal(base_size=14) +
   theme(
@@ -87,7 +88,7 @@ message("Plotting sample counts per SD bin (log scale)...")
 p_counts <- ggplot(bin_counts, aes(x = sd_bin, y = n_runs, color = sd_bin)) +
   geom_point(size = 3) +
   scale_color_viridis_c(
-    name = "SD of Full Series (degC)",
+    name = "Standard deviation of natural climate variability (degC)",
     option = "C",
     limits = range(sd_full_centers)
   ) +

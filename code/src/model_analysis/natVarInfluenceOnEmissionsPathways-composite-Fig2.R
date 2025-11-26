@@ -7,9 +7,9 @@ library(RColorBrewer)
 setwd('~/Documents/Research/social-climate-model/code')
 data_dir  <- "../results/MC Runs/MC Runs_TunedParams/"
 # fig_suffix <- ""
-# fig_suffix = '_initClimSupportNormalDistribution-500Kruns'
-fig_suffix <- '_fixedNatVar-hotRun'
-fig_suffix <- '_fixedNatVar-coldRun'
+fig_suffix = '_initClimSupportNormalDistribution-500Kruns'
+# fig_suffix <- '_fixedNatVar-hotRun'
+# fig_suffix <- '_fixedNatVar-coldRun'
 
 
 years     <- 2020:2100
@@ -21,11 +21,11 @@ pct_threshold  <- 0.10            # e.g. 0.10 for 10%, 0.05 for 5%
 # dynamically build labels for titles and file names:
 analysis_label <- paste0(analysis_years[1], "-", analysis_years[2])
 pct_label      <- paste0(pct_threshold * 100, "pct")
-fig_title      <- paste0(
-  "Impact of Natural Variability Extremes (", analysis_label, ") at ",
-  pct_threshold * 100, "% Threshold of Natural Variability\n",
-  fig_suffix
-)
+# fig_title      <- paste0(
+#   "Impact of Natural Variability Extremes (", analysis_label, ") at ",
+#   pct_threshold * 100, "% Threshold of Natural Variability\n",
+#   fig_suffix
+# )
 
 # ---- Load data ----
 ems    <- fread(paste0(data_dir, "emissions",   fig_suffix, ".csv"))
@@ -48,30 +48,35 @@ top_idx    <- which(avg_nat >= q_thresh[2])
 subs <- list(
   "Coldest 10%" = list(ems=ems_mat[bottom_idx, ], temp=clim_mat[bottom_idx, ]),
   "Hottest 10%"    = list(ems=ems_mat[top_idx, ],    temp=clim_mat[top_idx, ]),
-  "Median of All Runs"    = list(ems=ems_mat,               temp=clim_mat)
+  "Median of all runs"    = list(ems=ems_mat,               temp=clim_mat)
 )
 
-colors   <- c("Coldest 10%"="#005AB5", "Hottest 10%"="#DC3220","Median of All Runs"="#000000")
-# colors <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+colors   <- c("Coldest 10%"="#005AB5", "Hottest 10%"="#DC3220","Median of all runs"="#000000")
+colors <- c(
+  "Coldest 10%"        = brewer.pal(11, "RdBu")[10],
+  "Hottest 10%"       = brewer.pal(11, "RdBu")[2],
+  "Median of all runs" = "#000000"
+)
 
 
 # ---- Emissions plot ----
 dt_long_ems <- rbindlist(lapply(names(subs), function(name) {
   mat <- subs[[name]]$ems
   data.table(
-    Experiment = name,
+    Subset = name,
     year       = years,
     median     = apply(mat, 2, median,   na.rm=TRUE)
-    # q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
-    # q95        = apply(mat, 2, quantile, probs=0.95, na.rm=TRUE)
   )
 }))
 
-p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Experiment, fill=Experiment)) +
-  geom_line(size=1.1) +
+# compute end-of-series label positions for emissions
+dt_long_ems_last <- dt_long_ems[year == max(year), .(Subset, year, median)]
+
+p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Subset, fill=Subset)) +
+  geom_line(size=0.5) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="", y="Emissions (GtC/yr)", title="Median Emissions (GtC/yr)") +
+  labs(x="Year", y="Emissions (GtC/yr)") +  
   theme_minimal(base_size=14) +
   theme(legend.position="bottom", legend.box="horizontal")
 
@@ -79,19 +84,17 @@ p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Experiment, fill=Experi
 dt_long_temp <- rbindlist(lapply(names(subs), function(name) {
   mat <- subs[[name]]$temp
   data.table(
-    Experiment = name,
+    Subset = name,
     year       = years,
     median     = apply(mat, 2, median,   na.rm=TRUE)
-    # q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
-    # q95        = apply(mat, 2, quantile, probs=0.95, na.rm=TRUE)
   )
 }))
 
-p_all_temp <- ggplot(dt_long_temp, aes(year, median, color=Experiment, fill=Experiment)) +
+p_all_temp <- ggplot(dt_long_temp, aes(year, median, color=Subset, fill=Subset)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="", y="Temperature (°C)", title="Median Temperature (°C)") +
+  labs(x="Year", y="Temperature (°C)") + # title="Median Temperature (°C)") +
   theme_minimal(base_size=14) +
   theme(legend.position="bottom", legend.box="horizontal")
 
@@ -103,36 +106,40 @@ supporters_mat <- dist[,,3]
 subs_sup <- list(
   "Coldest 10%" = list(sup = supporters_mat[bottom_idx, ]),
   "Hottest 10%"    = list(sup = supporters_mat[top_idx, ]),
-  "Median of All Runs"    = list(sup = supporters_mat)
+  "Median of all runs"    = list(sup = supporters_mat)
 )
 
 dt_long_sup <- rbindlist(lapply(names(subs_sup), function(name) {
   mat <- subs_sup[[name]]$sup
   data.table(
-    Experiment = name,
+    Subset = name,
     year       = years,
     median     = apply(mat, 2, median,   na.rm=TRUE)
-    # q05        = apply(mat, 2, quantile, probs=0.05, na.rm=TRUE),
-    # q95        = apply(mat, 2, quantile, probs=0.95, na.rm=TRUE)
   )
 }))
 
-p_all_sup <- ggplot(dt_long_sup, aes(year, median, color=Experiment, fill=Experiment)) +
+p_all_sup <- ggplot(dt_long_sup, aes(year, median, color=Subset, fill=Subset)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="Year", y="Fraction of Climate Supporters", title="Median Fraction of Climate Supporters") +
+  labs(x="", y="Fraction of climate supporters") + 
   theme_minimal(base_size=14) +
   theme(legend.position="bottom", legend.box="horizontal")
 
-# ---- Combine plots as a 3-panel figure ----
-fig_combined <- p_all_ems / p_all_sup / p_all_temp +
+# ---- Combine plots as a 2-panel figure ----
+fig_combined <- p_all_sup / p_all_ems +
   plot_layout(guides="collect") &
-  plot_annotation(title=fig_title) &
   theme(legend.position="bottom", legend.box="horizontal") &
-  guides(color=guide_legend(ncol=2), fill=guide_legend(ncol=2))
+  guides(color=guide_legend(ncol=3), fill=guide_legend(ncol=3))
+  
+width_fig <- 7
+height_fig <- 11
 
 ggsave(
-  paste0("../results/natvar_extremes_3panel", fig_suffix, "_", analysis_label, "_", pct_label, ".png"),
-  fig_combined, width=8, height=15
+  paste0("../results/manuscriptFigures/natvar_extremes_2panel", fig_suffix, "_", analysis_label, "_", pct_label, ".png"),
+  fig_combined, width=width_fig, height=height_fig, dpi=300, units='cm'
+)
+ggsave(
+  paste0("../results/manuscriptFigures/natvar_extremes_2panel", fig_suffix, "_", analysis_label, "_", pct_label, ".pdf"),
+  fig_combined, width=width_fig, height=height_fig, dpi=300, units='cm'
 )
