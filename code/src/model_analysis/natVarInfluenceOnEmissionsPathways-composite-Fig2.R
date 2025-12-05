@@ -29,11 +29,11 @@ pct_label      <- paste0(pct_threshold * 100, "pct")
 
 # ---- Load data ----
 ems    <- fread(paste0(data_dir, "emissions",   fig_suffix, ".csv"))
-clim   <- fread(paste0(data_dir, "temperature", fig_suffix, ".csv"))
+# clim   <- fread(paste0(data_dir, "temperature", fig_suffix, ".csv"))
 natvar <- fread(paste0(data_dir, "natvar",      fig_suffix, ".csv"))
 
 ems_mat    <- as.matrix(ems)
-clim_mat   <- as.matrix(clim)
+# clim_mat   <- as.matrix(clim)
 natvar_mat <- as.matrix(natvar)
 
 # ---- Identify bottom/top 10% runs by avg natvar in 2030–2039 ----
@@ -46,9 +46,9 @@ top_idx    <- which(avg_nat >= q_thresh[2])
 
 # ---- Subsets ----
 subs <- list(
-  "Coldest 10%" = list(ems=ems_mat[bottom_idx, ], temp=clim_mat[bottom_idx, ]),
-  "Hottest 10%"    = list(ems=ems_mat[top_idx, ],    temp=clim_mat[top_idx, ]),
-  "Median of all runs"    = list(ems=ems_mat,               temp=clim_mat)
+  "Coldest 10%"       = list(ems = ems_mat[bottom_idx, ]),
+  "Hottest 10%"      = list(ems = ems_mat[top_idx, ]),
+  "Median of all runs" = list(ems = ems_mat)
 )
 
 colors   <- c("Coldest 10%"="#005AB5", "Hottest 10%"="#DC3220","Median of all runs"="#000000")
@@ -57,7 +57,6 @@ colors <- c(
   "Hottest 10%"       = brewer.pal(11, "RdBu")[2],
   "Median of all runs" = "#000000"
 )
-
 
 # ---- Emissions plot ----
 dt_long_ems <- rbindlist(lapply(names(subs), function(name) {
@@ -69,34 +68,15 @@ dt_long_ems <- rbindlist(lapply(names(subs), function(name) {
   )
 }))
 
-# compute end-of-series label positions for emissions
-dt_long_ems_last <- dt_long_ems[year == max(year), .(Subset, year, median)]
-
 p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Subset, fill=Subset)) +
-  geom_line(size=0.5) +
-  scale_color_manual(values=colors) +
-  scale_fill_manual(values=colors) +
-  labs(x="Year", y="Emissions (GtC/yr)") +  
-  theme_minimal(base_size=14) +
-  theme(legend.position="bottom", legend.box="horizontal")
-
-# ---- Temperature plot ----
-dt_long_temp <- rbindlist(lapply(names(subs), function(name) {
-  mat <- subs[[name]]$temp
-  data.table(
-    Subset = name,
-    year       = years,
-    median     = apply(mat, 2, median,   na.rm=TRUE)
-  )
-}))
-
-p_all_temp <- ggplot(dt_long_temp, aes(year, median, color=Subset, fill=Subset)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="Year", y="Temperature (°C)") + # title="Median Temperature (°C)") +
+  labs(x="Year", y="Emissions (GtC/yr)") +
+  scale_x_continuous(minor_breaks = NULL) +
+  scale_y_continuous(minor_breaks = NULL) +
   theme_minimal(base_size=14) +
-  theme(legend.position="bottom", legend.box="horizontal")
+  theme(panel.grid.minor = element_blank())
 
 # ---- Climate Supporters plot ----
 dist_file <- paste0(data_dir, "distributions", fig_suffix, ".Rdata")
@@ -123,8 +103,14 @@ p_all_sup <- ggplot(dt_long_sup, aes(year, median, color=Subset, fill=Subset)) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
   labs(x="", y="Fraction of climate supporters") + 
+  scale_x_continuous(minor_breaks = NULL) +
+  scale_y_continuous(minor_breaks = NULL) +
   theme_minimal(base_size=14) +
-  theme(legend.position="bottom", legend.box="horizontal")
+  theme(
+    legend.position="bottom",
+    legend.box="horizontal",
+    panel.grid.minor = element_blank()
+  )
 
 # ---- Combine plots as a 2-panel figure ----
 fig_combined <- p_all_sup / p_all_ems +
@@ -132,14 +118,15 @@ fig_combined <- p_all_sup / p_all_ems +
   theme(legend.position="bottom", legend.box="horizontal") &
   guides(color=guide_legend(ncol=3), fill=guide_legend(ncol=3))
   
-width_fig <- 7
-height_fig <- 11
+width_fig <- 6
+height_fig <- 9
 
 ggsave(
   paste0("../results/manuscriptFigures/natvar_extremes_2panel", fig_suffix, "_", analysis_label, "_", pct_label, ".png"),
-  fig_combined, width=width_fig, height=height_fig, dpi=300, units='cm'
+  fig_combined, width=width_fig, height=height_fig, dpi=300
 )
+
 ggsave(
   paste0("../results/manuscriptFigures/natvar_extremes_2panel", fig_suffix, "_", analysis_label, "_", pct_label, ".pdf"),
-  fig_combined, width=width_fig, height=height_fig, dpi=300, units='cm'
+  fig_combined, width=width_fig, height=height_fig, dpi=300
 )
