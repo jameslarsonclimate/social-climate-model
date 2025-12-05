@@ -59,7 +59,7 @@ message("Plotting median emissions trajectories by SD bin...")
 p <- ggplot(dt_plot, aes(x = year, y = median_ems, group = sd_bin, color = sd_bin)) +
   geom_line(size = 1.1) +
   scale_color_viridis_c(
-    name = "Standard deviation (degC)",
+    name = "Standard deviation (°C)",
     option = "C",
     guide = guide_colorbar(
       barwidth = unit(15, "lines"),
@@ -73,53 +73,69 @@ p <- ggplot(dt_plot, aes(x = year, y = median_ems, group = sd_bin, color = sd_bi
     oob = scales::squish  # map values outside limits to the nearest limit so lines still plot
   ) +
   labs(
-    title = paste0("Median Emissions Trajectory by Full-Series SD Bin\n", fig_suffix),
+    # title = paste0("Median Emissions Trajectory by Full-Series SD Bin\n", fig_suffix),
     x = "Year",
     y = "Emissions (GtC/yr)"
   ) +
+  scale_x_continuous(minor_breaks = NULL) +
+  scale_y_continuous(minor_breaks = NULL) +
   theme_minimal(base_size=14) +
   theme(
-    legend.position = "bottom",
-    legend.direction = "horizontal"
+    legend.position="bottom",
+    legend.box="horizontal",
+    panel.grid.minor = element_blank()
   )
 
-# ---- Additional scatterplot: bin counts (log scale) ----
-message("Plotting sample counts per SD bin (log scale)...")
-p_counts <- ggplot(bin_counts, aes(x = sd_bin, y = n_runs, color = sd_bin)) +
-  geom_point(size = 3) +
-  scale_color_viridis_c(
-    name = "Standard deviation of natural climate variability (degC)",
-    option = "C",
-    limits = range(sd_full_centers)
-  ) +
-  scale_y_log10(
-    breaks = c(100, 1000, 10000, 100000),
-    labels = scales::comma,
-    limits = c(100, 120000)
-  ) +
-  labs(
-    title = paste0("Sample Count per Full-Series SD Bin (Log Scale)\n", fig_suffix),
-    x = "SD Bin Center (degC)",
-    y = "Number of Samples (log scale)"
-  ) +
-  theme_minimal(base_size=14) +
-  theme(
-    legend.position = "right"
-  )
+# # ---- Additional scatterplot: bin counts (log scale) ----
+# message("Plotting sample counts per SD bin (log scale)...")
+# p_counts <- ggplot(bin_counts, aes(x = sd_bin, y = n_runs, color = sd_bin)) +
+#   geom_point(size = 3) +
+#   scale_color_viridis_c(
+#     name = "Standard deviation of natural climate variability (degC)",
+#     option = "C",
+#     limits = range(sd_full_centers)
+#   ) +
+#   scale_y_log10(
+#     breaks = c(100, 1000, 10000, 100000),
+#     labels = scales::comma,
+#     limits = c(100, 120000)
+#   ) +
+#   labs(
+#     title = paste0("Sample Count per Full-Series SD Bin (Log Scale)\n", fig_suffix),
+#     x = "SD Bin Center (degC)",
+#     y = "Number of Samples (log scale)"
+#   ) +
+#   theme_minimal(base_size=14) +
+#   theme(
+#     legend.position = "right"
+#   )
   
-  # ---- Save figures ----
-  out_dir <- "../results"
-  dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)
-  out_file <- file.path(
-    out_dir,
-    paste0("median_ems_trajectories_by_fullSD_bin_", fig_suffix, ".png")
-  )
-  message("Saving: ", out_file)
-  ggsave(out_file, p, width=7, height=6, dpi=300)
+# ---- Save figures ----
 
-out_file_counts <- file.path(
+figwidth <- 6
+figheight <- 5
+
+out_dir <- "../results/manuscriptFigures/"
+dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)
+out_file <- file.path(
   out_dir,
-  paste0("sample_count_by_fullSD_bin_", fig_suffix, ".png")
+  paste0("median_ems_trajectories_by_fullSD_bin_", fig_suffix, ".png")
 )
-message("Saving: ", out_file_counts)
-ggsave(out_file_counts, p_counts, width=8, height=6)
+message("Saving: ", out_file)
+ggsave(out_file, p, width=figwidth, height=figheight, dpi=300)
+
+out_file <- file.path(
+  out_dir,
+  paste0("median_ems_trajectories_by_fullSD_bin_", fig_suffix, ".pdf")
+)
+message("Saving: ", out_file)
+ggsave(out_file, p, width=figwidth, height=figheight, dpi=300)
+
+
+
+# out_file_counts <- file.path(
+#   out_dir,
+#   paste0("sample_count_by_fullSD_bin_", fig_suffix, ".png")
+# )
+# message("Saving: ", out_file_counts)
+# ggsave(out_file_counts, p_counts, width=8, height=6)
