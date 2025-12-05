@@ -189,10 +189,10 @@ p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
     show.limits    = TRUE
   )) +
   labs(
-    title = paste0("Net-Zero Year by Natural Variability Bin and Duration\n",
-                   fig_suffix, "\n",
-                   "Median Year of Net Zero for All Runs is ", zero_year_all),
-    x = "Anomaly magnitude (degC)",
+    # title = paste0("Net-Zero Year by Natural Variability Bin and Duration\n",
+    #                fig_suffix, "\n",
+    #                "Median Year of Net Zero for All Runs is ", zero_year_all),
+    x = "Anomaly magnitude (°C)",
     y = "Anomaly duration (years)"
   ) +
   theme_minimal(base_size=14) +
@@ -216,14 +216,22 @@ p_bin <- ggplot(dt_bin, aes(x = magnitude, y = duration, fill = zero_year)) +
     color = "black", size = 0.35, alpha = 0.8, inherit.aes = FALSE
   )
 
+  figwidth <- 6
+  figheight <- 5
+
 # ---- Save figure ----
-out_dir <- "../results/heatmaps"
+out_dir <- "../results/manuscriptFigures/"
 dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)
 out_file <- file.path(
   out_dir,
   paste0("netzero_heatmap_bin_wilcox", fig_suffix, ".png")
 )
 message("Saving: ", out_file)
-ggsave(out_file, p_bin, width=8, height=6)
+ggsave(out_file, p_bin, width=figwidth, height=figheight)
 
+out_file <- file.path(
+  out_dir,
+  paste0("netzero_heatmap_bin_wilcox", fig_suffix, ".pdf")
+)
+ggsave(out_file, p_bin, width=figwidth, height=figheight)
 
