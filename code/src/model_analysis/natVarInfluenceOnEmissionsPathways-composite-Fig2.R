@@ -68,7 +68,7 @@ dt_long_ems <- rbindlist(lapply(names(subs), function(name) {
   )
 }))
 
-p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Subset, fill=Subset)) +
+p_ems <- ggplot(dt_long_ems, aes(year, median, color=Subset, fill=Subset)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
@@ -76,7 +76,10 @@ p_all_ems <- ggplot(dt_long_ems, aes(year, median, color=Subset, fill=Subset)) +
   scale_x_continuous(minor_breaks = NULL) +
   scale_y_continuous(minor_breaks = NULL) +
   theme_minimal(base_size=14) +
-  theme(panel.grid.minor = element_blank())
+  theme(
+    legend.position = "none",
+    panel.grid.minor = element_blank()
+  )
 
 # ---- Climate Supporters plot ----
 dist_file <- paste0(data_dir, "distributions", fig_suffix, ".Rdata")
@@ -98,7 +101,7 @@ dt_long_sup <- rbindlist(lapply(names(subs_sup), function(name) {
   )
 }))
 
-p_all_sup <- ggplot(dt_long_sup, aes(year, median, color=Subset, fill=Subset)) +
+p_sup <- ggplot(dt_long_sup, aes(year, median, color=Subset, fill=Subset)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
@@ -107,19 +110,23 @@ p_all_sup <- ggplot(dt_long_sup, aes(year, median, color=Subset, fill=Subset)) +
   scale_y_continuous(minor_breaks = NULL) +
   theme_minimal(base_size=14) +
   theme(
-    legend.position="bottom",
-    legend.box="horizontal",
+    legend.position = "none",
     panel.grid.minor = element_blank()
   )
 
+p_sup <- p_sup + annotate("text", x = -Inf, y = Inf, label = "a",
+                          fontface = "bold", hjust = -2, vjust = 1.7, size = 6)
+
+p_ems <- p_ems + annotate("text", x = -Inf, y = Inf, label = "b",
+                          fontface = "bold", hjust = -2, vjust = 1.65, size = 6)
+
+
 # ---- Combine plots as a 2-panel figure ----
-fig_combined <- p_all_sup / p_all_ems +
-  plot_layout(guides="collect") &
-  theme(legend.position="bottom", legend.box="horizontal") &
-  guides(color=guide_legend(ncol=3), fill=guide_legend(ncol=3))
+fig_combined <- p_sup / p_ems +
+  plot_layout(guides="collect") 
   
 width_fig <- 6
-height_fig <- 9
+height_fig <- 7.5
 
 ggsave(
   paste0("../results/manuscriptFigures/natvar_extremes_2panel", fig_suffix, "_", analysis_label, "_", pct_label, ".png"),

@@ -20,7 +20,9 @@ labels <- c(
 )
 
 
-colors <- brewer.pal(length(fig_suffixes), "Dark2")
+# colors <- brewer.pal(length(fig_suffixes), "Dark2")
+colors <- c("#000000", brewer.pal(8, "Dark2")[2:3], brewer.pal(8, "Dark2")[6])
+
 # colors <- brewer.pal(8, "Dark2")[c(1, 8, 3)]
 # colors <- c("#1a936f", "#7570b3", "#5da70a", "#d95f02", "#dd0977", "#e6ab02", "#fff424")
 linstyles <- c("solid", "dashed", "dotted", "dotdash", "twodash", "longdash")
@@ -38,14 +40,20 @@ dt_long_ems <- rbindlist(lapply(seq_along(fig_suffixes), function(i) {
   )
 }))
 dt_long_ems$Experiment <- factor(dt_long_ems$Experiment, levels = labels)
+
 p_ems <- ggplot(dt_long_ems, aes(year, median, color=Experiment, fill=Experiment)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
-  labs(x="", y="Emissions (GtC/yr)") + #, title="Emissions (GtC/yr)") +
+  labs(x="Year", y="Emissions (GtC/yr)") + #, title="Emissions (GtC/yr)") +
+  scale_x_continuous(minor_breaks = NULL) +
+  scale_y_continuous(minor_breaks = NULL) +
   theme_minimal(base_size=14) +
-  theme(legend.position="bottom", legend.box="horizontal") +
-  guides(color=guide_legend(ncol=1), fill=guide_legend(ncol=1))
+  theme(
+    legend.position="none",
+    panel.grid.minor = element_blank()
+  )
+
 
 # ---- Climate Supporters ----
 dt_long_sup <- rbindlist(lapply(seq_along(fig_suffixes), function(i) {
@@ -65,30 +73,52 @@ dt_long_sup <- rbindlist(lapply(seq_along(fig_suffixes), function(i) {
 dt_long_ems$Experiment  <- factor(dt_long_ems$Experiment,  levels = labels)
 dt_long_sup$Experiment  <- factor(dt_long_sup$Experiment,  levels = labels)
 
-# Remove guides from individual plots
-p_ems <- ggplot(dt_long_ems, aes(year, median, color=Experiment, fill=Experiment)) +
-  geom_line(size=1.1) +
-  scale_color_manual(values=colors) +
-  scale_fill_manual(values=colors) +
-  labs(x="Year", y="Emissions (GtC/yr)") + #, title="Emissions (GtC/yr)") +
-  theme_minimal(base_size=14) +
-  theme(legend.position="bottom", legend.box="horizontal")
-
+# Remove guides from individual plots 
 p_sup <- ggplot(dt_long_sup, aes(year, median, color=Experiment, fill=Experiment)) +
   geom_line(size=1.1) +
   scale_color_manual(values=colors) +
   scale_fill_manual(values=colors) +
   labs(x="", y="Fraction of Climate Supporters") + #, title="Median Fraction of Climate Supporters") +
+  scale_x_continuous(minor_breaks = NULL) +
+  scale_y_continuous(minor_breaks = NULL) +
   theme_minimal(base_size=14) +
-  theme(legend.position="bottom", legend.box="horizontal")
+  theme(
+    legend.position="none",
+    panel.grid.minor = element_blank()
+  )
+
+p_sup <- p_sup + annotate("text", x = -Inf, y = Inf, label = "a",
+                          fontface = "bold", hjust = -2, vjust = 1.7, size = 6)
+
+p_ems <- p_ems + annotate("text", x = -Inf, y = Inf, label = "b",
+                          fontface = "bold", hjust = -2, vjust = 1.7, size = 6)
+
 
 # Combine and collect guides (legend)
+# fig_combined <- p_sup / p_ems +
+  # plot_layout(guides="collect") &
+  # # plot_annotation(tag_levels = 'a') &
+  # theme(legend.position="bottom", legend.box="horizontal"
+  #       # plot.tag = element_text(face = "bold"),        # bold tag text
+  #       # plot.tag.position = c(0.91, 0.93)              # top-left inside panels
+  #       ) &
+  # guides(color=guide_legend(ncol=1), fill=guide_legend(ncol=1))
+
+  # Combine without legend
 fig_combined <- p_sup / p_ems +
-  plot_layout(guides="collect") &
-  theme(legend.position="bottom", legend.box="horizontal") &
-  guides(color=guide_legend(ncol=1), fill=guide_legend(ncol=1))
+  plot_layout(guides="collect")
+
+
+figwidth <- 6
+figheight <- 7.5
 
 ggsave(
-  "../results/natvar_multidataset_2panel.png",
-  fig_combined, width=6, height=8, dpi=300
+  "../results/manuscriptFigures/natvar_multidataset_2panel.png",
+  fig_combined, width=figwidth, height=figheight, dpi=300
 )
+
+ggsave(
+  "../results/manuscriptFigures/natvar_multidataset_2panel.pdf",
+  fig_combined, width=figwidth, height=figheight, dpi=300
+)
+
