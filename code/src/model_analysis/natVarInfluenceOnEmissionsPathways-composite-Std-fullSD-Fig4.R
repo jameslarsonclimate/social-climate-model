@@ -122,14 +122,14 @@ out_file <- file.path(
   paste0("median_ems_trajectories_by_fullSD_bin_", fig_suffix, ".png")
 )
 message("Saving: ", out_file)
-ggsave(out_file, p, width=figwidth, height=figheight, dpi=300)
+ggsave(out_file, p, width=figwidth, height=figheight, dpi=500)
 
 out_file <- file.path(
   out_dir,
   paste0("median_ems_trajectories_by_fullSD_bin_", fig_suffix, ".pdf")
 )
 message("Saving: ", out_file)
-ggsave(out_file, p, width=figwidth, height=figheight, dpi=300)
+ggsave(out_file, p, width=figwidth, height=figheight, dpi=500)
 
 
 

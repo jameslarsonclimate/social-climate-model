@@ -130,10 +130,10 @@ height_fig <- 7.5
 
 ggsave(
   paste0("../results/manuscriptFigures/natvar_extremes_2panel", fig_suffix, "_", analysis_label, "_", pct_label, ".png"),
-  fig_combined, width=width_fig, height=height_fig, dpi=300
+  fig_combined, width=width_fig, height=height_fig, dpi=500
 )
 
 ggsave(
   paste0("../results/manuscriptFigures/natvar_extremes_2panel", fig_suffix, "_", analysis_label, "_", pct_label, ".pdf"),
-  fig_combined, width=width_fig, height=height_fig, dpi=300
+  fig_combined, width=width_fig, height=height_fig, dpi=500
 )

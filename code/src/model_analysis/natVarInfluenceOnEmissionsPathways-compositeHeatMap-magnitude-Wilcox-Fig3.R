@@ -227,11 +227,11 @@ out_file <- file.path(
   paste0("netzero_heatmap_bin_wilcox", fig_suffix, ".png")
 )
 message("Saving: ", out_file)
-ggsave(out_file, p_bin, width=figwidth, height=figheight)
+ggsave(out_file, p_bin, width=figwidth, height=figheight, dpi=500)
 
 out_file <- file.path(
   out_dir,
   paste0("netzero_heatmap_bin_wilcox", fig_suffix, ".pdf")
 )
-ggsave(out_file, p_bin, width=figwidth, height=figheight)
+ggsave(out_file, p_bin, width=figwidth, height=figheight, dpi=500)
 
